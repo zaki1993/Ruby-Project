@@ -44,7 +44,7 @@ class Parser
       if tokens[0] != '(' && Parser.instance_variable_defined?("@#{tokens[0]}")
         display_result Parser.instance_variable_get("@#{tokens[0]}")
       else
-        display_result display_no_variable_error "#{tokens[0]}"
+        display_no_variable_error "#{tokens[0]}"
       end
     end
   end
@@ -74,13 +74,13 @@ class Parser
   def calculate_function_value(tokens)
     tokens.each do |func|
       if func == '+'
-        return plus(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2])
+        return plus(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2..tokens.length])
       elsif func == '-'
-        return minus(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2])
+        return minus(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2..tokens.length])
       elsif func == '*'
-        return mult(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2])
+        return mult(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2..tokens.length])
       elsif func == 'mod'
-        return partition(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2])
+        return partition(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2..tokens.length])
       elsif func == '/'
         return tokens[tokens.index(func) + 1] + '/' + tokens[tokens.index(func) + 2]
       end
@@ -88,6 +88,12 @@ class Parser
   end
 
   def plus(x, y)
+    if y[0] == '('
+      y = calculate_function_value(y)
+    else
+      y = y[0..y.index(')') - 1]
+      y = y[0]
+    end
     if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
       x = Parser.instance_variable_get "@#{x}"
     end
@@ -98,6 +104,13 @@ class Parser
   end
 
   def minus(x, y)
+    if y[0] == '('
+      y = calculate_function_value(y)
+      puts y
+    else
+      y = y[0..y.index(')') - 1]
+      y = y[0]
+    end
     if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
       x = Parser.instance_variable_get "@#{x}"
     end
@@ -108,6 +121,13 @@ class Parser
   end
 
   def mult(x, y)
+    if y[0] == '('
+      y = calculate_function_value(y)
+      puts y
+    else
+      y = y[0..y.index(')') - 1]
+      y = y[0]
+    end
     if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
       x = Parser.instance_variable_get "@#{x}"
     end
@@ -118,6 +138,13 @@ class Parser
   end
 
   def partition(x, y)
+    if y[0] == '('
+      y = calculate_function_value(y)
+      puts y
+    else
+      y = y[0..y.index(')') - 1]
+      y = y[0]
+    end
     if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
       x = Parser.instance_variable_get "@#{x}"
     end
@@ -132,11 +159,11 @@ class Parser
   end
 
   def display_error
-    "Incorrect command"
+    display_result "Incorrect command"
   end
 
   def display_no_variable_error(variable)
-    "Undefined variable #{variable}"
+    display_result "Undefined variable #{variable}"
   end
 end
 
