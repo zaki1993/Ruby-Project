@@ -2,7 +2,7 @@ class Parser
   def initialize(entry_string)
     @tokens = []
     @variables = []
-    @functions = ['+','-','*','mod','/']
+    @functions = ['+','-','*','mod','/','<','<=','=','>=','>']
     if valid_brackets?(entry_string) == false
       display_error
     else
@@ -23,7 +23,7 @@ class Parser
   end
 
   def tokenizer(string)
-      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-/)
+      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-|\<\=|\>\=|\=|\<|\>/)
       parser(@tokens)
     #TODO for % ^
   end
@@ -52,23 +52,23 @@ class Parser
   def define(tokens)
     if tokens.length < 3
       display_error
-    elsif tokens.length == 3
+    elsif tokens[0] == '('
+      #function with parameters
+      puts "Parameters"
+    elsif tokens[1] != '('
       #define a function without parameters
       variable = tokens[tokens.index(tokens[0]) + 1]
       if (variable =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{variable}")
         Parser.instance_variable_set("@#{tokens[0]}", Parser.instance_variable_get("@#{variable}"))
+      elsif (variable =~ /[[:alpha:]]/) == 0
+        display_no_variable_error variable
       else
         Parser.instance_variable_set("@#{tokens[0]}", variable)
       end
-    elsif tokens.length == 3 && tokens.index('(')!=4
-      #Functions with parameters
-      puts "Parameters"
     else
-      #TODO
       result = calculate_function_value(tokens[tokens.index(tokens.select{|var| var == '('}.first)..tokens.length])
       Parser.instance_variable_set("@#{tokens[0]}", result)
     end
-    #puts Parser.instance_variables
   end
 
   def calculate_function_value(tokens)
@@ -83,6 +83,8 @@ class Parser
         return partition(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2..tokens.length])
       elsif func == '/'
         return tokens[tokens.index(func) + 1] + '/' + tokens[tokens.index(func) + 2]
+      elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
+        return compare(tokens[tokens.index(func) + 1], tokens[tokens.index(func) + 2..tokens.length], func)
       end
     end
   end
@@ -106,7 +108,6 @@ class Parser
   def minus(x, y)
     if y[0] == '('
       y = calculate_function_value(y)
-      puts y
     else
       y = y[0..y.index(')') - 1]
       y = y[0]
@@ -123,7 +124,6 @@ class Parser
   def mult(x, y)
     if y[0] == '('
       y = calculate_function_value(y)
-      puts y
     else
       y = y[0..y.index(')') - 1]
       y = y[0]
@@ -140,7 +140,6 @@ class Parser
   def partition(x, y)
     if y[0] == '('
       y = calculate_function_value(y)
-      puts y
     else
       y = y[0..y.index(')') - 1]
       y = y[0]
@@ -152,6 +151,38 @@ class Parser
        y = Parser.instance_variable_get "@#{y}"
     end
     (x.to_f / y.to_f).to_s
+  end
+
+  def compare(x, y, sign)
+    if y[0] == '('
+      y = calculate_function_value(y)
+    else
+      y = y[0..y.index(')') - 1]
+      y = y[0]
+    end
+    if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
+      x = Parser.instance_variable_get "@#{x}"
+    end
+    if (y =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{y}")
+       y = Parser.instance_variable_get "@#{y}"
+    end
+    result =  case sign
+      when '<'
+        x < y
+      when '>'
+        x > y
+      when '='
+        x == y
+      when '<='
+        x <= y
+      else
+        x >= y
+    end
+    if result == true
+      result = '#t'
+    else
+      result = '#f'
+    end
   end
 
   def display_result(result)
