@@ -2,7 +2,7 @@ class Parser
   def initialize
     @tokens = []
     @variables = []
-    @functions = ['+', '-', '*', 'mod', '/', '<', '<=', '=', '>=', '>', 'equal', 'not']
+    @functions = ['+', '-', '*', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal']
   end
 
   def read(entry_string)
@@ -26,6 +26,7 @@ class Parser
   end
 
   def tokenizer(string)
+      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-|\<\=|\>\=|\=|\<|\>|\"|\?|\#/)
       parser(@tokens)
     #TODO for % ^
   end
@@ -78,7 +79,7 @@ class Parser
         self.instance_variable_set("@#{tokens[0]}", variable)
       end
     else
-      result = calculate_function_value(tokens[tokens.index(tokens.select{|var| var == '('}.first)..tokens.length])
+      result = calculate_function_value(tokens[tokens.index(tokens.select{|var| var == '('}.first) + 1..tokens.length])
       self.instance_variable_set("@#{tokens[0]}", result)
     end
   end
@@ -86,26 +87,26 @@ class Parser
   def calculate_function_value(tokens)
     tokens.each do |func|
       idx = tokens.index func
-
       if (/[['+' || '-' || '*' || 'mod']]/ =~ func) == 0
         return primary_calculations(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
       elsif func == '/'
         return tokens[idx + 1] + '/' + tokens[idx + 2]
       elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
         return compare(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
-      elsif func == 'string' && tokens[idx + 2] == '=' && tokens[idx + 3] == '?'
+      elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
         x = ""
         y = ""
         checker = false
 
         if tokens[idx + 3] == "\"" && tokens[idx + 5] == "\""
-          x = "\"#{tokens[idx + 3]}\""
+          x = "\"#{tokens[idx + 4]}\""
           checker = true
         elsif self.instance_variable_defined?("@#{tokens[idx + 3]}")
           x = self.instance_variable_get("@#{tokens[idx + 3]}")
         else
           return display_error
         end
+
         check_idx_one = 4
         check_idx_two = 6
 
@@ -113,7 +114,6 @@ class Parser
           check_idx_one = 6
           check_idx_two = 8
         end
-
         if tokens[idx + check_idx_one] == "\"" && tokens[idx + check_idx_two] == "\""
           y = "\"#{tokens[idx + check_idx_one + 1]}\""
         elsif self.instance_variable_defined?("@#{tokens[idx + check_idx_one]}")
@@ -121,23 +121,21 @@ class Parser
         else
           return display_error
         end
-
         return scheme_equal?(x, y)
       elsif func == 'not'
-        if tokens[idx + 1] == '#' && tokens[idx + 2] == 't' || tokens[idx + 2] == 'f'
-          return scheme_not(tokens[idx + 1].to_s + tokens[idx + 2].to_s)
-        else
-          return display_error
-        end
+          return scheme_not(tokens[idx + 1..tokens.length])
+      elsif func == 'equal' && tokens[idx + 1] == '?'
+          return scheme_equal?(tokens[idx + 2..tokens.length])
       else
-        display_error
+        return display_error
       end
     end
   end
+
   def primary_calculations(x, y, sign)
     if y[0] == '('
       y = calculate_function_value(y)
-    else
+    elsif
       y = y[0..y.index(')') - 1]
       y = y[0]
     end
@@ -183,7 +181,7 @@ class Parser
     elsif not y.to_i.is_a? Integer
       return display_error
     end
-      result =  case sign
+      result = case sign
         when '<'
           x < y
         when '>'
@@ -202,17 +200,47 @@ class Parser
     end
   end
 
-  def scheme_equal?(x, y)
-    return x.eql? y
+  def scheme_equal?(tokens)
+    x, y = '', ''
+
+    if tokens[0] == '('
+      x = calculate_function_value(tokens[1..tokens.index(')')])
+    elsif tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f')
+      x = tokens[1]
+    else
+      return display_error
+    end
+
+    if tokens[2] == '('
+      tokens = tokens[2..tokens.length]
+      x = calculate_function_value(tokens[1..tokens.index(')')])
+    elsif tokens[2] == '#' && (tokens[3] == 't' || tokens[3] == 'f')
+      x = tokens[3]
+    else
+      return display_error
+    end
+
+    result = x.eql? y
+    return '#t' if result
+    return '#f'
   end
 
-  def scheme_not(x)
-    if x == '#t'
-      '#f'
-    elsif x == '#f'
-      '#t'
+  def scheme_not(tokens)
+    x = ''
+    if tokens[0] == '('
+      x = calculate_function_value(tokens[1..tokens.length])
+      return scheme_not(x)
+    elsif (tokens[0] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[0]}")
+      x = self.instance_variable_get("@#{tokens[0]}")
+      return scheme_not(x)
+    elsif tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f')
+      if tokens[1] == 't'
+        return '#f'
+      else
+        return '#t'
+      end
     else
-      display_error
+      return display_error
     end
   end
 
