@@ -1,8 +1,11 @@
 class Parser
-  def initialize(entry_string)
+  def initialize
     @tokens = []
     @variables = []
     @functions = ['+', '-', '*', 'mod', '/', '<', '<=', '=', '>=', '>', 'equal', 'not']
+  end
+
+  def read(entry_string)
     if valid_brackets?(entry_string) == false
       display_error
     else
@@ -23,7 +26,6 @@ class Parser
   end
 
   def tokenizer(string)
-      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-|\<\=|\>\=|\=|\<|\>|\"|\?|\#/)
       parser(@tokens)
     #TODO for % ^
   end
@@ -36,13 +38,14 @@ class Parser
       self.define(tokens[tokens.index("define") + 1..tokens.length])
     else
       #Calculate function value
-      @functions.each do |func|
-        if tokens.include? func
+      tokens.each do |func|
+        if @functions.include? func
           return display_result calculate_function_value(tokens[tokens.index(func)..tokens.length])
         end
       end
-      if tokens[0] != '(' && Parser.instance_variable_defined?("@#{tokens[0]}")
-        display_result Parser.instance_variable_get("@#{tokens[0]}")
+
+      if tokens[0] != '(' && self.instance_variable_defined?("@#{tokens[0]}")
+        display_result self.instance_variable_get("@#{tokens[0]}")
       else
         display_no_variable_error "#{tokens[0]}"
       end
@@ -58,61 +61,63 @@ class Parser
     elsif tokens[1] != '('
       #define a function without parameters
       variable = tokens[tokens.index(tokens[0]) + 1]
+
       if tokens[1] == "\"" && tokens[3] == "\""
         variable = tokens[2]
         variable.insert(0, "\"")
         variable.insert(variable.length,"\"")
-        Parser.instance_variable_set("@#{tokens[0]}",variable)
-      elsif (variable =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{variable}")
-        Parser.instance_variable_set("@#{tokens[0]}", Parser.instance_variable_get("@#{variable}"))
+        self.instance_variable_set("@#{tokens[0]}", variable)
+      elsif tokens[1] == '#' && tokens[2] == 't' || tokens[2] == 'f'
+        variable = "\##{tokens[2]}"
+        self.instance_variable_set("@#{tokens[0]}", variable)
+      elsif (variable =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{variable}")
+        self.instance_variable_set("@#{tokens[0]}", self.instance_variable_get("@#{variable}"))
       elsif (variable =~ /[[:alpha:]]/) == 0
         display_no_variable_error variable
       else
-        Parser.instance_variable_set("@#{tokens[0]}", variable)
+        self.instance_variable_set("@#{tokens[0]}", variable)
       end
     else
       result = calculate_function_value(tokens[tokens.index(tokens.select{|var| var == '('}.first)..tokens.length])
-      Parser.instance_variable_set("@#{tokens[0]}", result)
+      self.instance_variable_set("@#{tokens[0]}", result)
     end
   end
 
   def calculate_function_value(tokens)
     tokens.each do |func|
       idx = tokens.index func
-      if func == '+'
-        return plus(tokens[idx + 1], tokens[idx + 2..tokens.length])
-      elsif func == '-'
-        return minus(tokens[idx + 1], tokens[idx + 2..tokens.length])
-      elsif func == '*'
-        return mult(tokens[idx + 1], tokens[idx + 2..tokens.length])
-      elsif func == 'mod'
-        return partition(tokens[idx + 1], tokens[idx + 2..tokens.length])
+
+      if (/[['+' || '-' || '*' || 'mod']]/ =~ func) == 0
+        return primary_calculations(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
       elsif func == '/'
         return tokens[idx + 1] + '/' + tokens[idx + 2]
       elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
         return compare(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
-      elsif func == 'equal' && tokens[idx + 1] == '?'
+      elsif func == 'string' && tokens[idx + 2] == '=' && tokens[idx + 3] == '?'
         x = ""
         y = ""
         checker = false
-        if tokens[idx + 2] == "\"" && tokens[idx + 4] == "\""
+
+        if tokens[idx + 3] == "\"" && tokens[idx + 5] == "\""
           x = "\"#{tokens[idx + 3]}\""
           checker = true
-        elsif Parser.instance_variable_defined?("@#{tokens[idx + 2]}")
-          x = Parser.instance_variable_get("@#{tokens[idx + 2]}")
+        elsif self.instance_variable_defined?("@#{tokens[idx + 3]}")
+          x = self.instance_variable_get("@#{tokens[idx + 3]}")
         else
           return display_error
         end
-        check_idx_one = 3
-        check_idx_two = 5
+        check_idx_one = 4
+        check_idx_two = 6
+
         if checker == true
-          check_idx_one = 5
-          check_idx_two = 7
+          check_idx_one = 6
+          check_idx_two = 8
         end
+
         if tokens[idx + check_idx_one] == "\"" && tokens[idx + check_idx_two] == "\""
           y = "\"#{tokens[idx + check_idx_one + 1]}\""
-        elsif Parser.instance_variable_defined?("@#{tokens[idx + check_idx_one]}")
-          y = Parser.instance_variable_get("@#{tokens[idx + check_idx_one]}")
+        elsif self.instance_variable_defined?("@#{tokens[idx + check_idx_one]}")
+          y = self.instance_variable_get("@#{tokens[idx + check_idx_one]}")
         else
           return display_error
         end
@@ -129,69 +134,36 @@ class Parser
       end
     end
   end
-
-  def plus(x, y)
+  def primary_calculations(x, y, sign)
     if y[0] == '('
       y = calculate_function_value(y)
     else
       y = y[0..y.index(')') - 1]
       y = y[0]
     end
-    if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
-      x = Parser.instance_variable_get "@#{x}"
-    end
-    if (y =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{y}")
-       y = Parser.instance_variable_get "@#{y}"
-    end
-    (x.to_i + y.to_i).to_s
-  end
 
-  def minus(x, y)
-    if y[0] == '('
-      y = calculate_function_value(y)
-    else
-      y = y[0..y.index(')') - 1]
-      y = y[0]
+    if (x =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{x}")
+      x = self.instance_variable_get "@#{x}"
+    elsif not x.to_i.is_a? Integer
+      return display_error
     end
-    if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
-      x = Parser.instance_variable_get "@#{x}"
-    end
-    if (y =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{y}")
-       y = Parser.instance_variable_get "@#{y}"
-    end
-    (x.to_i - y.to_i).to_s
-  end
 
-  def mult(x, y)
-    if y[0] == '('
-      y = calculate_function_value(y)
-    else
-      y = y[0..y.index(')') - 1]
-      y = y[0]
+    if (y =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{y}")
+       y = self.instance_variable_get "@#{y}"
+    elsif not y.to_i.is_a? Integer
+      return display_error
     end
-    if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
-      x = Parser.instance_variable_get "@#{x}"
-    end
-    if (y =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{y}")
-       y = Parser.instance_variable_get "@#{y}"
-    end
-    (x.to_i * y.to_i).to_s
-  end
 
-  def partition(x, y)
-    if y[0] == '('
-      y = calculate_function_value(y)
-    else
-      y = y[0..y.index(')') - 1]
-      y = y[0]
+    case sign
+      when '+'
+        (x.to_f + y.to_f).to_s
+      when '-'
+        (x.to_f - y.to_f).to_s
+      when '*'
+        (x.to_f * y.to_f).to_s
+      when 'mod'
+        (x.to_f / y.to_f).to_s
     end
-    if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
-      x = Parser.instance_variable_get "@#{x}"
-    end
-    if (y =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{y}")
-       y = Parser.instance_variable_get "@#{y}"
-    end
-    (x.to_f / y.to_f).to_s
   end
 
   def compare(x, y, sign)
@@ -201,14 +173,14 @@ class Parser
       y = y[0..y.index(')') - 1]
       y = y[0]
     end
-    if (x =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{x}")
-      x = Parser.instance_variable_get "@#{x}"
-    else
+    if (x =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{x}")
+      x = self.instance_variable_get "@#{x}"
+    elsif not x.to_i.is_a? Integer
       return display_error
     end
-    if (y =~ /[[:alpha:]]/) == 0 && Parser.instance_variable_defined?("@#{y}")
-       y = Parser.instance_variable_get "@#{y}"
-    else
+    if (y =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{y}")
+       y = self.instance_variable_get "@#{y}"
+    elsif not y.to_i.is_a? Integer
       return display_error
     end
       result =  case sign
@@ -255,9 +227,4 @@ class Parser
   def display_no_variable_error(variable)
     display_result "Undefined variable #{variable}"
   end
-end
-
-while true
-  token = gets.chomp
-  Parser.new token
 end
