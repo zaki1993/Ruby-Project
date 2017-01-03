@@ -84,7 +84,11 @@ class Parser
       end
     else
       result = calculate_function_value(tokens[tokens.index(tokens.select{|var| var == '('}.first) + 1..tokens.length])
-      self.instance_variable_set("@#{tokens[0]}", result)
+      if result == display_error || result.include?("Undefined variable")
+        display_result result
+      else
+        self.instance_variable_set("@#{tokens[0]}", result)
+      end
     end
   end
 
@@ -128,8 +132,8 @@ class Parser
         return scheme_equal?(x, y)
       elsif func == 'not'
         result = scheme_not(tokens[idx + 1..tokens.length])
-          return display_error if result == display_error
-          return result
+        return display_error if result == display_error
+        return result
       elsif func == 'equal' && tokens[idx + 1] == '?'
           return scheme_equal?(tokens[idx + 2..tokens.length])
       else
@@ -208,24 +212,47 @@ class Parser
 
   def scheme_equal?(tokens)
     x, y = '', ''
-
-    if tokens[0] == '('
-      x = calculate_function_value(tokens[1..tokens.index(')')])
-    elsif tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f')
-      x = tokens[1]
+    idx = 0
+    if tokens[idx] == '('
+      idx = tokens.index(')')
+      x = calculate_function_value(tokens[1..tokens.length])
+      idx = idx + 1
+      if x == display_error || x.include?("Undefined variable")
+        return x
+      end
+    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
+      x = self.instance_variable_get("@#{tokens[idx]}")
+      puts x
+      idx = idx + 1
+    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
+      return display_no_variable_error tokens[idx]
+    elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
+      x = tokens[idx] + tokens[idx + 1]
+      idx = idx + 1
     else
       return display_error
     end
-
-    if tokens[2] == '('
-      tokens = tokens[2..tokens.length]
-      x = calculate_function_value(tokens[1..tokens.index(')')])
-    elsif tokens[2] == '#' && (tokens[3] == 't' || tokens[3] == 'f')
-      x = tokens[3]
+    puts idx, tokens[idx]
+    if tokens[idx] == '('
+      tokens = tokens[idx + 1..tokens.length]
+      puts tokens
+      y = calculate_function_value(tokens)
+      puts y
+      if y == display_error || y.include?("Undefined variable")
+        return y
+      end
+      idx = idx + 1
+    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
+      y = self.instance_variable_get("@#{tokens[idx]}")
+      idx = idx + 1
+    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
+      return display_no_variable_error tokens[idx]
+    elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
+      y = tokens[idx] + tokens[idx + 1]
+      idx = idx + 1
     else
       return display_error
     end
-
     result = x.eql? y
     return '#t' if result
     return '#f'
