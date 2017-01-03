@@ -7,7 +7,7 @@ class Parser
 
   def read(entry_string)
     if valid_brackets?(entry_string) == false
-      display_error
+      display_result display_error
     else
       tokenizer(entry_string)
     end
@@ -48,14 +48,14 @@ class Parser
       if tokens[0] != '(' && self.instance_variable_defined?("@#{tokens[0]}")
         display_result self.instance_variable_get("@#{tokens[0]}")
       else
-        display_no_variable_error "#{tokens[0]}"
+        display_result display_no_variable_error "#{tokens[0]}"
       end
     end
   end
 
   def define(tokens)
     if tokens.length < 3
-      display_error
+      display_result display_error
     elsif tokens[0] == '('
       #function with parameters
       puts "Parameters"
@@ -68,13 +68,17 @@ class Parser
         variable.insert(0, "\"")
         variable.insert(variable.length,"\"")
         self.instance_variable_set("@#{tokens[0]}", variable)
-      elsif tokens[1] == '#' && tokens[2] == 't' || tokens[2] == 'f'
-        variable = "\##{tokens[2]}"
-        self.instance_variable_set("@#{tokens[0]}", variable)
+      elsif tokens[1] == '#'
+        if (tokens[2] == 't' || tokens[2] == 'f') && tokens[3] == ')'
+          variable = "\##{tokens[2]}"
+          self.instance_variable_set("@#{tokens[0]}", variable)
+        else
+          display_result display_error
+        end
       elsif (variable =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{variable}")
         self.instance_variable_set("@#{tokens[0]}", self.instance_variable_get("@#{variable}"))
       elsif (variable =~ /[[:alpha:]]/) == 0
-        display_no_variable_error variable
+        display_result display_no_variable_error variable
       else
         self.instance_variable_set("@#{tokens[0]}", variable)
       end
@@ -123,7 +127,9 @@ class Parser
         end
         return scheme_equal?(x, y)
       elsif func == 'not'
-          return scheme_not(tokens[idx + 1..tokens.length])
+        result = scheme_not(tokens[idx + 1..tokens.length])
+          return display_error if result == display_error
+          return result
       elsif func == 'equal' && tokens[idx + 1] == '?'
           return scheme_equal?(tokens[idx + 2..tokens.length])
       else
@@ -226,19 +232,29 @@ class Parser
   end
 
   def scheme_not(tokens)
+    if tokens.include? "Undefined variable"
+      return tokens.split(" ")[2]
+    end
+    return display_error if tokens == display_error
     x = ''
     if tokens[0] == '('
       x = calculate_function_value(tokens[1..tokens.length])
       return scheme_not(x)
+    elsif (tokens[0] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[0]}")
+      return (display_no_variable_error tokens[0])
     elsif (tokens[0] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[0]}")
-      x = self.instance_variable_get("@#{tokens[0]}")
-      return scheme_not(x)
-    elsif tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f')
-      if tokens[1] == 't'
-        return '#f'
+      if tokens[1] != ')'
+        return display_error
       else
-        return '#t'
+        x = self.instance_variable_get("@#{tokens[0]}")
+        return scheme_not(x)
       end
+    elsif (tokens[0] =~ /[[:alpha:]]/) != 0 && tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f') && (tokens[2] == ')' || tokens[2].nil?)
+        if tokens[1] == 't'
+          return '#f'
+        else
+          return '#t'
+        end
     else
       return display_error
     end
@@ -249,10 +265,10 @@ class Parser
   end
 
   def display_error
-    display_result "Incorrect command"
+    "Incorrect command"
   end
 
   def display_no_variable_error(variable)
-    display_result "Undefined variable #{variable}"
+    "Undefined variable #{variable}"
   end
 end
