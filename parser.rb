@@ -188,7 +188,7 @@ class Parser
 
   def compare(x, y, sign)
     if y[0] == '('
-      y = calculate_function_value(y)
+      y = calculate_function_value(y[1..y.length])
     else
       y = y[0..y.index(')') - 1]
       y = y[0]
@@ -304,14 +304,14 @@ class Parser
    def scheme_string_length(tokens)
     result = 0
     if tokens[0] !="\"" && tokens[2] != "\""
-      if (/[[:alpha:]]/ =~ tokens[1]) == 0 && self.instance_variable_defined?("@#{tokens[1]}")
-        result = self.instance_variable_get("@#{tokens[1]}").length
+      if (/[[:alpha:]]/ =~ tokens[0]) == 0 && self.instance_variable_defined?("@#{tokens[0]}")
+        result = self.instance_variable_get("@#{tokens[0]}").length
         if result.to_i.is_a? Integer
           return display_error
         end
         return result
-      elsif (/[[:alpha:]]/ =~ tokens[1]) == 0 && !self.instance_variable_defined?("@#{tokens[1]}")
-        return display_no_variable_error tokens[1]
+      elsif (/[[:alpha:]]/ =~ tokens[0]) == 0 && !self.instance_variable_defined?("@#{tokens[0]}")
+        return display_no_variable_error tokens[0]
       else
         return display_error
       end
