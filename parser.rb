@@ -1,7 +1,7 @@
 class Parser
   def initialize
     @tokens = []
-    @variables = []
+    @defined_functions = []
     @functions = ['+', '-', '*', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal']
   end
 
@@ -32,8 +32,12 @@ class Parser
   end
 
   def parser(tokens)
-    if tokens.length == 0 || tokens.all?{|symbol| symbol == '(' || symbol == ')'}
-      #Do nothing
+    if tokens.length == 0
+
+    elsif tokens.length != 0 && check_for_default_print(tokens)
+
+    elsif tokens.all?{|symbol| symbol == '(' || symbol == ')'}
+      #ok
     elsif tokens.include?("define")
       #Define a function
       self.define(tokens[tokens.index("define") + 1..tokens.length])
@@ -45,7 +49,7 @@ class Parser
         end
       end
 
-      if tokens[0] != '(' && self.instance_variable_defined?("@#{tokens[0]}")
+      if tokens[0] != '(' && tokens.length == 1 && self.instance_variable_defined?("@#{tokens[0]}")
         display_result self.instance_variable_get("@#{tokens[0]}")
       else
         display_result display_no_variable_error "#{tokens[0]}"
@@ -326,6 +330,41 @@ class Parser
       return result.to_s
     else
       return display_error
+    end
+  end
+
+  def check_for_default_print(tokens)
+    if tokens[0] != "("
+      if tokens[0] == '#'
+        if (tokens[1] == 't' || tokens[1] == 'f') && tokens.length == 2
+          display_result (tokens[0] + tokens[1])
+          return true
+        else
+          display_result display_error
+          return true
+        end
+      elsif tokens[0] == "\""
+        if tokens[tokens.length - 1] == "\""
+          result = "\""
+          tokens[1..tokens.length].each do |val|
+            break if val == "\""
+            result.insert(result.length, val)
+          end
+          result.insert(result.length,"\"")
+          if tokens[1..tokens.length].index("\"") != tokens.length - 2
+            display_result display_error
+            return true
+          else
+            display_result result
+            return true
+          end
+        else
+          display_result display_error
+          return true
+        end
+      end
+    else
+      return false
     end
   end
 
