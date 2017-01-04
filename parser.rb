@@ -59,13 +59,23 @@ class Parser
     elsif tokens[0] == '('
       #function with parameters
       puts "Parameters"
+    elsif (/[[:alpha:]]/ =~ tokens[0]) != 0
+      display_result display_error
     elsif tokens[1] != '('
       #define a function without parameters
       variable = tokens[tokens.index(tokens[0]) + 1]
-
       if tokens[1] == "\"" && tokens[3] == "\""
-        variable = tokens[2]
-        variable.insert(0, "\"")
+        variable = tokens[1]
+        variable.insert(variable.length, tokens[2])
+        variable.insert(variable.length,"\"")
+        self.instance_variable_set("@#{tokens[0]}", variable)
+      elsif tokens[1] == "\"" && tokens[3] != "\""
+        variable = tokens[1]
+        tokens[2..tokens.length - 2].each do |val|
+          if val != "\""
+            variable.insert(variable.length, val)
+          end
+        end
         variable.insert(variable.length,"\"")
         self.instance_variable_set("@#{tokens[0]}", variable)
       elsif tokens[1] == '#'
@@ -214,38 +224,43 @@ class Parser
     x, y = '', ''
     idx = 0
     if tokens[idx] == '('
-      idx = tokens.index(')')
-      x = calculate_function_value(tokens[1..tokens.length])
-      idx = idx + 1
+      x = calculate_function_value(tokens[idx + 1..tokens.length])
+      tokens = tokens[tokens.index(')')..tokens.length]
+      tokens.each do |val|
+        if val != ')'
+          idx = tokens.index(val)
+          break
+        end
+      end
       if x == display_error || x.include?("Undefined variable")
         return x
       end
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
       x = self.instance_variable_get("@#{tokens[idx]}")
-      puts x
       idx = idx + 1
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
       return display_no_variable_error tokens[idx]
     elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
       x = tokens[idx] + tokens[idx + 1]
-      idx = idx + 1
+      idx = idx + 2
     else
       return display_error
     end
-    puts idx, tokens[idx]
     if tokens[idx] == '('
       tokens = tokens[idx + 1..tokens.length]
-      puts tokens
       y = calculate_function_value(tokens)
-      puts y
+      tokens = tokens[tokens.index(')')..tokens.length]
+      idx = tokens.index('(')
       if y == display_error || y.include?("Undefined variable")
         return y
       end
-      idx = idx + 1
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
       y = self.instance_variable_get("@#{tokens[idx]}")
       idx = idx + 1
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
+
+      puts "SS"
+      puts tokens[idx],idx
       return display_no_variable_error tokens[idx]
     elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
       y = tokens[idx] + tokens[idx + 1]
