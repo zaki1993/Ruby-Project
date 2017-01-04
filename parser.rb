@@ -140,6 +140,8 @@ class Parser
           return display_error
         end
         return scheme_equal?(x, y)
+      elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
+        return scheme_string_length(tokens[idx + 3.. tokens.length])
       elsif func == 'not'
         result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error
@@ -258,9 +260,6 @@ class Parser
       y = self.instance_variable_get("@#{tokens[idx]}")
       idx = idx + 1
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
-
-      puts "SS"
-      puts tokens[idx],idx
       return display_no_variable_error tokens[idx]
     elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
       y = tokens[idx] + tokens[idx + 1]
@@ -297,6 +296,34 @@ class Parser
         else
           return '#t'
         end
+    else
+      return display_error
+    end
+  end
+
+   def scheme_string_length(tokens)
+    result = 0
+    if tokens[0] !="\"" && tokens[2] != "\""
+      if (/[[:alpha:]]/ =~ tokens[1]) == 0 && self.instance_variable_defined?("@#{tokens[1]}")
+        result = self.instance_variable_get("@#{tokens[1]}").length
+        if result.to_i.is_a? Integer
+          return display_error
+        end
+        return result
+      elsif (/[[:alpha:]]/ =~ tokens[1]) == 0 && !self.instance_variable_defined?("@#{tokens[1]}")
+        return display_no_variable_error tokens[1]
+      else
+        return display_error
+      end
+    elsif tokens[0] == "\"" && tokens[1..tokens.length].include?("\"")
+      tokens[1..tokens.length].each do |val|
+        if val == "\""
+          break
+        else
+          result = result + val.length
+        end
+      end
+      return result.to_s
     else
       return display_error
     end
