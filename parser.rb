@@ -3,6 +3,7 @@ class Parser
     @tokens = []
     @defined_functions = []
     @functions = ['+', '-', '*', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal']
+    @SPACE = '자'
   end
 
   def read(entry_string)
@@ -14,6 +15,21 @@ class Parser
   end
 
   def valid_brackets?(str)
+    can_place_space = false
+    str.each_char.each_with_index do |symbol,idx|
+      if can_place_space
+        if symbol == " "
+          str[idx] = @SPACE
+        end
+        if symbol == "\""
+          can_place_space = false
+        end
+      else
+        if symbol == "\""
+          can_place_space = true
+        end
+      end
+    end
     strim = str.gsub(/[^\[\]\(\)\{\}]/,'')
     return true if strim.empty?
     return false if strim.size.odd?
@@ -26,7 +42,12 @@ class Parser
   end
 
   def tokenizer(string)
-      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-|\<\=|\>\=|\=|\<|\>|\"|\?|\#/)
+      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\자/)
+      @tokens.each do |val|
+        if val == @SPACE
+          @tokens[@tokens.index(val)] = " "
+        end
+      end
       parser(@tokens)
     #TODO for % ^
   end
@@ -68,20 +89,16 @@ class Parser
     elsif tokens[1] != '('
       #define a function without parameters
       variable = tokens[tokens.index(tokens[0]) + 1]
-      if tokens[1] == "\"" && tokens[3] == "\""
+      if tokens[1] == "\"" && tokens[2..tokens.length].include?("\"")
         variable = tokens[1]
-        variable.insert(variable.length, tokens[2])
-        variable.insert(variable.length,"\"")
-        self.instance_variable_set("@#{tokens[0]}", variable)
-      elsif tokens[1] == "\"" && tokens[3] != "\""
-        variable = tokens[1]
-        tokens[2..tokens.length - 2].each do |val|
-          if val != "\""
-            variable.insert(variable.length, val)
-          end
+        tokens[2..tokens.length].each do |val|
+          break if val == "\""
+          variable.insert(variable.length, val)
         end
         variable.insert(variable.length,"\"")
         self.instance_variable_set("@#{tokens[0]}", variable)
+      elsif tokens[1] == "\"" && !tokens[2..tokens.length].include?("\"")
+        display_result display_error
       elsif tokens[1] == '#'
         if (tokens[2] == 't' || tokens[2] == 'f') && tokens[3] == ')'
           variable = "\##{tokens[2]}"
@@ -116,34 +133,7 @@ class Parser
       elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
         return compare(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
       elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
-        x = ""
-        y = ""
-        checker = false
-
-        if tokens[idx + 3] == "\"" && tokens[idx + 5] == "\""
-          x = "\"#{tokens[idx + 4]}\""
-          checker = true
-        elsif self.instance_variable_defined?("@#{tokens[idx + 3]}")
-          x = self.instance_variable_get("@#{tokens[idx + 3]}")
-        else
-          return display_error
-        end
-
-        check_idx_one = 4
-        check_idx_two = 6
-
-        if checker == true
-          check_idx_one = 6
-          check_idx_two = 8
-        end
-        if tokens[idx + check_idx_one] == "\"" && tokens[idx + check_idx_two] == "\""
-          y = "\"#{tokens[idx + check_idx_one + 1]}\""
-        elsif self.instance_variable_defined?("@#{tokens[idx + check_idx_one]}")
-          y = self.instance_variable_get("@#{tokens[idx + check_idx_one]}")
-        else
-          return display_error
-        end
-        return scheme_equal?(x, y)
+        return scheme_string_equal(tokens, idx)
       elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
         return scheme_string_length(tokens[idx + 3.. tokens.length])
       elsif func == 'not'
@@ -226,6 +216,40 @@ class Parser
     end
   end
 
+  def scheme_string_equal(tokens, idx)
+    x = ""
+    y = ""
+    checker = false
+    first_q_idx = 0
+    if tokens[idx + 3] == "\"" && tokens[idx + 4..tokens.length].include?("\"")
+      x = "\""
+      tokens[idx+4..tokens.length].each do |val|
+        break if val == "\""
+        x.insert(x.length, val)
+      end
+      x.insert(x.length, "\"")
+      first_q_idx = idx + tokens[idx + 4..tokens.length].index("\"") + 5
+    elsif self.instance_variable_defined?("@#{tokens[idx + 3]}")
+      x = self.instance_variable_get("@#{tokens[idx + 3]}")
+      first_q_idx = idx + 5
+    else
+      return display_no_variable_error tokens[idx + 3]
+    end
+    if tokens[first_q_idx] == "\"" && tokens[first_q_idx + 1.. tokens.length].include?("\"")
+      y = "\""
+      tokens[first_q_idx + 1..tokens.length].each do |val|
+        break if val == "\""
+        y.insert(y.length, val)
+      end
+      y.insert(y.length, "\"")
+    elsif self.instance_variable_defined?("@#{tokens[first_q_idx]}")
+      y = self.instance_variable_get("@#{tokens[first_q_idx]}")
+    else
+      return display_error
+    end
+    return convert_boolean_to_scheme x.eql? y
+  end
+
   def scheme_equal?(tokens)
     x, y = '', ''
     idx = 0
@@ -243,6 +267,9 @@ class Parser
       end
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
       x = self.instance_variable_get("@#{tokens[idx]}")
+      if !(x[0] == '#' && (x[1] == 't' || x[1] == 'f') && x.length == 2)
+        return display_error
+      end
       idx = idx + 1
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
       return display_no_variable_error tokens[idx]
@@ -262,6 +289,9 @@ class Parser
       end
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
       y = self.instance_variable_get("@#{tokens[idx]}")
+      if !(y[0] == '#' && (y[1] == 't' || y[1] == 'f') && y.length == 2)
+        return display_error
+      end
       idx = idx + 1
     elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
       return display_no_variable_error tokens[idx]
@@ -271,8 +301,11 @@ class Parser
     else
       return display_error
     end
-    result = x.eql? y
-    return '#t' if result
+    return convert_boolean_to_scheme x.eql? y
+  end
+
+  def convert_boolean_to_scheme(statement)
+    return '#t' if statement
     return '#f'
   end
 
@@ -346,9 +379,13 @@ class Parser
       elsif tokens[0] == "\""
         if tokens[tokens.length - 1] == "\""
           result = "\""
-          tokens[1..tokens.length].each do |val|
+          tokens[1..tokens.length].each_with_index do |val,index|
             break if val == "\""
-            result.insert(result.length, val)
+            if (val == " ")
+              result.insert(result.length, " ")
+            else
+              result.insert(result.length, val)
+            end
           end
           result.insert(result.length,"\"")
           if tokens[1..tokens.length].index("\"") != tokens.length - 2
