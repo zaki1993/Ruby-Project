@@ -386,7 +386,7 @@ class Parser
             else
               result.insert(result.length, val)
             end
-          end
+          ends
           result.insert(result.length,"\"")
           if tokens[1..tokens.length].index("\"") != tokens.length - 2
             display_result display_error
