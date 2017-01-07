@@ -1,0 +1,2 @@
+(+ (string-length "asdas") (+ 2 (string-length "asd") 3) (string-length "ss"))
+(+ 1 (+ 2 (+ 2 3) (+ 2 3) 3) (+ 2 3) 2)

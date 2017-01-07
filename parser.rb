@@ -2,7 +2,7 @@ class Parser
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal']
+    @functions = ['+', '-', '*', 'div', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal']
     @SPACE = '자'
   end
 
@@ -42,7 +42,7 @@ class Parser
   end
 
   def tokenizer(string)
-      @tokens = string.scan(/\(|\)|\w+|\+|\*|\/|\-|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\자/)
+      @tokens = string.scan(/\(|\)|\w+|\+|\-|\*|\/|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\자/)
       @tokens.each do |val|
         if val == @SPACE
           @tokens[@tokens.index(val)] = " "
@@ -126,8 +126,11 @@ class Parser
   def calculate_function_value(tokens)
     tokens.each do |func|
       idx = tokens.index func
-      if (/[['+' || '-' || '*' || 'mod']]/ =~ func) == 0
-        return primary_calculations(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
+      if func == '-'
+        #TODO FIX THIS
+        return primary_calculations(tokens[1..tokens.length], func)
+      elsif (/[['-' || '+' || '*' || 'div' || 'mod']]/ =~ func) == 0
+        return primary_calculations(tokens[1..tokens.length], func)
       elsif func == '/'
         return tokens[idx + 1] + '/' + tokens[idx + 2]
       elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
@@ -148,36 +151,114 @@ class Parser
     end
   end
 
-  def primary_calculations(x, y, sign)
-    if y[0] == '('
-      y = calculate_function_value(y)
-    elsif
-      y = y[0..y.index(')') - 1]
-      y = y[0]
-    end
+  def primary_calculations(tokens, sign)
+    x = 0
+    y = 0
+    left_brackets = 0
+    right_brackets = 0
+    idx = 0
+    skips = 0
+    #FIND X
+      if tokens[idx] != '('
+        if (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[0]}")
+          if self.instance_variable_get("@#{tokens[0]}").to_i.is_a? Integer
+            x = self.instance_variable_get("@#{tokens[0]}").to_i
+          else
+            return display_error
+          end
+        elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[0]}")
+          return display_no_variable_error tokens[idx]
+        elsif tokens[idx].to_i.is_a? Integer
+          x = tokens[idx].to_i
+        else
+          return display_error
+        end
+        idx = idx + 1
+      else
+        left_brackets = 0
+        right_brackets = 0
+        tokens.each_with_index do |val,idxx|
+          if val == '('
+            left_brackets = left_brackets + 1
+          end
+          if val == ')'
+            right_brackets = right_brackets + 1
+          end
+          if left_brackets == right_brackets
+            idx = idx + idxx
+            x_check = 1
+            break
+          end
+        end
+        x = calculate_function_value(tokens[1..idx]).to_i
+      end
 
-    if (x =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{x}")
-      x = self.instance_variable_get "@#{x}"
-    elsif not x.to_i.is_a? Integer
-      return display_error
+    #FIND Y
+    tokens[idx..tokens.length].each_with_index do |var, index|
+      if skips != 0
+        skips = skips - 1
+        next
+      end
+      break if var == ')' && (index == tokens.length - 2)
+      if var != '(' && var != ')'
+        if (var =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{var}")
+          if self.instance_variable_get("@#{var}").to_i.is_a? Integer
+            y = self.instance_variable_get("@#{var}").to_i
+          else
+            return display_error
+          end
+        elsif (var =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{var}")
+          return display_no_variable_error var
+        elsif var.to_i.is_a? Integer
+          y = var.to_i
+        else
+          return display_error
+        end
+        case sign
+          when '+'
+            x = x + y
+          when '-'
+            x = x - y
+          when '*'
+            x = x * y
+          when 'div'
+            x = x / y
+          when 'mod'
+            x = x % y
+        end
+      elsif var == '('
+        left_brackets = 0
+        right_brackets = 0
+        find_close_bracket = 0
+        tokens[idx + index..tokens.length].each_with_index do |v,i|
+          if v == '('
+            left_brackets = left_brackets + 1
+          end
+          if v == ')'
+            right_brackets = right_brackets + 1
+          end
+          if left_brackets == right_brackets
+            find_close_bracket = idx + index + i
+            break
+          end
+        end
+        y = calculate_function_value(tokens[idx + index + 1..find_close_bracket]).to_s.to_i
+        skips = find_close_bracket - idx - index
+        case sign
+          when '+'
+            x = x + y
+          when '-'
+            x = x - y
+          when '*'
+            x = x * y
+          when 'div'
+            x = x / y
+          when 'mod'
+            x = x % y
+        end
+      end
     end
-
-    if (y =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{y}")
-       y = self.instance_variable_get "@#{y}"
-    elsif not y.to_i.is_a? Integer
-      return display_error
-    end
-
-    case sign
-      when '+'
-        (x.to_f + y.to_f).to_s
-      when '-'
-        (x.to_f - y.to_f).to_s
-      when '*'
-        (x.to_f * y.to_f).to_s
-      when 'mod'
-        (x.to_f / y.to_f).to_s
-    end
+   return x
   end
 
   def compare(x, y, sign)
@@ -209,11 +290,7 @@ class Parser
         else
           x >= y
       end
-    if result == true
-      result = '#t'
-    else
-      result = '#f'
-    end
+    return convert_boolean_to_scheme result
   end
 
   def scheme_string_equal(tokens, idx)
@@ -247,7 +324,7 @@ class Parser
     else
       return display_error
     end
-    return convert_boolean_to_scheme x.eql? y
+    x convert_boolean_to_scheme x.eql? y
   end
 
   def scheme_equal?(tokens)
@@ -386,7 +463,7 @@ class Parser
             else
               result.insert(result.length, val)
             end
-          ends
+          end
           result.insert(result.length,"\"")
           if tokens[1..tokens.length].index("\"") != tokens.length - 2
             display_result display_error
