@@ -411,12 +411,6 @@ class Parser
     if tokens[0] != '('
       return display_error
     end
-    tokens.insert(0,'(')
-    idx = find_last_bracket(tokens)
-    tokens.delete_at(0)
-    if idx != tokens.length - 1
-      return display_error
-    end
     #EVERYTHING IS OK WE CAN CONTINUE
     idx_last = find_last_bracket(tokens) + 1
     val = calculate_function_value(tokens[1..idx_last])
