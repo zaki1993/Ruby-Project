@@ -1,4 +1,19 @@
+module Display
+  def display_result(result)
+    puts result
+  end
+
+  def display_error
+    "Incorrect command"
+  end
+
+  def display_no_variable_error(variable)
+    "Undefined variable #{variable}"
+  end
+end
+
 class Parser
+  include Display
   def initialize
     @tokens = []
     @defined_functions = []
@@ -66,7 +81,8 @@ class Parser
       #Calculate function value
       tokens.each do |func|
         if @functions.include? func
-          return display_result calculate_function_value(tokens[tokens.index(func)..tokens.length])
+          arr = tokens[tokens.index(func)..tokens.length]
+          return display_result calculate_function_value(arr)
         end
       end
 
@@ -199,7 +215,9 @@ class Parser
         skips = skips - 1
         next
       end
-      break if var == ')' && (index == tokens.length - 2)
+      if var == ')' && index == find_last_bracket(tokens[idx - 1..tokens.length])
+         break
+      end
       if var != '(' && var != ')'
         if (var =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{var}")
           if self.instance_variable_get("@#{var}").to_i.is_a? Integer
@@ -482,15 +500,17 @@ class Parser
     end
   end
 
-  def display_result(result)
-    puts result
-  end
-
-  def display_error
-    "Incorrect command"
-  end
-
-  def display_no_variable_error(variable)
-    "Undefined variable #{variable}"
+  def find_last_bracket(tokens)
+    left_brackets = 1
+    right_brackets = 0
+      tokens[1..tokens.length].each_with_index do |v,i|
+        if v == '('
+          left_brackets = left_brackets + 1
+        end
+        if v == ')'
+          right_brackets = right_brackets + 1
+        end
+        return i if left_brackets == right_brackets
+      end
   end
 end
