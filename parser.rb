@@ -17,7 +17,7 @@ class Parser
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', 'div', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal']
+    @functions = ['+', '-', '*', 'div', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if']
     @SPACE = '자'
   end
 
@@ -145,6 +145,8 @@ class Parser
       if func == '-'
         #TODO FIX THIS
         return primary_calculations(tokens[1..tokens.length], func)
+      elsif func == 'if'
+        return scheme_if(tokens[idx + 1.. tokens.length])
       elsif (/[['-' || '+' || '*' || 'div' || 'mod']]/ =~ func) == 0
         return primary_calculations(tokens[1..tokens.length], func)
       elsif func == '/'
@@ -160,7 +162,7 @@ class Parser
         return display_error if result == display_error
         return result
       elsif func == 'equal' && tokens[idx + 1] == '?'
-          return scheme_equal?(tokens[idx + 2..tokens.length])
+        return scheme_equal?(tokens[idx + 2..tokens.length])
       else
         return display_error
       end
@@ -404,6 +406,100 @@ class Parser
     return '#f'
   end
 
+  def scheme_if(tokens)
+    #CHECK FOR CORRECTNESS
+    if tokens[0] != '('
+      return display_error
+    end
+    tokens.insert(0,'(')
+    idx = find_last_bracket(tokens)
+    tokens.delete_at(0)
+    if idx != tokens.length - 1
+      return display_error
+    end
+    #EVERYTHING IS OK WE CAN CONTINUE
+    idx_last = find_last_bracket(tokens) + 1
+    val = calculate_function_value(tokens[1..idx_last])
+    return display_error if val != '#t' && val != '#f'
+    #CALCULATE THE RESULT IF THE STATEMENT IS TRUE
+    true_res = ""
+    idx_last_true = 0
+    if tokens[idx_last + 1] == '('
+      idx_last_true = find_last_bracket(tokens[idx_last + 1..tokens.length]) + idx_last + 2
+      true_res = calculate_function_value(tokens[idx_last + 2 ..idx_last_true])
+    elsif (/[[:alpha:]]/ =~ tokens[idx_last + 1]) == 0
+      if self.instance_variable_defined?("@#{tokens[idx_last + 1]}")
+        true_res = self.instance_variable_get("@#{tokens[idx_last + 1]}")
+      else
+        return display_error
+      end
+    elsif (/[[:digit:]]/ =~ tokens[idx_last + 1])
+      true_res = tokens[idx_last + 1]
+    elsif tokens[idx_last + 1] == "\""
+      if !tokens[idx_last + 2 .. tokens.length].include?("\"")
+        return display_error
+      else
+        true_res = "\""
+        tokens[idx_last + 2..tokens.length].each_with_index do |v,i|
+          if v == "\""
+            idx_last_true = idx_last + i + 2
+            break
+          end
+          true_res.insert(true_res.length, v)
+        end
+        true_res.insert(true_res.length, "\"")
+      end
+    elsif tokens[idx_last + 1] == '#'
+      if tokens[idx_last + 2] == 't' || tokens[idx_last + 2] == 'f'
+        true_res = tokens[idx_last + 1] + tokens[idx_last + 2]
+        idx_last_true = idx_last + 2
+      else
+        return display_error
+      end
+    else
+      return display_error
+    end
+    #CALCULATE THE RESULT IF THE STATEMENT IS FALSE
+    false_res = ""
+    idx_last_false = 0
+    if tokens[idx_last_true + 1] == '('
+      idx_last_false = find_last_bracket(tokens[idx_last_true + 1..tokens.length]) + idx_last_true + 2
+      false_res = calculate_function_value(tokens[idx_last_true + 2 ..idx_last_false])
+    elsif (/[[:alpha:]]/ =~ tokens[idx_last_true + 1]) == 0
+      if self.instance_variable_defined?("@#{tokens[idx_last_true + 1]}")
+        false_res = self.instance_variable_get("@#{tokens[idx_last_true + 1]}")
+      else
+        return display_error
+      end
+    elsif (/[[:digit:]]/ =~ tokens[idx_last_true + 1])
+      false_res = tokens[idx_last_true + 1]
+    elsif tokens[idx_last_true + 1] == "\""
+      if !tokens[idx_last_true + 2 .. tokens.length].include?("\"")
+        return display_error
+      else
+        false_res = "\""
+        tokens[idx_last_true + 2..tokens.length].each do |v|
+          break if v == "\""
+          false_res.insert(false_res.length, v)
+        end
+        false_res.insert(false_res.length, "\"")
+      end
+    elsif tokens[idx_last_true + 1] == '#'
+      if tokens[idx_last_true + 2] == 't' || tokens[idx_last_true + 2] == 'f'
+        false_res = tokens[idx_last_true + 1] + tokens[idx_last_true + 2]
+      else
+        return display_error
+      end
+    else
+      return display_error
+    end
+    if val == '#t'
+      return true_res
+    elsif val == '#f'
+      return false_res
+    end
+  end
+
   def scheme_not(tokens)
     if tokens.include? "Undefined variable"
       return tokens.split(" ")[2]
@@ -466,6 +562,14 @@ class Parser
       if tokens[0] == '#'
         if (tokens[1] == 't' || tokens[1] == 'f') && tokens.length == 2
           display_result (tokens[0] + tokens[1])
+          return true
+        else
+          display_result display_error
+          return true
+        end
+      elsif /[[:digit:]]/ =~ tokens[0]
+        if tokens.length == 1
+          display_result tokens[0]
           return true
         else
           display_result display_error

@@ -1,2 +1,4 @@
 (+ (string-length "asdas") (+ 2 (string-length "asd") 3) (string-length "ss"))
 (+ 1 (+ 2 (+ 2 3) (+ 2 3) 3) (+ 2 3) 2)
+(if (not (< 2 (string-length "asd"))) "TRUE" "FALSE")
+(if (not (not (not (< (string-length "asd") (string-length "dsa"))))) (not (not (equal? #t #f))) (* 1 2 3 4 5))
