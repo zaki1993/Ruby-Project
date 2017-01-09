@@ -17,7 +17,7 @@ class Parser
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', 'div', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if']
+    @functions = ['+', '-', '*', 'div', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring']
     @SPACE = '자'
   end
 
@@ -163,6 +163,8 @@ class Parser
         return result
       elsif func == 'equal' && tokens[idx + 1] == '?'
         return scheme_equal?(tokens[idx + 2..tokens.length])
+      elsif func == 'substring'
+        return scheme_substring(tokens[idx + 1..tokens.length])
       else
         return display_error
       end
@@ -523,7 +525,7 @@ class Parser
     end
   end
 
-   def scheme_string_length(tokens)
+  def scheme_string_length(tokens)
     result = 0
     if tokens[0] !="\"" && tokens[2] != "\""
       if (/[[:alpha:]]/ =~ tokens[0]) == 0 && self.instance_variable_defined?("@#{tokens[0]}")
@@ -549,6 +551,102 @@ class Parser
     else
       return display_error
     end
+  end
+
+  def scheme_substring(tokens)
+    #EXTRACT THE STRING STRING
+    string = ""
+    idx = 0
+    if tokens[0] == "\""
+      if tokens[1..tokens.length].include?("\"")
+        tokens[1..tokens.length].each_with_index do |v,i|
+          if v == "\""
+            idx = i + 2
+            break
+          end
+          string.insert(string.length, v)
+        end
+      else
+        return display_error
+      end
+    elsif /[[:alpha:]]/ =~ tokens[0]
+      if self.instance_variable_defined?("@#{tokens[0]}")
+        string = self.instance_variable_get("@#{tokens[0]}")
+        if (/[[:digit:]]/ =~ string) == 0 || (/[[ '#' ]]/ =~ string) == 0
+          return display_error
+        end
+        idx = idx + 1
+      else
+        return display_no_variable_error tokens[0]
+      end
+    else
+      return display_error
+    end
+    #DETERMINE WHICH OF THE SUBSTRING FUNCTIONS WE NEED
+    param_one = ""
+    param_two = ""
+    if tokens[idx] == ')'
+      return display_error
+    end
+    if (/[[:digit:]]/ =~ tokens[idx]) == 0
+      param_one = tokens[idx].to_i
+      idx = idx + 1
+    elsif (/[[:alpha:]]/ =~ tokens[idx]) == 0
+      if self.instance_variable_defined?("@#{tokens[idx]}")
+        param_one = self.instance_variable_get("@#{tokens[idx]}")
+        if (/[[:digit:]]/ =~ param_one) != 0
+          return display_error
+        end
+        idx = idx + 1
+      end
+    elsif tokens[idx] == '('
+      bracket = find_last_bracket(tokens[idx..tokens.length]) + 1 + idx
+      param_one = calculate_function_value(tokens[idx + 1..bracket]).to_s
+      if (/[[:digit:]]/ =~ param_one) != 0
+        return display_error
+      end
+      idx = bracket + 1
+    else
+      return display_error
+    end
+    #CALCULATED THE START VALUE
+    #NOW CHECK IF THERE IS AN END VALUE
+    check = false
+    if (/[[:digit:]]/ =~ tokens[idx]) == 0
+      param_two = tokens[idx].to_i
+      idx = idx + 1
+      check = true
+    elsif (/[[:alpha:]]/ =~ tokens[idx]) == 0
+      if self.instance_variable_defined?("@#{tokens[idx]}")
+        param_two = self.instance_variable_get("@#{tokens[idx]}")
+        if (/[[:digit:]]/ =~ param_one) != 0
+          return display_error
+        end
+        idx = idx + 1
+        check = true
+      end
+    elsif tokens[idx] == '('
+      bracket = find_last_bracket(tokens[idx..tokens.length]) + 1 + idx
+      param_two = calculate_function_value(tokens[idx + 1..bracket]).to_s
+      if (/[[:digit:]]/ =~ param_two) != 0
+        return display_error
+      end
+      check = true
+    elsif tokens[idx] == ')'
+      #EVERYTHING IS OK
+      #WE HAVE ONLY START PARAMETER
+    else
+      return display_error
+    end
+    param_one = param_one.to_i
+    param_two = param_two.to_i
+    if param_one < 0 || param_two < 0 || (param_one < param_two && !check) ||
+      param_one > string.length || param_two > string.length
+      return display_error
+    end
+    return "" if param_one == param_two
+    return string[param_one..param_two - 1] if check
+    return string[param_one..string.length]
   end
 
   def check_for_default_print(tokens)
