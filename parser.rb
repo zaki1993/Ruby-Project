@@ -148,11 +148,11 @@ class Parser
       elsif func == 'if'
         return scheme_if(tokens[idx + 1.. tokens.length])
       elsif (/[['-' || '+' || '*' || 'div' || 'mod']]/ =~ func) == 0
-        return primary_calculations(tokens[1..tokens.length], func)
+        return primary_calculations(tokens[idx + 1..tokens.length], func)
       elsif func == '/'
         return tokens[idx + 1] + '/' + tokens[idx + 2]
       elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
-        return compare(tokens[idx + 1], tokens[idx + 2..tokens.length], func)
+        return compare(tokens[1..tokens.length], func)
       elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
         return scheme_string_equal(tokens, idx)
       elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
@@ -174,144 +174,95 @@ class Parser
   def primary_calculations(tokens, sign)
     x = 0
     y = 0
-    left_brackets = 0
-    right_brackets = 0
     idx = 0
-    skips = 0
-    #FIND X
-      if tokens[idx] != '('
-        if (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[0]}")
-          if self.instance_variable_get("@#{tokens[0]}").to_i.is_a? Integer
-            x = self.instance_variable_get("@#{tokens[0]}").to_i
-          else
-            return display_error
-          end
-        elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[0]}")
-          return display_no_variable_error tokens[idx]
-        elsif tokens[idx].to_i.is_a? Integer
-          x = tokens[idx].to_i
-        else
-          return display_error
-        end
-        idx = idx + 1
-      else
-        left_brackets = 0
-        right_brackets = 0
-        tokens.each_with_index do |val,idxx|
-          if val == '('
-            left_brackets = left_brackets + 1
-          end
-          if val == ')'
-            right_brackets = right_brackets + 1
-          end
-          if left_brackets == right_brackets
-            idx = idx + idxx
-            x_check = 1
-            break
-          end
-        end
-        x = calculate_function_value(tokens[1..idx]).to_i
-      end
-
-    #FIND Y
-    tokens[idx..tokens.length].each_with_index do |var, index|
-      if skips != 0
-        skips = skips - 1
-        next
-      end
-      if var == ')' && index == find_last_bracket(tokens[idx - 1..tokens.length])
-         break
-      end
-      if var != '(' && var != ')'
-        if (var =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{var}")
-          if self.instance_variable_get("@#{var}").to_i.is_a? Integer
-            y = self.instance_variable_get("@#{var}").to_i
-          else
-            return display_error
-          end
-        elsif (var =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{var}")
-          return display_no_variable_error var
-        elsif var.to_i.is_a? Integer
-          y = var.to_i
-        else
-          return display_error
-        end
-        case sign
-          when '+'
-            x = x + y
-          when '-'
-            x = x - y
-          when '*'
-            x = x * y
-          when 'div'
-            x = x / y
-          when 'mod'
-            x = x % y
-        end
-      elsif var == '('
-        left_brackets = 0
-        right_brackets = 0
-        find_close_bracket = 0
-        tokens[idx + index..tokens.length].each_with_index do |v,i|
-          if v == '('
-            left_brackets = left_brackets + 1
-          end
-          if v == ')'
-            right_brackets = right_brackets + 1
-          end
-          if left_brackets == right_brackets
-            find_close_bracket = idx + index + i
-            break
-          end
-        end
-        y = calculate_function_value(tokens[idx + index + 1..find_close_bracket]).to_s.to_i
-        skips = find_close_bracket - idx - index
-        case sign
-          when '+'
-            x = x + y
-          when '-'
-            x = x - y
-          when '*'
-            x = x * y
-          when 'div'
-            x = x / y
-          when 'mod'
-            x = x % y
-        end
-      end
+    if tokens[idx] != '('
+      x = calculate_digit_scheme(tokens[idx]).to_i
+      idx = idx + 1
+    else
+      oldIdx = idx
+      idx = find_last_bracket(tokens[idx..tokens.length]) + oldIdx + 1
+      x = calculate_function_value(tokens[oldIdx + 1..idx]).to_i
     end
-   return x
+    tokens = tokens[idx..tokens.length]
+    if tokens.length < 2
+      y = 0
+    elsif tokens.length == 2
+      y = calculate_digit_scheme(tokens[0]).to_i
+    else
+      tokens.unshift(sign)
+      y = calculate_function_value(tokens).to_i
+    end
+    return x + y
   end
 
-  def compare(x, y, sign)
-    if y[0] == '('
-      y = calculate_function_value(y[1..y.length])
+  def convert_calculation_to_scheme(sign, x, y)
+    case sign
+      when '+'
+        x + y
+      when '-'
+        x - y
+      when '*'
+        x * y
+      when 'div'
+        x / y
+      when 'mod'
+        x % y
+    end
+  end
+
+  def compare(tokens, sign)
+    x = 0
+    y = 0
+    idx = 0
+    if tokens[idx] == '('
+      idx = find_last_bracket(tokens)
+      x = calculate_function_value(tokens[1..idx])
+      idx = idx + 1
     else
-      y = y[0..y.index(')') - 1]
-      y = y[0]
+      x = calculate_digit_scheme(tokens[0])
     end
-    if (x =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{x}")
-      x = self.instance_variable_get "@#{x}"
-    elsif not x.to_i.is_a? Integer
-      return display_error
+    if tokens[idx + 1] == '('
+      oldIdx = idx + 1
+      idx = find_last_bracket(tokens[oldIdx..tokens.length]) + oldIdx
+      y = calculate_function_value(tokens[oldIdx + 1..idx])
+    else
+      y = calculate_digit_scheme(tokens[idx + 1])
     end
-    if (y =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{y}")
-       y = self.instance_variable_get "@#{y}"
-    elsif not y.to_i.is_a? Integer
-      return display_error
-    end
-      result = case sign
-        when '<'
-          x < y
-        when '>'
-          x > y
-        when '='
-          x == y
-        when '<='
-          x <= y
-        else
-          x >= y
+    return convert_compare_to_scheme(sign, x, y)
+  end
+
+  def calculate_digit_scheme(value)
+    if (value=~ /[[:alpha:]]/) == 0
+      if self.instance_variable_defined?("@#{value}")
+        result = self.instance_variable_get "@#{value}"
+        if (result =~ /[[:digit:]]/) != 0
+          return display_error
+        end
+      else
+        return display_no_variable_error value
       end
+    elsif (value =~ /[[:digit:]]/) == 0
+      result = value
+    else
+      return display_error
+    end
+    return result.to_i
+  end
+
+  def convert_compare_to_scheme(sign, x, y)
+    result =
+    case sign
+      when '<'
+      x < y
+      when '>'
+      x > y
+      when '='
+      x == y
+      when '<='
+      x <= y
+      else
+      x >= y
+    end
     return convert_boolean_to_scheme result
   end
 
