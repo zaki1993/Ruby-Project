@@ -192,7 +192,7 @@ class Parser
       tokens.unshift(sign)
       y = calculate_function_value(tokens).to_i
     end
-    return x + y
+    return convert_calculation_to_scheme(sign, x, y)
   end
 
   def convert_calculation_to_scheme(sign, x, y)
@@ -304,54 +304,43 @@ class Parser
     x, y = '', ''
     idx = 0
     if tokens[idx] == '('
-      x = calculate_function_value(tokens[idx + 1..tokens.length])
-      tokens = tokens[tokens.index(')')..tokens.length]
-      tokens.each do |val|
-        if val != ')'
-          idx = tokens.index(val)
-          break
-        end
-      end
-      if x == display_error || x.include?("Undefined variable")
-        return x
-      end
-    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
-      x = self.instance_variable_get("@#{tokens[idx]}")
-      if !(x[0] == '#' && (x[1] == 't' || x[1] == 'f') && x.length == 2)
-        return display_error
-      end
-      idx = idx + 1
-    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
-      return display_no_variable_error tokens[idx]
-    elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
-      x = tokens[idx] + tokens[idx + 1]
-      idx = idx + 2
+      x = get_boolean_scheme_bracket(tokens, idx)
     else
-      return display_error
+      x = get_boolean_scheme(tokens, idx)
     end
+    idx = idx + find_last_bracket(tokens[idx..tokens.length]) + 2
     if tokens[idx] == '('
-      tokens = tokens[idx + 1..tokens.length]
-      y = calculate_function_value(tokens)
-      tokens = tokens[tokens.index(')')..tokens.length]
-      idx = tokens.index('(')
-      if y == display_error || y.include?("Undefined variable")
-        return y
+      y = get_boolean_scheme_bracket(tokens, idx)
+    else
+      y = get_boolean_scheme(tokens, idx)
+    end
+    return convert_boolean_to_scheme x.eql? y
+  end
+
+  def get_boolean_scheme_bracket(tokens, idx)
+    x = calculate_function_value(tokens[idx + 1..tokens.length])
+    if x == display_error || x.include?("Undefined variable")
+      return x
+    end
+  end
+
+  def get_boolean_scheme(tokens, idx)
+    y = ""
+    if (tokens[idx] =~ /[[:alpha:]]/) == 0
+      if self.instance_variable_defined?("@#{tokens[idx]}")
+        y = self.instance_variable_get("@#{tokens[idx]}")
+      else
+        return display_no_variable_error tokens[idx]
       end
-    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && self.instance_variable_defined?("@#{tokens[idx]}")
-      y = self.instance_variable_get("@#{tokens[idx]}")
       if !(y[0] == '#' && (y[1] == 't' || y[1] == 'f') && y.length == 2)
         return display_error
       end
-      idx = idx + 1
-    elsif (tokens[idx] =~ /[[:alpha:]]/) == 0 && !self.instance_variable_defined?("@#{tokens[idx]}")
-      return display_no_variable_error tokens[idx]
     elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
       y = tokens[idx] + tokens[idx + 1]
-      idx = idx + 1
     else
       return display_error
     end
-    return convert_boolean_to_scheme x.eql? y
+    return y
   end
 
   def convert_boolean_to_scheme(statement)
@@ -648,6 +637,9 @@ class Parser
   end
 
   def find_last_bracket(tokens)
+    if tokens[0] != '('
+      return 0
+    end
     left_brackets = 1
     right_brackets = 0
       tokens[1..tokens.length].each_with_index do |v,i|
