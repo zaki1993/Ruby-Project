@@ -144,14 +144,16 @@ class Parser
       idx = tokens.index func
       if func == '-'
         #TODO FIX THIS
-        return primary_calculations(tokens[1..tokens.length], func)
+        return primary_calculations(tokens[idx + 1..tokens.length], func)
       elsif func == 'if'
         return scheme_if(tokens[idx + 1.. tokens.length])
-      elsif (/[['-' || '+' || '*' || 'div' || 'mod']]/ =~ func) == 0
+      elsif (/[['-' | '+' | '*' ]]/ =~ func) == 0
         return primary_calculations(tokens[idx + 1..tokens.length], func)
+      elsif (/[['mod' | 'div']]/ =~ func) == 0
+        return calculate_mod_div(tokens[idx + 1..tokens.length], func)
       elsif func == '/'
         return tokens[idx + 1] + '/' + tokens[idx + 2]
-      elsif (/[['<' || '>' || '=' || '>=' || '<=']]/ =~ func) == 0
+      elsif (/[['<' | '>' | '=' | '>=' | '<=']]/ =~ func) == 0
         return compare(tokens[1..tokens.length], func)
       elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
         return scheme_string_equal(tokens, idx)
@@ -189,13 +191,35 @@ class Parser
     elsif tokens.length == 2
       y = calculate_digit_scheme(tokens[0]).to_i
     else
-      tokens.unshift(sign)
+      if sign == '-'
+        tokens.unshift('+')
+      else
+        tokens.unshift(sign)
+      end
       y = calculate_function_value(tokens).to_i
     end
     return convert_calculation_to_scheme(sign, x, y)
   end
 
+  def calculate_mod_div(tokens, sign)
+      idx = 0
+      x = calculate_digit_scheme(tokens[idx])
+      idx = idx + find_last_bracket(tokens[idx..tokens.length]) + 1
+      y = calculate_digit_scheme(tokens[idx])
+      idx = idx + find_last_bracket(tokens[idx..tokens.length]) + 1
+      if (calculate_digit_scheme(tokens[idx]) != display_error)
+        return display_error
+      else
+        if sign == 'mod'
+          return x % y
+        else
+          return x / y
+        end
+      end
+  end
+
   def convert_calculation_to_scheme(sign, x, y)
+    #puts x, y
     case sign
       when '+'
         x + y
