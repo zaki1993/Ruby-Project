@@ -96,11 +96,11 @@ class Parser
         if symbol == ' '
           str[idx] = @SPACE
         end
-        if symbol == '\"'
+        if symbol == "\""
           can_place_space = false
         end
       else
-        if symbol == '\"'
+        if symbol == "\""
           can_place_space = true
         end
       end
@@ -165,15 +165,15 @@ class Parser
     elsif tokens[1] != '('
       # define a function without parameters
       variable = tokens[tokens.index(tokens[0]) + 1]
-      if tokens[1] == '\"' && tokens[2..tokens.length].include?('\"')
+      if tokens[1] == "\"" && tokens[2..tokens.length].include?("\"")
         variable = tokens[1]
         tokens[2..tokens.length].each do |val|
-          break if val == '\"'
+          break if val == "\""
           variable.insert(variable.length, val)
         end
-        variable.insert(variable.length, '\"')
+        variable.insert(variable.length, "\"")
         instance_variable_set("@#{tokens[0]}", variable)
-      elsif tokens[1] == '\"' && !tokens[2..tokens.length].include?('\"')
+      elsif tokens[1] == "\"" && !tokens[2..tokens.length].include?("\"")
         display_result display_error
       elsif tokens[1] == '#'
         if (tokens[2] == 't' || tokens[2] == 'f') && tokens[3] == ')'
@@ -286,27 +286,27 @@ class Parser
     y = ''
     checker = false
     first_q_idx = 0
-    if tokens[idx + 3] == '\"' && tokens[idx + 4..tokens.length].include?('\"')
-      x = '\"'
+    if tokens[idx + 3] == "\"" && tokens[idx + 4..tokens.length].include?("\"")
+      x = "\""
       tokens[idx+4..tokens.length].each do |val|
-        break if val == '\"'
+        break if val == "\""
         x.insert(x.length, val)
       end
-      x.insert(x.length, '\"')
-      first_q_idx = idx + tokens[idx + 4..tokens.length].index('\"') + 5
+      x.insert(x.length, "\"")
+      first_q_idx = idx + tokens[idx + 4..tokens.length].index("\"") + 5
     elsif instance_variable_defined?("@#{tokens[idx + 3]}")
       x = instance_variable_get("@#{tokens[idx + 3]}")
       first_q_idx = idx + 5
     else
       return display_no_variable_error tokens[idx + 3]
     end
-    if tokens[first_q_idx] == '\"' && tokens[first_q_idx + 1.. tokens.length].include?('\"')
-      y = '\"'
+    if tokens[first_q_idx] == "\"" && tokens[first_q_idx + 1.. tokens.length].include?("\"")
+      y = "\""
       tokens[first_q_idx + 1..tokens.length].each do |val|
-        break if val == '\"'
+        break if val == "\""
         y.insert(y.length, val)
       end
-      y.insert(y.length, '\"')
+      y.insert(y.length, "\"")
     elsif instance_variable_defined?("@#{tokens[first_q_idx]}")
       y = instance_variable_get("@#{tokens[first_q_idx]}")
     else
@@ -385,19 +385,19 @@ class Parser
       end
     elsif (/[[:digit:]]/ =~ tokens[idx_last + 1])
       true_res = tokens[idx_last + 1]
-    elsif tokens[idx_last + 1] == '\"'
-      if !tokens[idx_last + 2..tokens.length].include?('\"')
+    elsif tokens[idx_last + 1] == "\""
+      if !tokens[idx_last + 2..tokens.length].include?("\"")
         return display_error
       else
-        true_res = '\"'
+        true_res = "\""
         tokens[idx_last + 2..tokens.length].each_with_index do |v, i|
-          if v == '\"'
+          if v == "\""
             idx_last_true = idx_last + i + 2
             break
           end
           true_res.insert(true_res.length, v)
         end
-        true_res.insert(true_res.length, '\"')
+        true_res.insert(true_res.length, "\"")
       end
     elsif tokens[idx_last + 1] == '#'
       if tokens[idx_last + 2] == 't' || tokens[idx_last + 2] == 'f'
@@ -423,16 +423,16 @@ class Parser
       end
     elsif (/[[:digit:]]/ =~ tokens[idx_last_true + 1])
       false_res = tokens[idx_last_true + 1]
-    elsif tokens[idx_last_true + 1] == '\"'
-      if !tokens[idx_last_true + 2..tokens.length].include?('\"')
+    elsif tokens[idx_last_true + 1] == "\""
+      if !tokens[idx_last_true + 2..tokens.length].include?("\"")
         return display_error
       else
-        false_res = '\"'
+        false_res = "\""
         tokens[idx_last_true + 2..tokens.length].each do |v|
-          break if v == '\"'
+          break if v == "\""
           false_res.insert(false_res.length, v)
         end
-        false_res.insert(false_res.length, '\"')
+        false_res.insert(false_res.length, "\"")
       end
     elsif tokens[idx_last_true + 1] == '#'
       if tokens[idx_last_true + 2] == 't' || tokens[idx_last_true + 2] == 'f'
@@ -481,10 +481,11 @@ class Parser
 
   def scheme_string_length(tokens)
     result = 0
-    if tokens[0] != '\"' && tokens[2] != '\"'
+    if tokens[0] != "\"" && tokens[2] != "\""
       if (/[[:alpha:]]/ =~ tokens[0]) == 0 && instance_variable_defined?("@#{tokens[0]}")
-        result = instance_variable_get("@#{tokens[0]}").length
-        if result.to_i.is_a? Integer
+        temp = instance_variable_get("@#{tokens[0]}")
+        result = temp[1..temp.length - 2].length
+        if result.class.superclass != Integer
           return display_error
         end
         return result
@@ -493,12 +494,12 @@ class Parser
       else
         return display_error
       end
-    elsif tokens[0] == '\"' && tokens[1..tokens.length].include?('\"')
+    elsif tokens[0] == "\"" && tokens[1..tokens.length].include?("\"")
       tokens[1..tokens.length].each do |val|
-        if val == '\"'
+        if val == "\""
           break
         else
-          result = result + val.length
+          result += val.length
         end
       end
       return result.to_s
@@ -507,94 +508,62 @@ class Parser
     end
   end
 
-  def scheme_substring(tokens)
-    # EXTRACT THE STRING STRING
-    string = ''
-    idx = 0
-    if tokens[0] == '\"'
-      if tokens[1..tokens.length].include?('\"')
-        tokens[1..tokens.length].each_with_index do |v, i|
-          if v == '\"'
-            idx = i + 2
-            break
-          end
-          string.insert(string.length, v)
-        end
-      else
-        return display_error
-      end
-    elsif /[[:alpha:]]/ =~ tokens[0]
-      if instance_variable_defined?('@#{tokens[0]}')
-        string = instance_variable_get('@#{tokens[0]}')
-        if (/[[:digit:]]/ =~ string).zero? || (/[[ '#' ]]/ =~ string).zero?
+  def find_next_quote(tokens)
+    return 0 if tokens[0] != "\""
+    tokens[1..tokens.length].each_with_index do |v, i|
+      return i + 1 if v == "\""
+    end
+  end
+
+  def get_string(tokens, start, endIdx)
+    res = ''
+    if tokens[start] == "\"" && tokens[endIdx] == "\""
+      tokens[start + 1..endIdx - 1].each { |v| res.insert(res.length, v) }
+    elsif /[[:alpha:]]/ =~ tokens[0] && start == 0
+      if instance_variable_defined?("@#{tokens[start]}")
+        temp = instance_variable_get("@#{tokens[start]}")
+        if (/[[:digit:]]/ =~ temp) == 0 || (/[[ '#' ]]/ =~ temp) == 0
           return display_error
         end
-        idx += 1
+        temp[1..temp.length - 2].each_char { |v| res.insert(res.length, v) }
       else
-        return display_no_variable_error tokens[0]
+        return display_no_variable_error tokens[start]
       end
     else
       return display_error
     end
-    # DETERMINE WHICH OF THE SUBSTRING FUNCTIONS WE NEED
-    param_one = ''
-    param_two = ''
+    res
+  end
+
+  def scheme_substring(tokens)
+    idx, param_one, param_two = 0
+    check = false
+    endIdx = find_next_quote(tokens)
+    string = get_string(tokens, idx, endIdx)
+    return display_error if string == display_error
+    return display_no_variable_error "" if string.include?("Undefined variable")
+    idx += endIdx + 1
     if tokens[idx] == ')'
       return display_error
     end
-    if (/[[:digit:]]/ =~ tokens[idx]).zero?
-      param_one = tokens[idx].to_i
-      idx += 1
-    elsif (/[[:alpha:]]/ =~ tokens[idx]).zero?
-      if instance_variable_defined?('@#{tokens[idx]}')
-        param_one = instance_variable_get('@#{tokens[idx]}')
-        return display_error unless (/[[:digit:]]/ =~ param_one).zero?
-        idx += 1
-      end
+    param_one = calculate_digit_scheme(tokens[idx])
+    return display_error if param_one.class.superclass != Integer
+    idx += find_last_bracket(tokens[idx..tokens.length]) + 1
+    if tokens[idx] == ')'
+      param_two = 0
     elsif tokens[idx] == '('
-      bracket = find_last_bracket(tokens[idx..tokens.length]) + 1 + idx
-      param_one = calculate_function_value(tokens[idx + 1..bracket]).to_s
-      return display_error unless (/[[:digit:]]/ =~ param_one).zero?
-      idx = bracket + 1
-    else
-      return display_error
-    end
-    # CALCULATED THE START VALUE
-    # NOW CHECK IF THERE IS AN END VALUE
-    check = false
-    if (/[[:digit:]]/ =~ tokens[idx]).zero?
-      param_two = tokens[idx].to_i
-      idx += 1
+      param_two = calculate_function_value(tokens[idx + 1..tokens.length])
       check = true
-    elsif (/[[:alpha:]]/ =~ tokens[idx]).zero?
-      if instance_variable_defined?("@#{tokens[idx]}")
-        param_two = instance_variable_get("@#{tokens[idx]}")
-        if !(/[[:digit:]]/ =~ param_one).zero?
-          return display_error
-        end
-        idx += 1
-        check = true
-      end
-    elsif tokens[idx] == '('
-      bracket = find_last_bracket(tokens[idx..tokens.length]) + 1 + idx
-      param_two = calculate_function_value(tokens[idx + 1..bracket]).to_s
-      if !(/[[:digit:]]/ =~ param_two).zero?
-        return display_error
-      end
-      check = true
-    elsif tokens[idx] == ')'
-      # EVERYTHING IS OK
-      # WE HAVE ONLY START PARAMETER
     else
-      return display_error
+      param_two = calculate_digit_scheme(tokens[idx])
+      return display_error if param_two.class.superclass != Integer
+      check = true
     end
-    param_one = param_one.to_i
-    param_two = param_two.to_i
     if param_one < 0 || param_two < 0 || (param_one < param_two && !check) ||
       param_one > string.length || param_two > string.length
       return display_error
     end
-    return '' if param_one == param_two
+    return '' if param_one == param_two && check
     return string[param_one..param_two - 1] if check
     return string[param_one..string.length]
   end
@@ -617,19 +586,19 @@ class Parser
           display_result display_error
           return true
         end
-      elsif tokens[0] == '\"'
-        if tokens[tokens.length - 1] == '\"'
-          result = '\"'
+      elsif tokens[0] == "\""
+        if tokens[tokens.length - 1] == "\""
+          result = "\""
           tokens[1..tokens.length].each_with_index do |val, _|
-            break if val == '\"'
+            break if val == "\""
             if val == ' '
               result.insert(result.length, ' ')
             else
               result.insert(result.length, val)
             end
           end
-          result.insert(result.length, '\"')
-          if tokens[1..tokens.length].index('\"') != tokens.length - 2
+          result.insert(result.length, "\"")
+          if tokens[1..tokens.length].index("\"") != tokens.length - 2
             display_result display_error
             return true
           else
