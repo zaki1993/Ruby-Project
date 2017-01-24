@@ -12,41 +12,164 @@ module Display
   end
 end
 
+module SchemeCalculations
+
+  def single_digit(tokens)
+    x, y, idx, minus = 0, 0, 0, 1
+    if tokens[idx] == '-'
+      minus = -1
+      return display_error if tokens[idx + 1] == '('
+      if tokens[idx + 2] == '/'
+        x = calculate_digit_scheme(tokens[idx + 1])
+        y = calculate_digit_scheme(tokens[idx + 3])
+      else
+        x = calculate_digit_scheme(tokens[idx + 1])
+      end
+    elsif tokens[idx] == '('
+      old_idx = idx + 1
+      x = calculate_function_value(tokens[old_idx..tokens.length])
+    else
+      x = calculate_digit_scheme(tokens[idx])
+      y = calculate_digit_scheme(tokens[idx + 2])
+      y = 0 if y.class == String
+    end
+    return display_error if x.class == String || y.class == String
+    res = (x.to_f / y.to_f) * minus if y != 0
+    res = x.to_f * minus if y == 0
+    res
+  end
+
+  def nominator(tokens)
+
+  end
+
+  def denominator(tokens)
+
+  end
+
+  def truncate(tokens)
+    temp = single_digit(tokens)
+    return display_error if temp.class == String
+    minus = -1 if temp < 0
+    minus = 1 if temp >= 0
+    temp.abs.floor * minus
+  end
+
+  def ceiling(tokens)
+    temp = single_digit(tokens)
+    return display_error if temp.class == String
+    temp.ceil
+  end
+
+  def quotient(tokens)
+    first_digit = find_first_digit(tokens, 0, 0, 1)
+    x = first_digit[0]
+    idx = first_digit[1]
+    minus = first_digit[2]
+    idx += find_last_bracket(tokens) + 1
+    second_digit = find_second_digit(tokens, 0, idx, 1)
+    y = second_digit[0]
+    minus *= second_digit[1] if minus == 1
+    truncate((x/y).to_s) * minus
+  end
+
+  def abs(tokens)
+    result =
+    calculate_function_value(tokens[1..tokens.length]) if tokens[0] == '('
+    result =
+    calculate_digit_scheme(tokens[0]) if tokens[0] != '-'
+    result =
+    calculate_digit_scheme(tokens[1]) if tokens[0] == '-'
+    return result if result.class == String
+    return result.abs
+  end
+
+  def gcd(tokens)
+    first_digit = find_first_digit(tokens, 0, 0, 1)
+    x = first_digit[0].to_fi
+    idx = first_digit[1]
+    idx += find_last_bracket(tokens) + 1
+    second_digit = find_second_digit(tokens, 0, idx, 1)
+    y = second_digit[0].to_i
+    return x.gcd(x) if y == 0
+    return x.gcd(y) if y != 0
+  end
+
+  def lcm(tokens)
+    first_digit = find_first_digit(tokens, 0, 0, 1)
+    x = first_digit[0].to_i
+    idx = first_digit[1]
+    idx += find_last_bracket(tokens) + 1
+    second_digit = find_second_digit(tokens, 0, idx, 1)
+    y = second_digit[0].to_i
+    return x.lcm(x) if y == 0
+    return x.lcm(y) if y != 0
+  end
+
+  def find_first_digit(tokens, start_value, index, minus)
+    if tokens[0] == '('
+      start_value = calculate_function_value(tokens).to_i
+    elsif tokens[0] == '-'
+      start_value = calculate_digit_scheme(tokens[1]).to_i
+      minus = -1
+      index = 1
+    else
+      start_value = calculate_digit_scheme(tokens[0]).to_i
+    end
+    [start_value, index, minus]
+  end
+
+  def find_second_digit(tokens, start_value, index, minus)
+    if tokens[index] == '('
+    start_value = calculate_function_value(tokens[index + 1..tokens.length])
+    elsif tokens[index] == '-'
+      start_value = calculate_digit_scheme(tokens[index + 1])
+      minus = -1
+    else
+      start_value = calculate_digit_scheme(tokens[index])
+    end
+    [start_value, minus]
+  end
+end
+
 module ToScheme
+  include SchemeCalculations
   def convert_calculation_to_scheme(sign, x, y)
     case sign
     when '+' then x + y
     when '-' then x - y
     when '*' then x * y
+    when '/' then x / y
     end
   end
 
   def compare(tokens, sign)
-    x = 0
-    y = 0
-    idx = 0
+    x, y, idx = 0, 0, 0
     if tokens[idx] == '('
-      idx = find_last_bracket(tokens)
-      x = calculate_function_value(tokens[1..idx])
-      idx += 1
+      old_idx = idx
+      idx += find_last_bracket(tokens) + 1
+      x = calculate_function_value(tokens[old_idx + 1..idx]).to_i
     else
-      x = calculate_digit_scheme(tokens[0])
+      x = calculate_digit_scheme(tokens[idx]).to_i
     end
     if tokens[idx + 1] == '('
-      oldidx += 1
-      idx = find_last_bracket(tokens[oldIdx..tokens.length]) + oldIdx
-      y = calculate_function_value(tokens[oldIdx + 1..idx])
+      old_idx = idx + 1
+      idx += find_last_bracket(tokens[old_idx..tokens.length]) + 2
+      y = calculate_function_value(tokens[old_idx + 1..idx]).to_i
     else
-      y = calculate_digit_scheme(tokens[idx + 1])
+      y = calculate_digit_scheme(tokens[idx + 1]).to_i
     end
-    return convert_compare_to_scheme(sign, x, y)
+    return display_error if x.class.superclass != Integer || y.class.superclass != Integer
+    return convert_compare_to_scheme(sign, x.to_i, y.to_i)
   end
 
   def calculate_digit_scheme(value)
     if (value=~ /[[:alpha:]]/) == 0
       if instance_variable_defined?("@#{value}")
         result = instance_variable_get "@#{value}"
-        return display_error if (result =~ /[[:digit:]]/) != 0
+        if (result =~ /[[:digit:]]/) != 0 && result.class == String
+          return display_error
+        end
       else
         return display_no_variable_error value
       end
@@ -59,14 +182,13 @@ module ToScheme
   end
 
   def convert_compare_to_scheme(sign, x, y)
-    result =
-    case sign
-    when '<' then x < y
-    when '>' then x > y
-    when '=' then x == y
-    when '<=' then x <= y
-    else x >= y
-    end
+    result = case sign
+             when '<' then x < y
+             when '>' then x > y
+             when '=' then x == y
+             when '<=' then x <= y
+             else x >= y
+             end
     convert_boolean_to_scheme result
   end
 end
@@ -77,7 +199,7 @@ class Parser
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', 'div', 'mod', '/', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring']
+    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring']
     @space = '$'
   end
 
@@ -94,7 +216,7 @@ class Parser
     str.each_char.each_with_index do |symbol, idx|
       if can_place_space
         if symbol == ' '
-          str[idx] = @SPACE
+          str[idx] = @space
         end
         if symbol == "\""
           can_place_space = false
@@ -208,26 +330,36 @@ class Parser
       if func == '-'
         # TODO FIX THIS
         return primary_calculations(tokens[idx + 1..tokens.length], func)
-      elsif func == 'if'
-        return scheme_if(tokens[idx + 1.. tokens.length])
-      elsif (/[['-' | '+' | '*' ]]/ =~ func) == 0
-        return primary_calculations(tokens[idx + 1..tokens.length], func)
-      elsif (/[['mod' | 'div']]/ =~ func) == 0
-        return calculate_mod_div(tokens[idx + 1..tokens.length], func)
-      elsif func == '/'
-        return tokens[idx + 1] + '/' + tokens[idx + 2]
-      elsif (/[['<' | '>' | '=' | '>=' | '<=']]/ =~ func) == 0
-        return compare(tokens[1..tokens.length], func)
-      elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
-        return scheme_string_equal(tokens, idx)
-      elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
-        return scheme_string_length(tokens[idx + 3.. tokens.length])
       elsif func == 'not'
-        result = scheme_not(tokens[idx + 1..tokens.length])
+         result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error
         return result
       elsif func == 'equal' && tokens[idx + 1] == '?'
         return scheme_equal?(tokens[idx + 2..tokens.length])
+      elsif func == 'if'
+        return scheme_if(tokens[idx + 1.. tokens.length])
+      elsif func == 'truncate'
+        return truncate(tokens[idx + 1..tokens.length])
+      elsif func == 'ceiling'
+        return ceiling(tokens[idx + 1..tokens.length])
+      elsif func == 'quotient'
+        return quotient(tokens[idx + 1..tokens.length])
+      elsif func == 'gcd'
+        return gcd(tokens[idx + 1..tokens.length])
+      elsif func == 'lcm'
+        return lcm(tokens[idx + 1..tokens.length])
+      elsif func == 'abs'
+        return abs(tokens[idx + 1..tokens.length])
+      elsif (/[['-' | '+' | '*' | '\/']]/ =~ func) == 0
+        return primary_calculations(tokens[idx + 1..tokens.length], func)
+      elsif (/[['modulo' | 'remainder]]/ =~ func) == 0
+        return calculate_mod_div(tokens[idx + 1..tokens.length], func)
+      elsif (/[['<' | '>' | '=' | '>=' | '<=']]/ =~ func) == 0
+        return compare(tokens[1..tokens.length], func)
+      elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
+        return scheme_string_equal(tokens[idx + 3..tokens.length])
+      elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
+        return scheme_string_length(tokens[idx + 3.. tokens.length])
       elsif func == 'substring'
         return scheme_substring(tokens[idx + 1..tokens.length])
       else
@@ -237,16 +369,14 @@ class Parser
   end
 
   def primary_calculations(tokens, sign)
-    x = 0
-    y = 0
-    idx = 0
+    x, y, idx = 0, 0, 0
     if tokens[idx] != '('
       x = calculate_digit_scheme(tokens[idx]).to_i
       idx += 1
     else
-      oldIdx = idx
-      idx = find_last_bracket(tokens[idx..tokens.length]) + oldIdx + 1
-      x = calculate_function_value(tokens[oldIdx + 1..idx]).to_i
+      old_idx = idx
+      idx += find_last_bracket(tokens[idx..tokens.length]) + 2
+      x = calculate_function_value(tokens[old_idx + 1..idx]).to_i
     end
     tokens = tokens[idx..tokens.length]
     if tokens.length < 2
@@ -254,65 +384,83 @@ class Parser
     elsif tokens.length == 2
       y = calculate_digit_scheme(tokens[0]).to_i
     else
-      if sign == '-'
-        tokens.unshift('+')
+      idx = find_last_bracket(tokens) + 1
+      if tokens[0] == '(' && idx != 1
+        y = calculate_function_value(tokens[1..tokens.length])
       else
-        tokens.unshift(sign)
+        if sign == '-'
+          tokens.unshift('+')
+        elsif sign == '/'
+          tokens.unshift('*')
+        else
+          tokens.unshift(sign)
+        end
+        y = calculate_function_value(tokens).to_i
       end
-      y = calculate_function_value(tokens).to_i
     end
     return convert_calculation_to_scheme(sign, x, y)
   end
 
   def calculate_mod_div(tokens, sign)
       idx = 0
-      x = calculate_digit_scheme(tokens[idx])
-      idx = idx + find_last_bracket(tokens[idx..tokens.length]) + 1
-      y = calculate_digit_scheme(tokens[idx])
-      idx = idx + find_last_bracket(tokens[idx..tokens.length]) + 1
-      if (calculate_digit_scheme(tokens[idx]) != display_error)
-        return display_error
+      if(tokens[idx] == '-')
+        return display_error if tokens[idx + 1] == '('
+          x = calculate_digit_scheme(tokens[idx + 1])
+          x *= -1
+          idx += 2
       else
-        if sign == 'mod'
-          return x % y
+        if(tokens[idx] == '(')
+          bracket = find_last_bracket(tokens[idx..tokens.length]) + idx + 2
+          x = calculate_function_value(tokens[idx + 1..bracket]).to_i
+          idx += bracket
         else
-          return x / y
+          x = calculate_digit_scheme(tokens[idx]).to_i
+          idx += 1
         end
+      end
+      if(tokens[idx] == '-')
+        return display_error if tokens[idx + 1] == '('
+          y = calculate_digit_scheme(tokens[idx + 1])
+          y *= -1
+      else
+        if(tokens[idx] == '(')
+          bracket = find_last_bracket(tokens[idx..tokens.length]) + idx + 2
+          y = calculate_function_value(tokens[idx + 1..bracket]).to_i
+        else
+          y = calculate_digit_scheme(tokens[idx]).to_i
+        end
+      end
+      case sign
+      when 'remainder' then (x.abs % y.abs) * (x / x.abs)
+      when 'modulo' then x.modulo(y)
+      when 'quotient' then
       end
   end
 
-  def scheme_string_equal(tokens, idx)
-    x = ''
-    y = ''
-    checker = false
-    first_q_idx = 0
-    if tokens[idx + 3] == "\"" && tokens[idx + 4..tokens.length].include?("\"")
-      x = "\""
-      tokens[idx+4..tokens.length].each do |val|
-        break if val == "\""
-        x.insert(x.length, val)
-      end
-      x.insert(x.length, "\"")
-      first_q_idx = idx + tokens[idx + 4..tokens.length].index("\"") + 5
-    elsif instance_variable_defined?("@#{tokens[idx + 3]}")
-      x = instance_variable_get("@#{tokens[idx + 3]}")
-      first_q_idx = idx + 5
+  def scheme_string_equal(tokens)
+    x, y, idx = '', '', 0
+    old_idx = 0
+    if tokens[idx] == "\""
+      old_idx = idx
+      idx += find_next_quote(tokens[old_idx..tokens.length])
+      x = get_string(tokens, old_idx, idx)
+    elsif tokens[idx] == '('
+      x = calculate_function_value(tokens[idx + 1..tokens.length])
+      idx += find_last_bracket(tokens[idx..tokens.length]) + 1
     else
-      return display_no_variable_error tokens[idx + 3]
+      x = get_string(tokens, idx, idx)
     end
-    if tokens[first_q_idx] == "\"" && tokens[first_q_idx + 1.. tokens.length].include?("\"")
-      y = "\""
-      tokens[first_q_idx + 1..tokens.length].each do |val|
-        break if val == "\""
-        y.insert(y.length, val)
-      end
-      y.insert(y.length, "\"")
-    elsif instance_variable_defined?("@#{tokens[first_q_idx]}")
-      y = instance_variable_get("@#{tokens[first_q_idx]}")
+    idx +=1
+    if tokens[idx] == "\""
+    old_idx = idx
+    idx += find_next_quote(tokens[old_idx..tokens.length])
+    y = get_string(tokens, old_idx, idx)
+    elsif tokens[idx] == '('
+      y = calculate_function_value(tokens[idx + 1..tokens.length])
     else
-      return display_error
+      y = get_string(tokens[idx..tokens.length], 0, 0)
     end
-    x convert_boolean_to_scheme x.eql? y
+    return convert_boolean_to_scheme x.eql?(y)
   end
 
   def scheme_equal?(tokens)
@@ -346,10 +494,8 @@ class Parser
       else
         return display_no_variable_error tokens[idx]
       end
-      if !(y[0] == '#' && (y[1] == 't' || y[1] == 'f') && y.length == 2)
-        return display_error
-      end
-    elsif tokens[idx] == '#' && (tokens[idx + 1] == 't' || tokens[idx + 1] == 'f')
+      return display_error if !(y.start_with?('#t', '#f')) && y.length == 2
+    elsif tokens[idx..tokens.length].start_with?('#t', '#f')
       y = tokens[idx] + tokens[idx + 1]
     else
       return display_error
@@ -461,7 +607,7 @@ class Parser
       return scheme_not(x)
     elsif (tokens[0] =~ /[[:alpha:]]/) == 0 && !instance_variable_defined?('@#{tokens[0]}')
       return (display_no_variable_error tokens[0])
-    elsif (tokens[0] =~ /[[:alpha:]]/).zero? && instance_variable_defined?('@#{tokens[0]}')
+    elsif (tokens[0] =~ /[[:alpha:]]/) == 0&& instance_variable_defined?('@#{tokens[0]}')
       if tokens[1] != ')'
         return display_error
       else
@@ -469,11 +615,11 @@ class Parser
         return scheme_not(x)
       end
     elsif (tokens[0] =~ /[[:alpha:]]/) != 0 && tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f') && (tokens[2] == ')' || tokens[2].nil?)
-        if tokens[1] == 't'
-          return '#f'
-        else
-          return '#t'
-        end
+      if tokens[1] == 't'
+        return '#f'
+      else
+        return '#t'
+      end
     else
       return display_error
     end
@@ -515,10 +661,13 @@ class Parser
     end
   end
 
-  def get_string(tokens, start, endIdx)
+  def get_string(tokens, start, end_idx)
     res = ''
-    if tokens[start] == "\"" && tokens[endIdx] == "\""
-      tokens[start + 1..endIdx - 1].each { |v| res.insert(res.length, v) }
+    if tokens[start] == '('
+      idx = find_last_bracket(tokens[start..tokens.length])
+      res = calculate_function_value(tokens[start + 1..idx])
+    elsif tokens[start] == "\"" && tokens[end_idx] == "\""
+      tokens[start + 1..end_idx - 1].each { |v| res.insert(res.length, v) }
     elsif /[[:alpha:]]/ =~ tokens[0] && start == 0
       if instance_variable_defined?("@#{tokens[start]}")
         temp = instance_variable_get("@#{tokens[start]}")
@@ -538,11 +687,11 @@ class Parser
   def scheme_substring(tokens)
     idx, param_one, param_two = 0
     check = false
-    endIdx = find_next_quote(tokens)
-    string = get_string(tokens, idx, endIdx)
+    end_idx = find_next_quote(tokens)
+    string = get_string(tokens, idx, end_idx)
     return display_error if string == display_error
     return display_no_variable_error "" if string.include?("Undefined variable")
-    idx += endIdx + 1
+    idx += end_idx + 1
     if tokens[idx] == ')'
       return display_error
     end

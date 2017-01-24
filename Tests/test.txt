@@ -3,3 +3,8 @@
 (if (not (< 2 (string-length "asd"))) "TRUE" "FALSE")
 (if (not (not (not (< (string-length "asd") (string-length "dsa"))))) (not (not (equal? #t #f))) (* 1 2 3 4 5))
 (+ 1 2 3 (+ 3 5) (- 3 4 5 (+ 2 3)))
+(string=? x x)
+(string=? x y)
+(string=? "sd" "sd")
+(string=? (substring "asda" 1 2) (substring "asdssss" 3 4))
+(< (string-length (substring "asd" 0)) 4)
