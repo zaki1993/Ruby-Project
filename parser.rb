@@ -48,8 +48,7 @@ module SchemeCalculations
     else
       res = calculate_digit_scheme(tokens[0])
     end
-    return res if res.class.superclass == Integer
-    display_error
+    (res.class.superclass == Integer ? res : display_error)
   end
 
   def denominator(tokens)
@@ -63,15 +62,13 @@ module SchemeCalculations
     else
       calculate_digit_scheme(tokens[idx])
     end
-    return res * -1 if numerator(tokens) < 0
-    return res
+    (numerator(tokens) < 0 ? res * -1 : res)
   end
 
   def truncate(tokens)
     temp = single_digit(tokens)
     return display_error if temp.class == String
-    minus = -1 if temp < 0
-    minus = 1 if temp >= 0
+    minus = (temp < 0 ? -1 : 1)
     temp.abs.floor * minus
   end
 
@@ -100,8 +97,7 @@ module SchemeCalculations
     calculate_digit_scheme(tokens[0]) if tokens[0] != '-'
     result =
     calculate_digit_scheme(tokens[1]) if tokens[0] == '-'
-    return result if result.class == String
-    return result.abs
+    return (result.class == String ? result : result.abs)
   end
 
   def gcd(tokens)
@@ -111,8 +107,7 @@ module SchemeCalculations
     idx += find_last_bracket(tokens) + 1
     second_digit = find_second_digit(tokens, 0, idx, 1)
     y = second_digit[0].to_i
-    return x.gcd(x) if y == 0
-    return x.gcd(y) if y != 0
+    return (y == 0 ? x.gcd(x) : x.gcd(y))
   end
 
   def lcm(tokens)
@@ -122,8 +117,7 @@ module SchemeCalculations
     idx += find_last_bracket(tokens) + 1
     second_digit = find_second_digit(tokens, 0, idx, 1)
     y = second_digit[0].to_i
-    return x.lcm(x) if y == 0
-    return x.lcm(y) if y != 0
+    return (y == 0 ? x.lcm(x) : x.lcm(y))
   end
 
   def find_first_digit(tokens, start_value, index, minus)
@@ -457,7 +451,6 @@ class Parser
       case sign
       when 'remainder' then (x.abs % y.abs) * (x / x.abs)
       when 'modulo' then x.modulo(y)
-      when 'quotient' then
       end
   end
 
@@ -505,9 +498,7 @@ class Parser
   end
 
   def get_boolean_scheme_bracket(tokens, idx)
-    x = calc_fn_val(tokens[idx + 1..tokens.length])
-    return x if x == display_error || x.include?("Undefined variable")
-    x
+    calc_fn_val(tokens[idx + 1..tokens.length])
   end
 
   def get_boolean_scheme(tokens, idx)
@@ -528,8 +519,7 @@ class Parser
   end
 
   def convert_boolean_to_scheme(statement)
-    return '#t' if statement
-    return '#f'
+    statement ? '#t' : '#f'
   end
 
   def scheme_if(tokens)
@@ -613,11 +603,7 @@ class Parser
     else
       return display_error
     end
-    if val == '#t'
-      return true_res
-    elsif val == '#f'
-      return false_res
-    end
+    return (val == '#t' ? true_res : false_res)
   end
 
   def scheme_not(tokens)
@@ -639,11 +625,7 @@ class Parser
         return scheme_not(x)
       end
     elsif (tokens[0] =~ /[[:alpha:]]/) != 0 && tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f') && (tokens[2] == ')' || tokens[2].nil?)
-      if tokens[1] == 't'
-        return '#f'
-      else
-        return '#t'
-      end
+      return (tokens[1] == 't' ? '#f' : '#t')
     else
       return display_error
     end
