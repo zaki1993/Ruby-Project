@@ -476,7 +476,7 @@ class Parser
     end
     idx +=1
     if tokens[idx] == "\""
-    old_idx = idx
+    old_idx = idx_last
     idx += find_next_quote(tokens[old_idx..tokens.length])
     y = get_string(tokens, old_idx, idx)
     elsif tokens[idx] == '('
