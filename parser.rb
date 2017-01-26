@@ -34,6 +34,11 @@ module SchemeString
     return get_err_string(res) ? res : res.upcase
   end
 
+  def string_downcase(tokens)
+    res = get_string(tokens, 0, find_next_quote(tokens))
+    return get_err_string(res) ? res : res.downcase
+  end
+
   def string_contains?(tokens)
     x = get_string(tokens, 0, find_next_quote(tokens))
     return x if get_err_string(x)
@@ -123,6 +128,10 @@ module SchemeString
     when '>' then x > y
     end
   end
+end
+
+module SchemeList
+
 end
 
 module SchemeCalculations
@@ -477,6 +486,8 @@ class Parser
         return scheme_string_length(tokens[idx + 3.. tokens.length])
       elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'upcase'
         return string_upcase(tokens[idx + 3..tokens.length])
+      elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'downcase'
+        return string_downcase(tokens[idx + 3..tokens.length])
       elsif func == 'string' && tokens.join('').start_with?('string-contains?')
         return string_contains?(tokens[idx + 4..tokens.length])
       elsif func == 'string' && tokens.join('').start_with?('string->list')
