@@ -10,10 +10,57 @@ module Display
   def display_no_variable_error(variable)
     'Undefined variable ' + variable
   end
+
+  def get_err_digit(x)
+    x.class == String ? true : false
+  end
+
+  def get_err_string(x)
+    x == display_error || x.include?("Undefined variable") ? true : false
+  end
+end
+
+module SchemeString
+  def string_upcase(tokens)
+    res = get_string(tokens, 0, find_next_quote(tokens))
+    return get_err_string(res) ? res : res.upcase
+  end
+
+  def string_contains?(tokens)
+    x = get_string(tokens, 0, find_next_quote(tokens))
+    return x if get_err_string(x)
+    idx = find_next_quote(tokens)
+    idx = (idx == 0 ? find_last_bracket(tokens) : idx + 1)
+    idx = (idx == 0 ? 1 : idx)
+    y = get_string(tokens, idx, find_next_quote(tokens[idx..tokens.length]) + idx)
+    return y if get_err_string(y)
+    x.include? y
+  end
+
+  def string_list(tokens)
+    res = get_string(tokens, 0, find_next_quote(tokens))
+    return res if get_err_string(res)
+    res = res.delete(' ')
+    res.each_char.each_with_index { |v, i| res[i + i*3] = '#\\' + v + ' ' }
+    res.insert(0, '\'(')
+    res.insert(res.length - 1, ')')
+    res
+  end
+
+  def string_split(tokens)
+    res = get_string(tokens, 0, find_next_quote(tokens))
+    return res if get_err_string(res)
+    res = res.split(' ')
+    res.each_with_index do |v, i|
+      res[i].insert(0, '"')
+      res[i].insert(res[i].length, '"')
+    end
+    res = res.join(" ").insert(0, '\'(')
+    res.insert(res.length, ')')
+  end
 end
 
 module SchemeCalculations
-
   def single_digit(tokens)
     x, y, idx, minus = 0, 0, 0, 1
     if tokens[idx] == '-'
@@ -78,18 +125,6 @@ module SchemeCalculations
     temp.ceil
   end
 
-  def quotient(tokens)
-    first_digit = find_first_digit(tokens, 0, 0, 1)
-    x = first_digit[0]
-    idx = first_digit[1]
-    minus = first_digit[2]
-    idx += find_last_bracket(tokens) + 1
-    second_digit = find_second_digit(tokens, 0, idx, 1)
-    y = second_digit[0]
-    minus *= second_digit[1] if minus == 1
-    truncate((x/y).to_s) * minus
-  end
-
   def abs(tokens)
     result =
     calc_fn_val(tokens[1..tokens.length]) if tokens[0] == '('
@@ -100,37 +135,16 @@ module SchemeCalculations
     return (result.class == String ? result : result.abs)
   end
 
-  def gcd(tokens)
-    first_digit = find_first_digit(tokens, 0, 0, 1)
-    x = first_digit[0].to_fi
-    idx = first_digit[1]
-    idx += find_last_bracket(tokens) + 1
-    second_digit = find_second_digit(tokens, 0, idx, 1)
-    y = second_digit[0].to_i
-    return (y == 0 ? x.gcd(x) : x.gcd(y))
-  end
-
-  def lcm(tokens)
-    first_digit = find_first_digit(tokens, 0, 0, 1)
-    x = first_digit[0].to_i
-    idx = first_digit[1]
-    idx += find_last_bracket(tokens) + 1
-    second_digit = find_second_digit(tokens, 0, idx, 1)
-    y = second_digit[0].to_i
-    return (y == 0 ? x.lcm(x) : x.lcm(y))
-  end
-
   def find_first_digit(tokens, start_value, index, minus)
     if tokens[0] == '('
-      start_value = calc_fn_val(tokens).to_i
+      start_value = calc_fn_val(tokens)
     elsif tokens[0] == '-'
-      start_value = calculate_digit_scheme(tokens[1]).to_i
+      start_value = calculate_digit_scheme(tokens[1])
       minus = -1
-      index = 1
     else
-      start_value = calculate_digit_scheme(tokens[0]).to_i
+      start_value = calculate_digit_scheme(tokens[0])
     end
-    [start_value, index, minus]
+    [start_value, (minus == -1 ? 1 : 0), minus]
   end
 
   def find_second_digit(tokens, start_value, index, minus)
@@ -143,6 +157,29 @@ module SchemeCalculations
       start_value = calculate_digit_scheme(tokens[index])
     end
     [start_value, minus]
+  end
+
+  def primary_func_numbers(tokens, sign)
+    x, y, minus = get_digits_pair(tokens)
+    case sign
+    when 'remainder' then (x.abs % y.abs) * (x / x.abs)
+    when 'modulo' then x.modulo(y)
+    when 'quotient' then truncate((x.to_i/y.to_i).to_s) * minus
+    when 'gcd' then y == 0 ? x.to_i.gcd(x.to_i) : x.to_i.gcd(y.to_i)
+    when 'lcm' then y == 0 ? x.to_i.lcm(x.to_i) : x.to_i.lcm(y.to_i)
+    end
+  end
+
+  def get_digits_pair(tokens)
+    first = find_first_digit(tokens, 0, 0, 1)
+    x = first[0]
+    idx = first[1]
+    minus = first[2]
+    idx += find_last_bracket(tokens) + 1
+    second = find_second_digit(tokens, 0, idx, minus)
+    y = second[0]
+    minus *= second[1] if minus == 1
+    [x, y, minus]
   end
 end
 
@@ -210,6 +247,7 @@ end
 class Parser
   include Display
   include ToScheme
+  include SchemeString
   def initialize
     @tokens = []
     @defined_functions = []
@@ -326,7 +364,7 @@ class Parser
         instance_variable_set("@#{tokens[0]}", variable)
       end
     else
-      result = calc_fn_val(tokens[tokens.index(tokens.select{|var| var == '('}.first) + 1..tokens.length])
+      result = calc_fn_val(tokens[tokens.index(tokens.select{ |var| var == '(' }.first) + 1..tokens.length])
       if result.class == Integer
         result = result.to_i
       elsif result.class == String
@@ -355,12 +393,6 @@ class Parser
       elsif func == 'truncate'
         return truncate(tokens[idx + 1..tokens.length])
       elsif func == 'ceiling'
-        return ceiling(tokens[idx + 1..tokens.length])
-      elsif func == 'quotient'
-        return quotient(tokens[idx + 1..tokens.length])
-      elsif func == 'gcd'
-        return gcd(tokens[idx + 1..tokens.length])
-      elsif func == 'lcm'
         return lcm(tokens[idx + 1..tokens.length])
       elsif func == 'numerator'
         return numerator(tokens[idx + 1..tokens.length])
@@ -370,14 +402,22 @@ class Parser
         return abs(tokens[idx + 1..tokens.length])
       elsif (/[['-' | '+' | '*' | '\/']]/ =~ func) == 0
         return primary_calculations(tokens[idx + 1..tokens.length], func)
-      elsif (/[['modulo' | 'remainder]]/ =~ func) == 0
-        return calculate_mod_div(tokens[idx + 1..tokens.length], func)
+      elsif (/[['modulo' | 'remainder | 'quotient' | 'gcd' | 'lcm']]/ =~ func) == 0
+        return primary_func_numbers(tokens[idx + 1..tokens.length], func)
       elsif (/[['<' | '>' | '=' | '>=' | '<=']]/ =~ func) == 0
         return compare(tokens[1..tokens.length], func)
       elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
         return scheme_string_equal(tokens[idx + 3..tokens.length])
       elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
         return scheme_string_length(tokens[idx + 3.. tokens.length])
+      elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'upcase'
+        return string_upcase(tokens[idx + 3..tokens.length])
+      elsif func == 'string' && tokens.join('').start_with?('string-contains?')
+        return string_contains?(tokens[idx + 4..tokens.length])
+      elsif func == 'string' && tokens.join('').start_with?('string->list')
+        return string_list(tokens[idx + 4..tokens.length])
+      elsif func == 'string' && tokens.join('').start_with?('string-split')
+        return string_split(tokens[idx + 3..tokens.length])
       elsif func == 'substring'
         return scheme_substring(tokens[idx + 1..tokens.length])
       else
@@ -417,41 +457,6 @@ class Parser
       end
     end
     return convert_calculation_to_scheme(sign, x, y)
-  end
-
-  def calculate_mod_div(tokens, sign)
-      idx = 0
-      if(tokens[idx] == '-')
-        return display_error if tokens[idx + 1] == '('
-          x = calculate_digit_scheme(tokens[idx + 1])
-          x *= -1
-          idx += 2
-      else
-        if(tokens[idx] == '(')
-          bracket = find_last_bracket(tokens[idx..tokens.length]) + idx + 2
-          x = calc_fn_val(tokens[idx + 1..bracket]).to_i
-          idx += bracket
-        else
-          x = calculate_digit_scheme(tokens[idx]).to_i
-          idx += 1
-        end
-      end
-      if(tokens[idx] == '-')
-        return display_error if tokens[idx + 1] == '('
-          y = calculate_digit_scheme(tokens[idx + 1])
-          y *= -1
-      else
-        if(tokens[idx] == '(')
-          bracket = find_last_bracket(tokens[idx..tokens.length]) + idx + 2
-          y = calc_fn_val(tokens[idx + 1..bracket]).to_i
-        else
-          y = calculate_digit_scheme(tokens[idx]).to_i
-        end
-      end
-      case sign
-      when 'remainder' then (x.abs % y.abs) * (x / x.abs)
-      when 'modulo' then x.modulo(y)
-      end
   end
 
   def scheme_string_equal(tokens)

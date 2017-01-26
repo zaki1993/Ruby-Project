@@ -8,3 +8,5 @@
 (string=? "sd" "sd")
 (string=? (substring "asda" 1 2) (substring "asdssss" 3 4))
 (< (string-length (substring "asd" 0)) 4)
+(lcm 12 81)
+(gcd 12 81)
