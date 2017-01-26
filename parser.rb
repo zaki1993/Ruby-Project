@@ -18,6 +18,14 @@ module Display
   def get_err_string(x)
     x == display_error || x.include?("Undefined variable") ? true : false
   end
+
+  def get_err_substr(x, y, check, len)
+    return false if x.class == String
+    x = x.to_i
+    return false if y.class == String && !check
+    y = y.to_i
+    x < 0 || (!check && x < y) || (x > y) || x > len || y > len
+  end
 end
 
 module SchemeString
@@ -32,7 +40,8 @@ module SchemeString
     idx = find_next_quote(tokens)
     idx = (idx == 0 ? find_last_bracket(tokens) : idx + 1)
     idx = (idx == 0 ? 1 : idx)
-    y = get_string(tokens, idx, find_next_quote(tokens[idx..tokens.length]) + idx)
+    end_idx = find_next_quote(tokens[idx..tokens.length]) + idx
+    y = get_string(tokens, idx, end_idx)
     return y if get_err_string(y)
     x.include? y
   end
@@ -57,6 +66,62 @@ module SchemeString
     end
     res = res.join(" ").insert(0, '\'(')
     res.insert(res.length, ')')
+  end
+
+  def string?(tokens)
+    res = get_string(tokens, 0, find_next_quote(tokens))
+    res = calculate_digit_scheme(tokens[0]) if get_err_string(res)
+    convert_boolean_to_scheme res.class == String
+  end
+
+  def scheme_substring(tokens)
+    idx = 0
+    quote = find_next_quote(tokens)
+    end_idx = quote == 0 ? find_last_bracket(tokens) + 1 : quote
+    string = get_string(tokens, idx, end_idx)
+    return string if get_err_string(string)
+    digit = get_digits_pair(tokens[end_idx + 1..tokens.length])
+    x, y = digit
+    check = true if !get_err_digit(y)
+    return display_error if get_err_substr(x*digit[2], y, check, string.length)
+    return get_substring_result(x, y, check, string)
+  end
+
+  def get_substring_result(x, y, check, string)
+    return '' if x == y && check
+    return string[x..y - 1] if check
+    return string[x..string.length]
+  end
+
+  def get_string_sign(tokens)
+    idx = tokens.index('?')
+    sign = tokens[0..idx - 1]
+    i = 0
+    tokens = tokens[sign.length + 1..tokens.length]
+    x = get_string(tokens, 0, find_next_quote(tokens))
+    idx = find_next_quote(tokens)
+    idx = (idx == 0 ? find_last_bracket(tokens) : idx + 1)
+    idx = (idx == 0 ? 1 : idx)
+    [x, sign, tokens[idx..tokens.length]]
+  end
+
+  def scheme_string_equal(tokens)
+    x, sign, tokens = get_string_sign(tokens)
+    return x if get_err_string(x)
+    end_idx = find_next_quote(tokens)
+    y = get_string(tokens, 0, end_idx)
+    return y if get_err_string(y)
+    return convert_boolean_to_scheme compare_strings(x, y, sign)
+  end
+
+  def compare_strings(x, y, sign)
+    case sign.join('')
+    when '=' then x.eql?(y)
+    when '<=' then x <= y
+    when '>=' then x >= y
+    when '<' then x < y
+    when '>' then x > y
+    end
   end
 end
 
@@ -406,8 +471,8 @@ class Parser
         return primary_func_numbers(tokens[idx + 1..tokens.length], func)
       elsif (/[['<' | '>' | '=' | '>=' | '<=']]/ =~ func) == 0
         return compare(tokens[1..tokens.length], func)
-      elsif func == 'string' && tokens[idx + 1] == '=' && tokens[idx + 2] == '?'
-        return scheme_string_equal(tokens[idx + 3..tokens.length])
+      elsif func == 'string' && tokens.join('').start_with?('string<?', 'string>?', 'string=?', 'string>=?', 'string<=?')
+        return scheme_string_equal(tokens[idx + 1..tokens.length])
       elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'length'
         return scheme_string_length(tokens[idx + 3.. tokens.length])
       elsif func == 'string' && tokens[idx + 1] == '-' && tokens[idx + 2] == 'upcase'
@@ -418,6 +483,8 @@ class Parser
         return string_list(tokens[idx + 4..tokens.length])
       elsif func == 'string' && tokens.join('').start_with?('string-split')
         return string_split(tokens[idx + 3..tokens.length])
+      elsif func == 'string' && tokens[idx + 1] == '?'
+        return string?(tokens[idx + 2..tokens.length])
       elsif func == 'substring'
         return scheme_substring(tokens[idx + 1..tokens.length])
       else
@@ -457,32 +524,6 @@ class Parser
       end
     end
     return convert_calculation_to_scheme(sign, x, y)
-  end
-
-  def scheme_string_equal(tokens)
-    x, y, idx = '', '', 0
-    old_idx = 0
-    if tokens[idx] == "\""
-      old_idx = idx
-      idx += find_next_quote(tokens[old_idx..tokens.length])
-      x = get_string(tokens, old_idx, idx)
-    elsif tokens[idx] == '('
-      x = calc_fn_val(tokens[idx + 1..tokens.length])
-      idx += find_last_bracket(tokens[idx..tokens.length]) + 1
-    else
-      x = get_string(tokens, idx, idx)
-    end
-    idx +=1
-    if tokens[idx] == "\""
-    old_idx = idx_last
-    idx += find_next_quote(tokens[old_idx..tokens.length])
-    y = get_string(tokens, old_idx, idx)
-    elsif tokens[idx] == '('
-      y = calc_fn_val(tokens[idx + 1..tokens.length])
-    else
-      y = get_string(tokens[idx..tokens.length], 0, 0)
-    end
-    return convert_boolean_to_scheme x.eql?(y)
   end
 
   def scheme_equal?(tokens)
@@ -693,39 +734,6 @@ class Parser
       return display_error
     end
     res
-  end
-
-  def scheme_substring(tokens)
-    idx, param_one, param_two = 0
-    check = false
-    end_idx = find_next_quote(tokens)
-    string = get_string(tokens, idx, end_idx)
-    return display_error if string == display_error
-    return display_no_variable_error "" if string.include?("Undefined variable")
-    idx += end_idx + 1
-    if tokens[idx] == ')'
-      return display_error
-    end
-    param_one = calculate_digit_scheme(tokens[idx])
-    return display_error if param_one.class.superclass != Integer
-    idx += find_last_bracket(tokens[idx..tokens.length]) + 1
-    if tokens[idx] == ')'
-      param_two = 0
-    elsif tokens[idx] == '('
-      param_two = calc_fn_val(tokens[idx + 1..tokens.length])
-      check = true
-    else
-      param_two = calculate_digit_scheme(tokens[idx])
-      return display_error if param_two.class.superclass != Integer
-      check = true
-    end
-    if param_one < 0 || param_two < 0 || (param_one < param_two && !check) ||
-      param_one > string.length || param_two > string.length
-      return display_error
-    end
-    return '' if param_one == param_two && check
-    return string[param_one..param_two - 1] if check
-    return string[param_one..string.length]
   end
 
   def check_for_default_print(tokens)
