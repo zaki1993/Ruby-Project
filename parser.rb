@@ -26,6 +26,11 @@ module Display
     y = y.to_i
     x < 0 || (!check && x < y) || (x > y) || x > len || y > len
   end
+
+  def get_err_bool(x)
+    return true if x != '#t' && x != '#f'
+    return false
+  end
 end
 
 module SchemeString
@@ -131,7 +136,18 @@ module SchemeString
 end
 
 module SchemeList
+  def null?(tokens)
 
+  end
+
+  def cons(tokens)
+
+  end
+
+  def null
+    puts "asda"
+    return '\'()'
+  end
 end
 
 module SchemeCalculations
@@ -257,6 +273,57 @@ module SchemeCalculations
   end
 end
 
+module SchemeBoolean
+  def get_boolean_scheme_bracket(tokens, idx)
+    calc_fn_val(tokens[idx + 1..tokens.length])
+  end
+
+  def check_for_instance_var(tokens, idx)
+    (tokens[idx] =~ /[[:alpha:]]/) == 0
+  end
+
+  def get_instance_var(tokens, idx)
+    if instance_variable_defined?("@#{tokens[idx]}")
+      return instance_variable_get("@#{tokens[idx]}")
+    else
+      return display_no_variable_error tokens[idx]
+    end
+  end
+
+  def get_boolean_scheme(tokens, idx)
+    y = display_error
+    if check_for_instance_var(tokens, idx)
+      y = get_instance_var(tokens, idx)
+    elsif tokens[idx..tokens.length].join('').start_with?('#t)', '#f)')
+      y = tokens[idx..idx + 1].join('')
+    end
+    return y if get_err_bool(y)
+    y
+  end
+
+  def convert_boolean_to_scheme(statement)
+    statement ? '#t' : '#f'
+  end
+
+  def calculate_bool_scheme(tokens)
+    res = tokens.join('')
+    return res[0..1] if res.start_with?('#t', '#f')
+    if tokens[0] == '('
+      res = get_boolean_scheme_bracket(tokens, 0)
+    else
+      res = get_boolean_scheme(tokens, 0)
+    end
+    res
+  end
+
+  def scheme_not(tokens)
+    return display_error if get_err_string(tokens)
+    res = calculate_bool_scheme(tokens)
+    return res if get_err_string(res)
+    res == '#t' ? '#f' : '#t'
+  end
+end
+
 module ToScheme
   include SchemeCalculations
   def convert_calculation_to_scheme(sign, x, y)
@@ -322,10 +389,11 @@ class Parser
   include Display
   include ToScheme
   include SchemeString
+  include SchemeBoolean
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', 'numerator', 'denominator' , '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring']
+    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', 'numerator', 'denominator' , '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring', 'null']
     @space = '$'
   end
 
@@ -538,45 +606,15 @@ class Parser
   end
 
   def scheme_equal?(tokens)
-    x, y = '', ''
     idx = 0
-    if tokens[idx] == '('
-      x = get_boolean_scheme_bracket(tokens, idx)
-    else
-      x = get_boolean_scheme(tokens, idx)
-    end
-    idx = idx + find_last_bracket(tokens[idx..tokens.length]) + 2
-    if tokens[idx] == '('
-      y = get_boolean_scheme_bracket(tokens, idx)
-    else
-      y = get_boolean_scheme(tokens, idx)
-    end
+    x = calculate_bool_scheme(tokens)
+    idx = find_last_bracket(tokens) + 1
+    check = check_for_instance_var(tokens, idx)
+    idx = (idx == 1 && check ? idx + 1 : idx)
+    idx = (idx == 0 ? idx + 1 : idx)
+    y = calculate_bool_scheme(tokens[idx..tokens.length])
+    return display_error if get_err_bool(x) || get_err_bool(y)
     return convert_boolean_to_scheme x.eql? y
-  end
-
-  def get_boolean_scheme_bracket(tokens, idx)
-    calc_fn_val(tokens[idx + 1..tokens.length])
-  end
-
-  def get_boolean_scheme(tokens, idx)
-    y = ''
-    if (tokens[idx] =~ /[[:alpha:]]/) == 0
-      if instance_variable_defined?("@#{tokens[idx]}")
-        y = instance_variable_get("@#{tokens[idx]}")
-      else
-        return display_no_variable_error tokens[idx]
-      end
-      return display_error if !(y.start_with?('#t', '#f')) && y.length == 2
-    elsif tokens[idx..tokens.length].start_with?('#t', '#f')
-      y = tokens[idx] + tokens[idx + 1]
-    else
-      return display_error
-    end
-    return y
-  end
-
-  def convert_boolean_to_scheme(statement)
-    statement ? '#t' : '#f'
   end
 
   def scheme_if(tokens)
@@ -585,14 +623,14 @@ class Parser
       return display_error
     end
     # EVERYTHING IS OK WE CAN CONTINUE
-    idx_last = find_last_bracket(tokens) + 1
+    idx_last = find_last_bracket(tokens)
     val = calc_fn_val(tokens[1..idx_last])
     return display_error if val != '#t' && val != '#f'
     # CALCULATE THE RESULT IF THE STATEMENT IS TRUE
     true_res = ''
     idx_last_true = 0
     if tokens[idx_last + 1] == '('
-      idx_last_true = find_last_bracket(tokens[idx_last + 1..tokens.length]) + idx_last + 2
+      idx_last_true = find_last_bracket(tokens[idx_last + 1..tokens.length]) + idx_last + 1
       true_res = calc_fn_val(tokens[idx_last + 2 ..idx_last_true])
     elsif (/[[:alpha:]]/ =~ tokens[idx_last + 1]) == 0
       if instance_variable_defined?("@#{tokens[idx_last + 1]}")
@@ -630,7 +668,7 @@ class Parser
     false_res = ''
     idx_last_false = 0
     if tokens[idx_last_true + 1] == '('
-      idx_last_false = find_last_bracket(tokens[idx_last_true + 1..tokens.length]) + idx_last_true + 2
+      idx_last_false = find_last_bracket(tokens[idx_last_true + 1..tokens.length]) + idx_last_true + 1
       false_res = calc_fn_val(tokens[idx_last_true + 2 ..idx_last_false])
     elsif (/[[:alpha:]]/ =~ tokens[idx_last_true + 1]) == 0
       if instance_variable_defined?('@#{tokens[idx_last_true + 1]}')
@@ -661,31 +699,6 @@ class Parser
       return display_error
     end
     return (val == '#t' ? true_res : false_res)
-  end
-
-  def scheme_not(tokens)
-    if tokens.include? display_no_variable_error ''
-      return tokens.split(' ')[2]
-    end
-    return display_error if tokens == display_error
-    x = ''
-    if tokens[0] == '('
-      x = calc_fn_val(tokens[1..tokens.length])
-      return scheme_not(x)
-    elsif (tokens[0] =~ /[[:alpha:]]/) == 0 && !instance_variable_defined?('@#{tokens[0]}')
-      return (display_no_variable_error tokens[0])
-    elsif (tokens[0] =~ /[[:alpha:]]/) == 0&& instance_variable_defined?('@#{tokens[0]}')
-      if tokens[1] != ')'
-        return display_error
-      else
-        x = instance_variable_get('@#{tokens[0]}')
-        return scheme_not(x)
-      end
-    elsif (tokens[0] =~ /[[:alpha:]]/) != 0 && tokens[0] == '#' && (tokens[1] == 't' || tokens[1] == 'f') && (tokens[2] == ')' || tokens[2].nil?)
-      return (tokens[1] == 't' ? '#f' : '#t')
-    else
-      return display_error
-    end
   end
 
   def scheme_string_length(tokens)
@@ -801,7 +814,7 @@ class Parser
     tokens[1..tokens.length].each_with_index do |v, i|
       left_brackets += 1 if v == '('
       right_brackets += 1 if v == ')'
-      return i if left_brackets == right_brackets
+      return i + 1 if left_brackets == right_brackets
     end
   end
 end
