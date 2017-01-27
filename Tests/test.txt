@@ -10,3 +10,7 @@
 (< (string-length (substring "asd" 0)) 4)
 (lcm 12 81)
 (gcd 12 81)
+(list? '(1 2 3))
+(string-contains? "asdasd" "sda")
+(string-upcase "sada")
+(string-downcase "sada")

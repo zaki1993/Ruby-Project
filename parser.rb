@@ -16,6 +16,7 @@ module Display
   end
 
   def get_err_string(x)
+    x = x.to_s
     x == display_error || x.include?("Undefined variable") ? true : false
   end
 
@@ -45,29 +46,31 @@ module SchemeString
   end
 
   def string_contains?(tokens)
-    x = get_string(tokens, 0, find_next_quote(tokens))
+    x = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
     return x if get_err_string(x)
     idx = find_next_quote(tokens)
     idx = (idx == 0 ? find_last_bracket(tokens) : idx + 1)
     idx = (idx == 0 ? 1 : idx)
     end_idx = find_next_quote(tokens[idx..tokens.length]) + idx
-    y = get_string(tokens, idx, end_idx)
+    y = get_string(tokens, idx, end_idx).delete('"')
     return y if get_err_string(y)
-    x.include? y
+    convert_boolean_to_scheme x.include? y
   end
 
   def string_list(tokens)
-    res = get_string(tokens, 0, find_next_quote(tokens))
+    res = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
     return res if get_err_string(res)
     res = res.delete(' ')
-    res.each_char.each_with_index { |v, i| res[i + i*3] = '#\\' + v + ' ' }
+    res.each_char.each_with_index do |v, i|
+      res[i + i*3] = '#\\' + v + ' '
+    end
     res.insert(0, '\'(')
     res.insert(res.length - 1, ')')
     res
   end
 
   def string_split(tokens)
-    res = get_string(tokens, 0, find_next_quote(tokens))
+    res = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
     return res if get_err_string(res)
     res = res.split(' ')
     res.each_with_index do |v, i|
@@ -80,15 +83,15 @@ module SchemeString
 
   def string?(tokens)
     res = get_string(tokens, 0, find_next_quote(tokens))
-    res = calculate_digit_scheme(tokens[0]) if get_err_string(res)
+    return res if get_err_string(res)
     convert_boolean_to_scheme res.class == String
   end
 
   def scheme_substring(tokens)
     idx = 0
     quote = find_next_quote(tokens)
-    end_idx = quote == 0 ? find_last_bracket(tokens) + 1 : quote
-    string = get_string(tokens, idx, end_idx)
+    end_idx = quote == 0 ? find_last_bracket(tokens) : quote
+    string = get_string(tokens, idx, end_idx).delete('"')
     return string if get_err_string(string)
     digit = get_digits_pair(tokens[end_idx + 1..tokens.length])
     x, y = digit
@@ -98,9 +101,9 @@ module SchemeString
   end
 
   def get_substring_result(x, y, check, string)
-    return '' if x == y && check
-    return string[x..y - 1] if check
-    return string[x..string.length]
+    return '""' if x == y && check
+    return '"' + string[x..y - 1] + '"' if check
+    return '"' + string[x..string.length] + '"'
   end
 
   def get_string_sign(tokens)
@@ -108,9 +111,9 @@ module SchemeString
     sign = tokens[0..idx - 1]
     i = 0
     tokens = tokens[sign.length + 1..tokens.length]
-    x = get_string(tokens, 0, find_next_quote(tokens))
+    x = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
     idx = find_next_quote(tokens)
-    idx = (idx == 0 ? find_last_bracket(tokens) : idx + 1)
+    idx = (idx == 0 ? find_last_bracket(tokens) + 1 : idx + 1)
     idx = (idx == 0 ? 1 : idx)
     [x, sign, tokens[idx..tokens.length]]
   end
@@ -119,7 +122,7 @@ module SchemeString
     x, sign, tokens = get_string_sign(tokens)
     return x if get_err_string(x)
     end_idx = find_next_quote(tokens)
-    y = get_string(tokens, 0, end_idx)
+    y = get_string(tokens, 0, end_idx).delete('"')
     return y if get_err_string(y)
     return convert_boolean_to_scheme compare_strings(x, y, sign)
   end
@@ -138,6 +141,66 @@ end
 module SchemeList
   def null?(tokens)
 
+  end
+
+  def is_valid_list(tokens)
+    puts tokens.join ' '
+    return tokens if get_err_string(tokens)
+    string = tokens.join('')
+    tokens[2..tokens.length].each do |v|
+      if check_for_instance_var(v, 0)
+        return false if v.class != String && v.class.superclass != Integer
+      end
+      return false if v.class.superclass != Integer && v.class != String
+    end
+    true
+  end
+
+  def list?(tokens)
+    return false if !string.start_with?('\'(') && !string.end_with?(')')
+    res = tokens
+    if check_for_instance_var(tokens, 0)
+      res = get_instance_var(tokens, 0)
+    elsif tokens[0] == '('
+      res = calc_fn_val(tokens[1..tokens.length])
+    end
+    is_valid_list(res)
+  end
+
+  def helper_digit_bool_string(token)
+    return display_error if !check_for_instance_var(token, 0)
+    return instance_variable_get("@#{token}")
+  end
+
+  def get_list_elem(tokens)
+    if tokens[0] == '('
+      idx = find_last_bracket(tokens)
+      return [calc_fn_val(tokens[1..idx]), idx]
+    elsif tokens[0] == '"'
+      idx = find_next_quote(tokens)
+      return [get_string(tokens, 0, idx), idx]
+    elsif tokens[0] == '#'
+      puts get_boolean_scheme(tokens, 0)
+      return [get_boolean_scheme(tokens, 0), 2]
+    elsif (tokens[0] =~ /[[:alpha:]]/) == 0
+      return [helper_digit_bool_string(tokens[0]), 0]
+    else
+      return [calculate_digit_scheme(tokens[0]), 0]
+    end
+  end
+
+  def list(tokens)
+    result = '\'('
+    skips = 0
+    tokens[0..tokens.length - 2].each_with_index do |v, i|
+      next if (skips -= 1) >= 0
+      puts v
+      res = get_list_elem(tokens[i..tokens.length - 2])
+      return res[0] if get_err_string(res[0].to_s)
+      result += res[0].to_s
+      skips = res[1]
+    end
+    result
   end
 
   def cons(tokens)
@@ -279,15 +342,11 @@ module SchemeBoolean
   end
 
   def check_for_instance_var(tokens, idx)
-    (tokens[idx] =~ /[[:alpha:]]/) == 0
+    (tokens[idx] =~ /[[:alpha:]]/) == 0 && instance_variable_defined?("@#{tokens[idx]}")
   end
 
   def get_instance_var(tokens, idx)
-    if instance_variable_defined?("@#{tokens[idx]}")
       return instance_variable_get("@#{tokens[idx]}")
-    else
-      return display_no_variable_error tokens[idx]
-    end
   end
 
   def get_boolean_scheme(tokens, idx)
@@ -339,11 +398,12 @@ module ToScheme
     x, y, idx = 0, 0, 0
     if tokens[idx] == '('
       old_idx = idx
-      idx += find_last_bracket(tokens) + 1
+      idx += find_last_bracket(tokens)
       x = calc_fn_val(tokens[old_idx + 1..idx]).to_i
     else
       x = calculate_digit_scheme(tokens[idx]).to_i
     end
+    puts tokens[idx]
     if tokens[idx + 1] == '('
       old_idx = idx + 1
       idx += find_last_bracket(tokens[old_idx..tokens.length]) + 2
@@ -374,6 +434,7 @@ module ToScheme
   end
 
   def convert_compare_to_scheme(sign, x, y)
+    puts x, y
     result = case sign
              when '<' then x < y
              when '>' then x > y
@@ -390,10 +451,11 @@ class Parser
   include ToScheme
   include SchemeString
   include SchemeBoolean
+  include SchemeList
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', 'numerator', 'denominator' , '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring', 'null']
+    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', 'numerator', 'denominator' , '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring', 'null', 'list']
     @space = '$'
   end
 
@@ -433,7 +495,7 @@ class Parser
   end
 
   def tokenizer(string)
-      @tokens = string.scan(/\(|\)|\w+|\+|\-|\*|\/|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\$/)
+      @tokens = string.scan(/\(|\)|\w+|\+|\-|\*|\/|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\$|\'/)
       @tokens.each do |val|
         if val == @space
           @tokens[@tokens.index(val)] = ' '
@@ -461,7 +523,6 @@ class Parser
           return display_result calc_fn_val(arr)
         end
       end
-
       if tokens[0] != '(' && tokens.length == 1 && instance_variable_defined?("@#{tokens[0]}")
         display_result instance_variable_get("@#{tokens[0]}")
       else
@@ -524,6 +585,10 @@ class Parser
       if func == '-'
         # TODO FIX THIS
         return primary_calculations(tokens[idx + 1..tokens.length], func)
+      elsif func == 'list' && tokens.join('').start_with?('list?')
+        return list?(tokens[idx + 2..tokens.length])
+      elsif func == 'list'
+        return list(tokens[idx + 1..tokens.length])
       elsif func == 'not'
          result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error
@@ -610,7 +675,7 @@ class Parser
     x = calculate_bool_scheme(tokens)
     idx = find_last_bracket(tokens) + 1
     check = check_for_instance_var(tokens, idx)
-    idx = (idx == 1 && check ? idx + 1 : idx)
+    idx = (idx == 1 && check ? idx : idx + 1)
     idx = (idx == 0 ? idx + 1 : idx)
     y = calculate_bool_scheme(tokens[idx..tokens.length])
     return display_error if get_err_bool(x) || get_err_bool(y)
@@ -702,32 +767,9 @@ class Parser
   end
 
   def scheme_string_length(tokens)
-    result = 0
-    if tokens[0] != "\"" && tokens[2] != "\""
-      if (/[[:alpha:]]/ =~ tokens[0]) == 0 && instance_variable_defined?("@#{tokens[0]}")
-        temp = instance_variable_get("@#{tokens[0]}")
-        result = temp[1..temp.length - 2].length
-        if result.class.superclass != Integer
-          return display_error
-        end
-        return result
-      elsif (/[[:alpha:]]/ =~ tokens[0]) == 0 && !instance_variable_defined?("@#{tokens[0]}")
-        return display_no_variable_error tokens[0]
-      else
-        return display_error
-      end
-    elsif tokens[0] == "\"" && tokens[1..tokens.length].include?("\"")
-      tokens[1..tokens.length].each do |val|
-        if val == "\""
-          break
-        else
-          result += val.length
-        end
-      end
-      return result.to_s
-    else
-      return display_error
-    end
+    string = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
+    return string if get_err_string(string)
+    string.length
   end
 
   def find_next_quote(tokens)
@@ -743,14 +785,13 @@ class Parser
       idx = find_last_bracket(tokens[start..tokens.length])
       res = calc_fn_val(tokens[start + 1..idx])
     elsif tokens[start] == "\"" && tokens[end_idx] == "\""
-      tokens[start + 1..end_idx - 1].each { |v| res.insert(res.length, v) }
+      tokens[start..end_idx].each { |v| res.insert(res.length, v) }
     elsif /[[:alpha:]]/ =~ tokens[0] && start == 0
       if instance_variable_defined?("@#{tokens[start]}")
-        temp = instance_variable_get("@#{tokens[start]}")
-        if (/[[:digit:]]/ =~ temp) == 0 || (/[[ '#' ]]/ =~ temp) == 0
+        res = instance_variable_get("@#{tokens[start]}")
+        if (/[[:digit:]]/ =~ res) == 0 || (/[[ '#' ]]/ =~ res) == 0
           return display_error
         end
-        temp[1..temp.length - 2].each_char { |v| res.insert(res.length, v) }
       else
         return display_no_variable_error tokens[start]
       end
