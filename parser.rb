@@ -140,7 +140,8 @@ end
 
 module SchemeList
   def null?(tokens)
-    return tokens.join('') == '\'()'
+    res = tokens.join('').start_with?('\'()')
+    convert_boolean_to_scheme res
   end
 
   def list?(tokens)
@@ -200,8 +201,6 @@ module SchemeList
   end
 
   def null
-    puts "asda"
-    return '\'()'
   end
 end
 
@@ -581,6 +580,8 @@ class Parser
         return list?(tokens[idx + 2..tokens.length])
       elsif func == 'list'
         return list(tokens[idx + 1..tokens.length])
+      elsif func == 'null' && tokens[1] == '?'
+        return null?(tokens[idx + 2..tokens.length])
       elsif func == 'not'
          result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error
