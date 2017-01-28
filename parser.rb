@@ -140,31 +140,19 @@ end
 
 module SchemeList
   def null?(tokens)
-
-  end
-
-  def is_valid_list(tokens)
-    puts tokens.join ' '
-    return tokens if get_err_string(tokens)
-    string = tokens.join('')
-    tokens[2..tokens.length].each do |v|
-      if check_for_instance_var(v, 0)
-        return false if v.class != String && v.class.superclass != Integer
-      end
-      return false if v.class.superclass != Integer && v.class != String
-    end
-    true
+    return tokens.join('') == '\'()'
   end
 
   def list?(tokens)
-    return false if !string.start_with?('\'(') && !string.end_with?(')')
-    res = tokens
-    if check_for_instance_var(tokens, 0)
-      res = get_instance_var(tokens, 0)
-    elsif tokens[0] == '('
-      res = calc_fn_val(tokens[1..tokens.length])
+    string = tokens.join('')
+    return '#t' if string[0..tokens.length - 2] == '\'()'
+    res = display_error
+    if string.start_with?('\'(') && string.end_with?('))')
+      res = list(tokens[2..tokens.length - 2])
+    elsif string.start_with?('(list','\'(')
+      res = list(tokens[2..tokens.length - 2])
     end
-    is_valid_list(res)
+    convert_boolean_to_scheme !get_err_string(res) ? true : false
   end
 
   def helper_digit_bool_string(token)
@@ -173,19 +161,24 @@ module SchemeList
   end
 
   def get_list_elem(tokens)
-    if tokens[0] == '('
+    if tokens.join('').start_with?('\'(')
+      idx = find_last_bracket(tokens[1..tokens.length]) + 1
+      res = list(tokens[2..idx]).delete('\'')
+      return [res, res.delete(' ').length]
+    elsif tokens[0] == '('
       idx = find_last_bracket(tokens)
-      return [calc_fn_val(tokens[1..idx]), idx]
+      res = calc_fn_val(tokens[1..idx]).to_s
+      res = res.delete('\'') if list?(res.split(''))
+      return [res, idx]
     elsif tokens[0] == '"'
       idx = find_next_quote(tokens)
-      return [get_string(tokens, 0, idx), idx]
+      return [get_string(tokens, 0, idx).to_s, idx]
     elsif tokens[0] == '#'
-      puts get_boolean_scheme(tokens, 0)
-      return [get_boolean_scheme(tokens, 0), 2]
+      return [get_boolean_scheme(tokens, 0), 1]
     elsif (tokens[0] =~ /[[:alpha:]]/) == 0
-      return [helper_digit_bool_string(tokens[0]), 0]
+      return [helper_digit_bool_string(tokens[0]).to_s, 0]
     else
-      return [calculate_digit_scheme(tokens[0]), 0]
+      return [calculate_digit_scheme(tokens[0]).to_s, 0]
     end
   end
 
@@ -193,14 +186,13 @@ module SchemeList
     result = '\'('
     skips = 0
     tokens[0..tokens.length - 2].each_with_index do |v, i|
-      next if (skips -= 1) >= 0
-      puts v
-      res = get_list_elem(tokens[i..tokens.length - 2])
+      next if (skips -= 1) >= 0 || v == ')'
+      res = get_list_elem(tokens[i..tokens.length])
       return res[0] if get_err_string(res[0].to_s)
-      result += res[0].to_s
+      result += res[0] + ' '
       skips = res[1]
     end
-    result
+    result.insert(result.length - 1, ')').rstrip
   end
 
   def cons(tokens)
@@ -353,7 +345,7 @@ module SchemeBoolean
     y = display_error
     if check_for_instance_var(tokens, idx)
       y = get_instance_var(tokens, idx)
-    elsif tokens[idx..tokens.length].join('').start_with?('#t)', '#f)')
+    elsif tokens[idx..tokens.length].join('').start_with?('#t', '#f')
       y = tokens[idx..idx + 1].join('')
     end
     return y if get_err_bool(y)
