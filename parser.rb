@@ -169,7 +169,11 @@ module SchemeList
   def get_list_elem(tokens)
     if tokens.join('').start_with?('\'(')
       idx = find_last_bracket(tokens[1..tokens.length]) + 1
-      res = list(tokens[2..idx]).delete('\'')
+      if tokens[2] == '('
+        res = list(tokens[2..idx].insert(0,'\'')).delete('\'')
+      else
+        res = list(tokens[2..idx]).delete('\'')
+      end
       return [res, res.delete(' ').length]
     elsif tokens[0] == '('
       idx = find_last_bracket(tokens)
@@ -177,7 +181,7 @@ module SchemeList
       res = res.delete('\'') if list?(res.split(''))
       if list?(tokens[0..idx].insert(0, '\'')) == '#t'
         res = list(tokens[0..idx].insert(0, '\''))
-        res = res[2..res.length - 1]
+        res = res[2..res.length - 2]
       end
       return [res, idx]
     elsif tokens[0] == '"'

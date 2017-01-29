@@ -25,3 +25,4 @@
 (list? (cons 1 (cons 2 '())))
 (if (list? '(1 2)) "asd" "da")
 (if (null? '()) #t #f)
+(list '((1 2)))
