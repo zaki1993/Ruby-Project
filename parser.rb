@@ -93,10 +93,9 @@ module SchemeString
     end_idx = quote == 0 ? find_last_bracket(tokens) : quote
     string = get_string(tokens, idx, end_idx).delete('"')
     return string if get_err_string(string)
-    digit = get_digits_pair(tokens[end_idx + 1..tokens.length])
-    x, y = digit
+    x, y, z = get_digits_pair(tokens[end_idx + 1..tokens.length])
     check = true if !get_err_digit(y)
-    return display_error if get_err_substr(x*digit[2], y, check, string.length)
+    return display_error if get_err_substr(x*z, y, check, string.length)
     return get_substring_result(x, y, check, string)
   end
 
@@ -140,25 +139,32 @@ end
 
 module SchemeList
   def null?(tokens)
+    return '#t' if tokens.join('') == 'null)'
     res = tokens.join('').start_with?('\'()')
     convert_boolean_to_scheme res
   end
 
   def list?(tokens)
     string = tokens.join('')
-    return '#t' if string[0..tokens.length - 2] == '\'()'
+    return '#t' if string == '\'()' || string == 'null)'
     res = display_error
-    if string.start_with?('\'(') && string.end_with?('))')
-      res = list(tokens[2..tokens.length - 2])
-    elsif string.start_with?('(list','\'(')
-      res = list(tokens[2..tokens.length - 2])
+    if tokens.join('').start_with?('\'(', '(')
+      res = list(tokens)
     end
     convert_boolean_to_scheme !get_err_string(res) ? true : false
   end
 
   def cons?(tokens)
-    puts tokens
-    '#f'
+    if tokens.join('').start_with?('\'(', '(list')
+      list?(tokens) == '#t' ? '#t' : '#f'
+    elsif tokens.join('').start_with?('(cons')
+      get_err_string(cons(tokens[2..tokens.length])) ? '#f' : '#t'
+    else
+      first = get_first_cons(tokens[1..tokens.length])
+      idx = get_index_cons(tokens[1..tokens.length], first)
+      second = get_second_cons(tokens[idx + 2..tokens.length])
+      return (get_err_string(first) || get_err_string(second) || tokens[idx + 1] != '.') ? '#f' : '#t'
+    end
   end
 
   def helper_digit_bool_string(token)
@@ -179,7 +185,7 @@ module SchemeList
       idx = find_last_bracket(tokens)
       res = calc_fn_val(tokens[1..idx]).to_s
       res = res.delete('\'') if list?(res.split(''))
-      if list?(tokens[0..idx].insert(0, '\'')) == '#t'
+      if !get_err_string(list(tokens[0..idx].insert(0, '\'')))
         res = list(tokens[0..idx].insert(0, '\''))
         res = res[2..res.length - 2]
       end
@@ -203,7 +209,6 @@ module SchemeList
     skips = 0
     tokens[0..tokens.length - 2].each_with_index do |v, i|
       next if (skips -= 1) >= 0 || v == ')'
-      return display_error if (v == '(' && i < 1)
       res = get_list_elem(tokens[i..tokens.length])
       return res[0] if get_err_string(res[0].to_s)
       result += res[0] + ' '
@@ -225,47 +230,55 @@ module SchemeList
   end
 
   def get_second_cons(tokens)
-    if tokens.join('').start_with?('\'(')
-      list(tokens[0..tokens.length - 1])
+    return '\'()' if tokens.join('') == '\'())'
+    if tokens.join('').start_with?('\'(', '(list')
+      [list(tokens[0..tokens.length - 1]), true]
     else
-      get_first_cons(tokens)
+      if tokens.join('').include?('\'(')
+        [list(tokens), true]
+      else
+        [get_first_cons(tokens), false]
+      end
     end
   end
 
-  def cons_or_list(second, result)
-    if list?(second.to_s.split('')) == '#t'
-      result += second[1..second.to_s.length].to_s.rstrip + ')'
-    elsif cons?(second.to_s.split('')) == '#t'
-    else
-      result += second.to_s + ')'
-    end
-  end
-
-  def calculate_cons_result(first, second)
+  def calculate_cons_result(first, second, list_or_cons)
     return display_error if list?(first.to_s.split('')) == '#t'
     return second if get_err_string(second)
     result = '('
     result += first.to_s + ' '
-    if list?(second.to_s.split('')) == '#f' && cons?(second.to_s.split('')) == '#f'
-      result += '. ' + second.to_s  + ')'
+    if list_or_cons
+      if second[3..second.length - 2].to_s == ''
+        result[result.length - 1] = ''
+        result += ')'
+      else
+        result += second[3..second.length - 2].to_s
+      end
+    elsif second[0] != '('
+      result += '. ' + second.to_s + ')'
     else
-      cons_or_list(second, result)
+      result += ' . ' + second.to_s + ')'
     end
+  end
+
+  def get_index_cons(tokens, first)
+    idx = find_last_bracket(tokens) + 1
+    idx = (idx == 1 ? find_next_quote(tokens) + 1: idx)
+    idx = (idx == 1 ? first.to_s.length : idx)
   end
 
   def cons(tokens)
     return display_error if tokens.join('').start_with?('\'(')
     first = get_first_cons(tokens)
     return first if get_err_string(first)
-    idx = find_last_bracket(tokens) + 1
-    idx = (idx == 1 ? find_next_quote(tokens) + 1: idx)
-    idx = (idx == 1 ? first.to_s.length : idx)
+    idx = get_index_cons(tokens, first)
     return display_error if tokens[idx] == ')'
     second = get_second_cons(tokens[idx..tokens.length])
-    calculate_cons_result(first, second)
+    calculate_cons_result(first, second[0], second[1])
   end
 
   def null
+    '\'()'
   end
 end
 
@@ -551,7 +564,7 @@ class Parser
   end
 
   def tokenizer(string)
-      @tokens = string.scan(/\(|\)|\w+|\+|\-|\*|\/|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\$|\'/)
+      @tokens = string.scan(/\(|\)|\w+|\+|\-|\*|\/|\<\=|\>\=|\=|\<|\>|\"|\?|\#|\$|\'|\./)
       @tokens.each do |val|
         if val == @space
           @tokens[@tokens.index(val)] = ' '
@@ -647,6 +660,10 @@ class Parser
         return list(tokens[idx + 1..tokens.length])
       elsif func == 'null' && tokens[1] == '?'
         return null?(tokens[idx + 2..tokens.length])
+      elsif func == 'null'
+        return null
+      elsif func == 'cons' && tokens[1] == '?'
+        return cons?(tokens[idx + 2..tokens.length])
       elsif func == 'cons'
         return cons(tokens[idx + 1..tokens.length])
       elsif func == 'not'
