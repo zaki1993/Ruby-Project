@@ -156,6 +156,11 @@ module SchemeList
     convert_boolean_to_scheme !get_err_string(res) ? true : false
   end
 
+  def cons?(tokens)
+    puts tokens
+    '#f'
+  end
+
   def helper_digit_bool_string(token)
     return display_error if !check_for_instance_var(token, 0)
     return instance_variable_get("@#{token}")
@@ -170,6 +175,10 @@ module SchemeList
       idx = find_last_bracket(tokens)
       res = calc_fn_val(tokens[1..idx]).to_s
       res = res.delete('\'') if list?(res.split(''))
+      if list?(tokens[0..idx].insert(0, '\'')) == '#t'
+        res = list(tokens[0..idx].insert(0, '\''))
+        res = res[2..res.length - 1]
+      end
       return [res, idx]
     elsif tokens[0] == '"'
       idx = find_next_quote(tokens)
@@ -184,10 +193,13 @@ module SchemeList
   end
 
   def list(tokens)
+    return '\'()' if tokens.join('') == '\'())' || tokens.join('') == '())'
+    return display_error if tokens[1..find_last_bracket(tokens[1..tokens.length]) + 1].join('').include?('\'(')
     result = '\'('
     skips = 0
     tokens[0..tokens.length - 2].each_with_index do |v, i|
       next if (skips -= 1) >= 0 || v == ')'
+      return display_error if (v == '(' && i < 1)
       res = get_list_elem(tokens[i..tokens.length])
       return res[0] if get_err_string(res[0].to_s)
       result += res[0] + ' '
@@ -196,8 +208,57 @@ module SchemeList
     result.insert(result.length - 1, ')').rstrip
   end
 
-  def cons(tokens)
+ def get_first_cons(tokens)
+    if tokens[0] == '('
+      calc_fn_val(tokens[1..find_last_bracket(tokens)])
+    else
+      res = calculate_digit_scheme(tokens[0])
+      res = get_boolean_scheme(tokens, 0) if get_err_string(res)
+      idx = find_next_quote(tokens)
+      res = get_string(tokens, 0, idx) if get_err_string(res) && get_err_bool(res)
+      res
+    end
+  end
 
+  def get_second_cons(tokens)
+    if tokens.join('').start_with?('\'(')
+      list(tokens[0..tokens.length - 1])
+    else
+      get_first_cons(tokens)
+    end
+  end
+
+  def cons_or_list(second, result)
+    if list?(second.to_s.split('')) == '#t'
+      result += second[1..second.to_s.length].to_s.rstrip + ')'
+    elsif cons?(second.to_s.split('')) == '#t'
+    else
+      result += second.to_s + ')'
+    end
+  end
+
+  def calculate_cons_result(first, second)
+    return display_error if list?(first.to_s.split('')) == '#t'
+    return second if get_err_string(second)
+    result = '('
+    result += first.to_s + ' '
+    if list?(second.to_s.split('')) == '#f' && cons?(second.to_s.split('')) == '#f'
+      result += '. ' + second.to_s  + ')'
+    else
+      cons_or_list(second, result)
+    end
+  end
+
+  def cons(tokens)
+    return display_error if tokens.join('').start_with?('\'(')
+    first = get_first_cons(tokens)
+    return first if get_err_string(first)
+    idx = find_last_bracket(tokens) + 1
+    idx = (idx == 1 ? find_next_quote(tokens) + 1: idx)
+    idx = (idx == 1 ? first.to_s.length : idx)
+    return display_error if tokens[idx] == ')'
+    second = get_second_cons(tokens[idx..tokens.length])
+    calculate_cons_result(first, second)
   end
 
   def null
@@ -446,7 +507,7 @@ class Parser
   def initialize
     @tokens = []
     @defined_functions = []
-    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', 'numerator', 'denominator' , '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring', 'null', 'list']
+    @functions = ['+', '-', '*', '/', 'remainder', 'modulo', 'truncate', 'ceiling', 'quotient', 'abs', 'gcd', 'lcm', 'numerator', 'denominator' , '<', '<=', '=', '>=', '>', 'string', 'not', 'equal', 'if', 'substring', 'null', 'list', 'cons']
     @space = '$'
   end
 
@@ -582,6 +643,8 @@ class Parser
         return list(tokens[idx + 1..tokens.length])
       elsif func == 'null' && tokens[1] == '?'
         return null?(tokens[idx + 2..tokens.length])
+      elsif func == 'cons'
+        return cons(tokens[idx + 1..tokens.length])
       elsif func == 'not'
          result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error

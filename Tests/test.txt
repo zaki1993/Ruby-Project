@@ -17,6 +17,7 @@
 (list "asd" #t (not #t) (string-length "asd") "sda" 2 3 (* 1 2 3 5))
 (list '(1 2) 3)
 (list '(1 '(1 2)) 3)
+(list '(1 (1 2)) 3)
 (list '(1 2) '(1 2))
 (list 3 '(1 2))
 (list 3 '(1 2) (list 3 '(1 2)))
