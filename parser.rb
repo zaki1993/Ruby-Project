@@ -236,8 +236,15 @@ module SchemeList
     if tokens.join('').start_with?('\'(', '(list')
       [list(tokens[0..tokens.length - 1]), true]
     else
-      if tokens.join('').include?('\'(')
-        [list(tokens), true]
+      res = get_first_cons(tokens)
+      if list?(tokens) == '#t'
+        if !tokens.join('').start_with?('(cons')
+          res = calc_fn_val(tokens[1..tokens.length])
+          [res, false]
+        else
+          res = list(tokens)
+          [res, true]
+        end
       else
         [get_first_cons(tokens), false]
       end
@@ -259,6 +266,7 @@ module SchemeList
     elsif second[0] != '('
       result += '. ' + second.to_s + ')'
     else
+      puts "A"
       result += ' . ' + second.to_s + ')'
     end
   end
@@ -291,13 +299,25 @@ module SchemeList
     end
   end
 
+  def check_for_brackets_only(tokens)
+    left_brackets = 0
+    right_brackets = 0
+    tokens.each do |v|
+      left_brackets += 1 if v == '('
+      right_brackets += 1 if v == ')'
+      return false if v != '(' && v != ')'
+    end
+    left_brackets == right_brackets ? true : false
+  end
+
   def get_first_car_method(tokens)
-    puts cons?(tokens)
-    if cons?(tokens) == '#t' || list?(tokens) == '#t'
+    if check_for_brackets_only(tokens)
+      tokens[0..tokens.length - 1].join('')
+    elsif cons?(tokens) == '#t' || list?(tokens) == '#t'
       res = list(tokens)
-      res[2..res.length - 2]
+      res[2..res.length - 2].insert(0, '\'')
     else
-      calc_fn_val(tokens[1..tokens.length].split('' ))
+      calc_fn_val(tokens[1..tokens.length].split(''))
     end
   end
 
@@ -313,6 +333,27 @@ module SchemeList
     end
   end
 
+  def find_index_cdr(tokens, idx)
+    if tokens[idx] == '('
+      find_last_bracket(tokens) + 1
+    elsif tokens[idx] == '"'
+      find_next_quote(tokens) + 1
+    elsif tokens[idx] == '#'
+      2
+    else
+      1
+    end
+  end
+
+  def get_second_cdr(tokens)
+    idx = find_index_cdr(tokens, 0)
+    tokens = tokens[idx..tokens.length].insert(0, '(')
+    result = list(tokens).delete('\'')
+    return display_error if get_err_string(result)
+    result = result[1..result.length - 2].insert(0, '\'')
+    result
+  end
+
   def car(tokens)
     return display_error if list?(tokens) == '#f'
     return display_error if tokens.join('') == '\'())'
@@ -322,14 +363,12 @@ module SchemeList
   def cdr(tokens)
     return display_error if list?(tokens) == '#f'
     return display_error if tokens.join('') == '\'())'
-    result
-    get_second_cdr(tokens)
+    get_second_cdr(tokens[2..tokens.length])
   end
 
   def multiple_car_cdr(tokens)
 
   end
-
 end
 
 module SchemeCalculations
@@ -718,6 +757,8 @@ class Parser
         return cons(tokens[idx + 1..tokens.length])
       elsif func == 'car'
         return car(tokens[idx + 1..tokens.length])
+      elsif func == 'cdr'
+        return cdr(tokens[idx + 1..tokens.length])
       elsif func == 'not'
          result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error
