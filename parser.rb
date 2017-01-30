@@ -153,23 +153,23 @@ module SchemeList
     string = tokens.join('')
     return '#t' if string == '\'()' || string == 'null)'
     res = display_error
-    if tokens.join('').start_with?('\'(', '(')
+    if string.start_with?('\'(', '(')
       res = list(tokens)
     end
     convert_boolean_to_scheme !get_err_string(res) ? true : false
   end
 
   def cons?(tokens)
-    if tokens.join('').start_with?('\'(', '(list')
-      list?(tokens) == '#t' ? '#t' : '#f'
-    elsif tokens.join('').start_with?('(cons')
-      get_err_string(cons(tokens[2..tokens.length])) ? '#f' : '#t'
+    string = tokens.join('')
+    res = display_error
+    if string.start_with?('(cons')
+      res = cons(tokens[2..tokens.length])
+    elsif string.start_with?('(list', '\'(')
+      res = list?(tokens)
     else
-      first = get_first_cons(tokens[1..tokens.length])
-      idx = get_index_cons(tokens[1..tokens.length], first)
-      second = get_second_cons(tokens[idx + 2..tokens.length])
-      return (get_err_string(first) || get_err_string(second) || tokens[idx + 1] != '.') ? '#f' : '#t'
+      res = cons(tokens[1..tokens.length])
     end
+    convert_boolean_to_scheme !get_err_string(res) ? true : false
   end
 
   def helper_digit_bool_string(token)
@@ -232,7 +232,7 @@ module SchemeList
   end
 
   def get_second_cons(tokens)
-    return '\'()' if tokens.join('') == '\'())'
+    return '\'()' if tokens.join('') == '\'())' || tokens.join('') == '())'
     if tokens.join('').start_with?('\'(', '(list')
       [list(tokens[0..tokens.length - 1]), true]
     else
@@ -292,6 +292,7 @@ module SchemeList
   end
 
   def get_first_car_method(tokens)
+    puts cons?(tokens)
     if cons?(tokens) == '#t' || list?(tokens) == '#t'
       res = list(tokens)
       res[2..res.length - 2]
