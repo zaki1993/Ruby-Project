@@ -292,44 +292,20 @@ module SchemeList
   end
 
   def get_first_car(tokens, idx)
-    if tokens[idx] == '('
-      get_first_car_method(tokens[0..find_last_bracket(tokens)])
+    idx = find_index_cdr(tokens, idx)
+    tokens = tokens[0..idx].insert('\'')
+    result = calc_fn_val(tokens[1..tokens.length]).to_s
+    if get_err_string(result)
+      result = list(tokens).to_s
     else
-      get_first_car_variable(tokens, idx)
+      result = list(result.split('')).to_s
     end
-  end
-
-  def check_for_brackets_only(tokens)
-    left_brackets = 0
-    right_brackets = 0
-    tokens.each do |v|
-      left_brackets += 1 if v == '('
-      right_brackets += 1 if v == ')'
-      return false if v != '(' && v != ')'
-    end
-    left_brackets == right_brackets ? true : false
-  end
-
-  def get_first_car_method(tokens)
-    if check_for_brackets_only(tokens)
-      tokens[0..tokens.length - 1].join('')
-    elsif cons?(tokens) == '#t' || list?(tokens) == '#t'
-      res = list(tokens)
-      res[2..res.length - 2].insert(0, '\'')
+    return display_error if get_err_string(result)
+    result = result[2..result.length - 2].to_s
+    if result.start_with?('(')
+      result.insert(0, '\'')
     else
-      calc_fn_val(tokens[1..tokens.length].split(''))
-    end
-  end
-
-  def get_first_car_variable(tokens, idx)
-    if check_for_instance_var(tokens, idx)
-      get_instance_var(tokens, idx)
-    elsif tokens[idx] == '"'
-      get_string(tokens, idx, find_next_quote(tokens))
-    elsif tokens[idx] == '#'
-      get_boolean_scheme(tokens, idx)
-    else
-      calculate_digit_scheme(tokens[idx])
+      result
     end
   end
 
@@ -349,6 +325,7 @@ module SchemeList
     idx = find_index_cdr(tokens, 0)
     tokens = tokens[idx..tokens.length].insert(0, '(')
     result = list(tokens).delete('\'')
+    return '\'()' if result == '()' || result == '\'()'
     return display_error if get_err_string(result)
     result = result[1..result.length - 2].insert(0, '\'')
     result
