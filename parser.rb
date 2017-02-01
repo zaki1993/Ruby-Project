@@ -1,6 +1,6 @@
 module Display
   def display_result(result)
-    puts result
+    result
   end
 
   def display_error
@@ -826,8 +826,8 @@ class Parser
       idx += 1
     else
       old_idx = idx
-      idx += find_last_bracket(tokens[idx..tokens.length]) + 2
-      x = calc_fn_val(tokens[old_idx + 1..idx]).to_i
+      idx += find_last_bracket(tokens[idx..tokens.length]) + 1
+      x = calc_fn_val(tokens[old_idx + 1..idx - 1]).to_i
     end
     tokens = tokens[idx..tokens.length]
     if tokens.length < 2
@@ -835,19 +835,15 @@ class Parser
     elsif tokens.length == 2
       y = calculate_digit_scheme(tokens[0]).to_i
     else
-      idx = find_last_bracket(tokens) + 1
-      if tokens[0] == '(' && idx != 1
-        y = calc_fn_val(tokens[1..tokens.length])
-      else
+      newSign =
         if sign == '-'
-          tokens.unshift('+')
+          '+'
         elsif sign == '/'
-          tokens.unshift('*')
+          '*'
         else
-          tokens.unshift(sign)
+          sign
         end
-        y = calc_fn_val(tokens).to_i
-      end
+        y = primary_calculations(tokens, newSign).to_i
     end
     return convert_calculation_to_scheme(sign, x, y)
   end
