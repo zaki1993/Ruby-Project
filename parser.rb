@@ -293,12 +293,12 @@ module SchemeList
 
   def get_first_car(tokens, idx)
     idx = find_index_cdr(tokens, idx)
-    tokens = tokens[0..idx].insert('\'')
+    tokens = tokens[0..idx]
     result = calc_fn_val(tokens[1..tokens.length]).to_s
     if get_err_string(result)
       result = list(tokens).to_s
     else
-      result = list(result.split('')).to_s
+      result = list(tokens).to_s
     end
     return display_error if get_err_string(result)
     result = result[2..result.length - 2].to_s
@@ -343,8 +343,39 @@ module SchemeList
     get_second_cdr(tokens[2..tokens.length])
   end
 
-  def multiple_car_cdr(tokens)
+  def valid_multiple_car_cdr(tokens)
+    string = ""
+    tokens.join('').each_char do |v|
+      string += v
+      break if v == 'r'
+    end
+    return false if string[0] != 'c' && string[string.length] != 'r'
+    string = string[1..string.length - 2]
+    string.each_char { |v| return false if v != 'd' && v != 'a' }
+    true
+  end
 
+  def convert_str_to_arr(string)
+    string.delete(' ')
+    string
+  end
+
+  def get_first_second(tokens)
+    fn_first = tokens[0]
+    fn_second = tokens[1..tokens.length]
+    fn_repeat = fn_first[1..fn_first.length - 2]
+    [fn_second, fn_repeat]
+  end
+
+  def multiple_car_cdr(tokens)
+    fn_second, fn_repeat = get_first_second(tokens)
+    fn_repeat.each_char.each_with_index do |v, i|
+      fn_second = car(fn_second) if v == 'a'
+      fn_second = cdr(fn_second) if v == 'd'
+      break if i == fn_repeat.length - 1
+      fn_second = convert_str_to_arr(fn_second.split(''))
+    end
+    return get_err_string(fn_second.to_s) ? display_error : fn_second
   end
 end
 
@@ -651,17 +682,19 @@ class Parser
       # Define a function
       define(tokens[tokens.index('define') + 1..tokens.length])
     else
-      # Calculate function value
-      tokens.each do |func|
-        if @functions.include? func
-          arr = tokens[tokens.index(func)..tokens.length]
-          return display_result calc_fn_val(arr)
-        end
-      end
       if tokens[0] != '(' && tokens.length == 1 && instance_variable_defined?("@#{tokens[0]}")
         display_result instance_variable_get("@#{tokens[0]}")
       else
-        display_result display_no_variable_error "#{tokens[0]}"
+          # Calculate function value
+          arr = tokens[1..tokens.length]
+          result = calc_fn_val(arr)
+          if result == []
+            display_result display_no_variable_error "#{tokens[0]}"
+          elsif get_err_string(result) || result.nil?
+            display_result display_error
+          else
+            display_result result
+          end
       end
     end
   end
@@ -736,6 +769,8 @@ class Parser
         return car(tokens[idx + 1..tokens.length])
       elsif func == 'cdr'
         return cdr(tokens[idx + 1..tokens.length])
+      elsif valid_multiple_car_cdr(tokens)
+        return multiple_car_cdr(tokens[0..tokens.length - 2])
       elsif func == 'not'
          result = scheme_not(tokens[idx + 1..tokens.length])
         return display_error if result == display_error
