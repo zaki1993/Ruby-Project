@@ -88,8 +88,8 @@ module SchemeString
 
   def string?(tokens)
     res = get_string(tokens, 0, find_next_quote(tokens))
-    return res if get_err_string(res)
-    convert_boolean_to_scheme res.class == String
+    result = get_err_string(res) ? false : true
+    convert_boolean_to_scheme result
   end
 
   def scheme_substring(tokens)
@@ -105,9 +105,9 @@ module SchemeString
   end
 
   def get_substring_result(x, y, check, string)
-    return '""' if x == y && check
-    return '"' + string[x..y - 1] + '"' if check
-    return '"' + string[x..string.length] + '"'
+    return '' if x == y && check
+    return string[x..y - 1] if check
+    return string[x..string.length]
   end
 
   def get_string_sign(tokens)
@@ -369,7 +369,7 @@ module SchemeList
 
   def multiple_car_cdr(tokens)
     fn_second, fn_repeat = get_first_second(tokens)
-    fn_repeat.each_char.each_with_index do |v, i|
+    fn_repeat.reverse.each_char.each_with_index do |v, i|
       fn_second = car(fn_second) if v == 'a'
       fn_second = cdr(fn_second) if v == 'd'
       break if i == fn_repeat.length - 1
@@ -553,10 +553,10 @@ module ToScheme
   include SchemeCalculations
   def convert_calculation_to_scheme(sign, x, y)
     case sign
-    when '+' then x + y
-    when '-' then x - y
-    when '*' then x * y
-    when '/' then x / y
+    when '+' then x.to_f + y.to_f
+    when '-' then x.to_f - y.to_f
+    when '*' then x.to_f * y.to_f
+    when '/' then y == 0 ? '+inf.0' : x.to_f / y.to_f
     end
   end
 
@@ -569,7 +569,6 @@ module ToScheme
     else
       x = calculate_digit_scheme(tokens[idx]).to_i
     end
-    puts tokens[idx]
     if tokens[idx + 1] == '('
       old_idx = idx + 1
       idx += find_last_bracket(tokens[old_idx..tokens.length]) + 2
@@ -600,7 +599,6 @@ module ToScheme
   end
 
   def convert_compare_to_scheme(sign, x, y)
-    puts x, y
     result = case sign
              when '<' then x < y
              when '>' then x > y
@@ -963,7 +961,7 @@ class Parser
       idx = find_last_bracket(tokens[start..tokens.length])
       res = calc_fn_val(tokens[start + 1..idx])
     elsif tokens[start] == "\"" && tokens[end_idx] == "\""
-      tokens[start..end_idx].each { |v| res.insert(res.length, v) }
+      tokens[start + 1..end_idx - 1].each { |v| res.insert(res.length, v) }
     elsif /[[:alpha:]]/ =~ tokens[0] && start == 0
       if instance_variable_defined?("@#{tokens[start]}")
         res = instance_variable_get("@#{tokens[start]}")

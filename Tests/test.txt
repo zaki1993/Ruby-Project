@@ -44,3 +44,5 @@
 (cadar '((1 (1 2) 3) 3))
 (caar '((1 2)))
 (cdddr '(1 1 1 1 1))
+
+rspec spec.rb --require ./parser.rb --colour --format documentation
