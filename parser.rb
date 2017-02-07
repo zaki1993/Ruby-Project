@@ -468,7 +468,7 @@ module SchemeCalculations
 
   def find_second_digit(tokens, start_value, index, minus)
     if tokens[index] == '('
-    start_value = calc_fn_val(tokens[index + 1..tokens.length])
+      start_value = calc_fn_val(tokens[index + 1..tokens.length])
     elsif tokens[index] == '-'
       start_value = calculate_digit_scheme(tokens, index + 1)
       minus = -1
@@ -478,14 +478,34 @@ module SchemeCalculations
     [start_value, minus]
   end
 
+  def gcd_helper(x, y)
+    if y.zero?
+      x.to_i.gcd(x.to_i)
+    else
+      x.to_i.gcd(y.to_i)
+    end
+  end
+
+  def lcm_helper(x, y)
+    if y.zero?
+      x.to_i.lcm(x.to_i)
+    else
+      x.to_i.lcm(y.to_i)
+    end
+  end
+
+  def quotient_helper(x, y, minus)
+    truncate((x.to_i / y.to_i).to_s) * minus
+  end
+
   def primary_func_numbers(tokens, sign)
     x, y, minus = get_digits_pair(tokens)
     case sign
     when 'remainder' then (x.abs % y.abs) * (x / x.abs)
     when 'modulo' then x.modulo(y)
-    when 'quotient' then truncate((x.to_i/y.to_i).to_s) * minus
-    when 'gcd' then y == 0 ? x.to_i.gcd(x.to_i) : x.to_i.gcd(y.to_i)
-    when 'lcm' then y == 0 ? x.to_i.lcm(x.to_i) : x.to_i.lcm(y.to_i)
+    when 'quotient' then quotient_helper(x, y, minus)
+    when 'gcd' then gcd_helper(x, y)
+    when 'lcm' then lcm_helper(x, y)
     end
   end
 
@@ -504,20 +524,20 @@ end
 
 module SchemeBoolean
   def get_boolean_scheme_bracket(tokens)
-    endIdx = find_last_bracket(tokens,)
-    [calc_fn_val(tokens[1..endIdx]), endIdx + 1]
+    tokens = tokens[1..find_last_bracket(tokens)]
+    [calc_fn_val(tokens), tokens.length + 1]
   end
 
   def check_for_instance_var(tokens, idx)
-    (tokens[idx] =~ /[[:alpha:]]/) == 0 && instance_variable_defined?("@#{tokens[idx]}")
+    return false unless tokens[idx] =~ /[[:alpha:]]/
+    instance_variable_defined?("@#{tokens[idx]}")
   end
 
   def get_instance_var(tokens, idx)
-      return instance_variable_get("@#{tokens[idx]}")
+    instance_variable_get("@#{tokens[idx]}")
   end
 
   def get_boolean_scheme(tokens)
-    y = display_error
     if check_for_instance_var(tokens, 0)
       [get_instance_var(tokens, 0), 1]
     elsif tokens.join('').start_with?('#t', '#f')
@@ -547,35 +567,33 @@ end
 
 module ToScheme
   include SchemeCalculations
+  def zero_division(x, y)
+    if y.to_f.zero?
+      '+inf.0'
+    else
+      x.to_f / y.to_f
+    end
+  end
+
   def convert_calculation_to_scheme(sign, x, y)
     case sign
     when '+' then x.to_f + y.to_f
     when '-' then x.to_f - y.to_f
     when '*' then x.to_f * y.to_f
-    when '/' then (y.to_f == 0 ? '+inf.0' : x.to_f / y.to_f)
+    when '/' then zero_division(x, y)
     end
   end
 
   def compare(tokens, sign)
-    x, y, idx = 0, 0, 0
     x, idx = calculate_digit_scheme(tokens, 0)
     y = calculate_digit_scheme(tokens, idx)[0].to_i
     return display_error if get_err_digit(x.to_i) || get_err_digit(y)
-    return convert_compare_to_scheme(sign, x.to_i, y)
-  end
-
-  def calculate_digit_alpha(value)
-    if instance_variable_defined?("@#{value}")
-      result = instance_variable_get "@#{value}"
-      return display_error if get_err_digit(value)
-    else
-      return display_no_variable_error value
-    end
+    convert_compare_to_scheme(sign, x.to_i, y)
   end
 
   def calculate_digit_bracket(tokens, idx)
-    endIdx = find_last_bracket(tokens)
-    [calc_fn_val(tokens[idx + 1..endIdx]), endIdx + 1]
+    tokens = tokens[idx + 1..find_last_bracket(tokens)]
+    [calc_fn_val(tokens), tokens.length + 1]
   end
 
   def check_for_dot(tokens, idx)
@@ -590,9 +608,9 @@ module ToScheme
   end
 
   def calculate_digit_scheme(tokens, idx)
-    if (tokens[idx] =~ /[[:alpha:]]/) == 0
-      [calculate_digit_alpha(tokens[idx]), 1]
-    elsif (tokens[idx] =~ /[[:digit:]]/) == 0
+    if check_for_instance_var(tokens, idx)
+      [get_instance_var(tokens, idx), 1]
+    elsif tokens[idx] =~ /[[:digit:]]/
       check_for_dot(tokens, idx)
     elsif tokens[idx] == '('
       calculate_digit_bracket(tokens, idx)

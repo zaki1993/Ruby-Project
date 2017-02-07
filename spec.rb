@@ -4,7 +4,6 @@ RSpec.describe 'Parser' do
   end
 
   describe '#numbers' do
-# todo for variables
     context 'sum' do
       it 'sums with one number' do
         expect(@parser.read('(+ 1)')).to eq 1
