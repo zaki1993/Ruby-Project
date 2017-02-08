@@ -30,7 +30,7 @@ module Display
 
   def get_err_bool(x)
     return true if x != '#t' && x != '#f'
-    return false
+    false
   end
 
   def get_err_list(tokens)
@@ -42,12 +42,12 @@ end
 module SchemeString
   def string_upcase(tokens)
     res = get_string(tokens, 0, find_next_quote(tokens))
-    return get_err_string(res) ? res : res.upcase
+    get_err_string(res) ? res : res.upcase
   end
 
   def string_downcase(tokens)
     res = get_string(tokens, 0, find_next_quote(tokens))
-    return get_err_string(res) ? res : res.downcase
+    get_err_string(res) ? res : res.downcase
   end
 
   def string_contains?(tokens)
@@ -78,11 +78,11 @@ module SchemeString
     res = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
     return res if get_err_string(res)
     res = res.split(' ')
-    res.each_with_index do |v, i|
+    res.each_with_index do |_v, i|
       res[i].insert(0, '"')
       res[i].insert(res[i].length, '"')
     end
-    res = res.join(" ").insert(0, '\'(')
+    res = res.join(' ').insert(0, '\'(')
     res.insert(res.length, ')')
   end
 
@@ -95,7 +95,7 @@ module SchemeString
   def scheme_substring(tokens)
     idx = 0
     quote = find_next_quote(tokens)
-    end_idx = quote == 0 ? find_last_bracket(tokens) : quote
+    end_idx = quote.zero? ? find_last_bracket(tokens) : quote
     string = get_string(tokens, idx, end_idx).delete('"')
     return string if get_err_string(string)
     x, y, z = get_digits_pair(tokens[end_idx + 1..tokens.length])
@@ -117,8 +117,8 @@ module SchemeString
     tokens = tokens[sign.length + 1..tokens.length]
     x = get_string(tokens, 0, find_next_quote(tokens)).delete('"')
     idx = find_next_quote(tokens)
-    idx = (idx == 0 ? find_last_bracket(tokens) + 1 : idx + 1)
-    idx = (idx == 0 ? 1 : idx)
+    idx = (idx.zero? ? find_last_bracket(tokens) + 1 : idx + 1)
+    idx = (idx.zero? ? 1 : idx)
     [x, sign, tokens[idx..tokens.length]]
   end
 
@@ -181,7 +181,7 @@ module SchemeList
     if tokens.join('').start_with?('\'(')
       idx = find_last_bracket(tokens[1..tokens.length]) + 1
       res = list(tokens[2..idx]).delete('\'')
-      return [res, tokens[2..idx].length]
+      [res, tokens[2..idx].length]
     elsif tokens[0] == '('
       idx = find_last_bracket(tokens)
       res = calc_fn_val(tokens[1..idx]).to_s
@@ -190,16 +190,26 @@ module SchemeList
         res = list(tokens[0..idx].insert(0, '\''))
         res = res[2..res.length - 2]
       end
-      return [res, idx]
+      [res, idx]
     elsif tokens[0] == '"'
       idx = find_next_quote(tokens)
-      return [get_string(tokens, 0, idx).to_s, idx]
+      [get_string(tokens, 0, idx).to_s, idx]
     elsif tokens[0] == '#'
-      return [get_boolean_scheme(tokens)[0], 1]
-    elsif (tokens[0] =~ /[[:alpha:]]/) == 0
-      return [helper_digit_bool_string(tokens[0]).to_s, 0]
+      [get_boolean_scheme(tokens)[0], 1]
+    elsif check_for_instance_var(tokens, 0)
+      [get_instance_var(tokens, 0), 0]
     else
-      return [calculate_digit_scheme(tokens, 0)[0].to_s, 0]
+      [calculate_digit_scheme(tokens, 0)[0].to_s, 0]
+    end
+  end
+
+  def list_helper(tokens, result, skips)
+    tokens = tokens[0..tokens.length - 2]
+    tokens.each_with_index do |v, i|
+      next if (skips -= 1) >= 0 || v == ')'
+      res, skips = get_list_elem(tokens[i..tokens.length])
+      return res if get_err_string(res.to_s)
+      result += res + ' '
     end
   end
 
@@ -208,26 +218,26 @@ module SchemeList
     return '\'()' if string == '\'())' || string == '())'
     return display_error if get_err_list(tokens)
     result = '\'('
-    skips = 0
-    tokens[0..tokens.length - 2].each_with_index do |v, i|
-      next if (skips -= 1) >= 0 || v == ')'
-      res = get_list_elem(tokens[i..tokens.length])
-      return res[0] if get_err_string(res[0].to_s)
-      result += res[0] + ' '
-      skips = res[1]
-    end
+    result += list_helper(tokens, result, 0)
     result.insert(result.length - 1, ')').rstrip
   end
 
- def get_first_cons(tokens)
+  def get_first_cons(tokens)
     if tokens[0] == '('
       calc_fn_val(tokens[1..find_last_bracket(tokens)])
     else
       res = calculate_digit_scheme(tokens, 0)[0]
       res = get_boolean_scheme(tokens, 0)[0] if get_err_string(res)
       idx = find_next_quote(tokens)
-      res = get_string(tokens, 0, idx) if get_err_string(res) && get_err_bool(res)
-      res
+      get_string(tokens, 0, idx) if get_err_string(res) && get_err_bool(res)
+    end
+  end
+
+  def get_second_cons_helper(tokens)
+    if !tokens.join('').start_with?('(cons')
+      [calc_fn_val(tokens[1..tokens.length]), false]
+    else
+      [list(tokens), true]
     end
   end
 
@@ -236,13 +246,7 @@ module SchemeList
     if tokens.join('').start_with?('\'(', '(list')
       [list(tokens[0..tokens.length - 1]), true]
     elsif list?(tokens) == '#t'
-      if !tokens.join('').start_with?('(cons')
-        res = calc_fn_val(tokens[1..tokens.length])
-        [res, false]
-      else
-        res = list(tokens)
-        [res, true]
-      end
+      get_second_cons_helper(tokens)
     else
       [get_first_cons(tokens), false]
     end
@@ -976,7 +980,7 @@ class Parser
       res = calc_fn_val(tokens[start + 1..idx])
     elsif tokens[start] == '"' && tokens[end_idx] == '"'
       res = get_string_quote(tokens[start + 1..end_idx - 1])
-    elsif check_for_instance_var(tokens, 0) && start == 0
+    elsif check_for_instance_var(tokens, 0) && start.zero?
       res = get_instance_var(tokens, 0)
     else
       return display_error
