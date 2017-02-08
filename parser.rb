@@ -195,11 +195,11 @@ module SchemeList
       idx = find_next_quote(tokens)
       return [get_string(tokens, 0, idx).to_s, idx]
     elsif tokens[0] == '#'
-      return [get_boolean_scheme(tokens, 0), 1]
+      return [get_boolean_scheme(tokens)[0], 1]
     elsif (tokens[0] =~ /[[:alpha:]]/) == 0
       return [helper_digit_bool_string(tokens[0]).to_s, 0]
     else
-      return [calculate_digit_scheme(tokens, 0).to_s, 0]
+      return [calculate_digit_scheme(tokens, 0)[0].to_s, 0]
     end
   end
 
@@ -223,8 +223,8 @@ module SchemeList
     if tokens[0] == '('
       calc_fn_val(tokens[1..find_last_bracket(tokens)])
     else
-      res = calculate_digit_scheme(tokens, 0)
-      res = get_boolean_scheme(tokens, 0) if get_err_string(res)
+      res = calculate_digit_scheme(tokens, 0)[0]
+      res = get_boolean_scheme(tokens, 0)[0] if get_err_string(res)
       idx = find_next_quote(tokens)
       res = get_string(tokens, 0, idx) if get_err_string(res) && get_err_bool(res)
       res
@@ -235,19 +235,35 @@ module SchemeList
     return '\'()' if tokens.join('') == '\'())' || tokens.join('') == '())'
     if tokens.join('').start_with?('\'(', '(list')
       [list(tokens[0..tokens.length - 1]), true]
-    else
-      res = get_first_cons(tokens)
-      if list?(tokens) == '#t'
-        if !tokens.join('').start_with?('(cons')
-          res = calc_fn_val(tokens[1..tokens.length])
-          [res, false]
-        else
-          res = list(tokens)
-          [res, true]
-        end
+    elsif list?(tokens) == '#t'
+      if !tokens.join('').start_with?('(cons')
+        res = calc_fn_val(tokens[1..tokens.length])
+        [res, false]
       else
-        [get_first_cons(tokens), false]
+        res = list(tokens)
+        [res, true]
       end
+    else
+      [get_first_cons(tokens), false]
+    end
+  end
+
+  def list_or_cons_helper(result, second)
+    if second[3..second.length - 2].to_s == ''
+      result[result.length - 1] = ''
+      result + ')'
+    else
+      result + second[3..second.length - 2].to_s
+    end
+  end
+
+  def cons_result_helper(result, second, list_or_cons)
+    if list_or_cons
+      list_or_cons_helper(result, second)
+    elsif second[0] != '('
+      result + '. ' + second.to_s + ')'
+    else
+      result + ' . ' + second.to_s + ')'
     end
   end
 
@@ -256,25 +272,13 @@ module SchemeList
     return second if get_err_string(second)
     result = '('
     result += first.to_s + ' '
-    if list_or_cons
-      if second[3..second.length - 2].to_s == ''
-        result[result.length - 1] = ''
-        result += ')'
-      else
-        result += second[3..second.length - 2].to_s
-      end
-    elsif second[0] != '('
-      result += '. ' + second.to_s + ')'
-    else
-      puts "A"
-      result += ' . ' + second.to_s + ')'
-    end
+    cons_result_helper(result, second, list_or_cons)
   end
 
   def get_index_cons(tokens, first)
     idx = find_last_bracket(tokens) + 1
-    idx = (idx == 1 ? find_next_quote(tokens) + 1: idx)
-    idx = (idx == 1 ? first.to_s.length : idx)
+    idx = (idx == 1 ? find_next_quote(tokens) + 1 : idx)
+    idx == 1 ? first.to_s.length : idx
   end
 
   def cons(tokens)
@@ -294,19 +298,11 @@ module SchemeList
   def get_first_car(tokens, idx)
     idx = find_index_cdr(tokens, idx)
     tokens = tokens[0..idx]
-    result = calc_fn_val(tokens[1..tokens.length]).to_s
-    if get_err_string(result)
-      result = list(tokens).to_s
-    else
-      result = list(tokens).to_s
-    end
+    result = list(tokens)
     return display_error if get_err_string(result)
     result = result[2..result.length - 2].to_s
-    if result.start_with?('(')
-      result.insert(0, '\'')
-    else
-      result
-    end
+    return result.insert(0, '\'') if result.start_with?('(')
+    result
   end
 
   def find_index_cdr(tokens, idx)
@@ -343,16 +339,20 @@ module SchemeList
     get_second_cdr(tokens[2..tokens.length])
   end
 
+  def validation_car_cdr_helper(string)
+    string.each_char { |v| return false if v != 'd' && v != 'a' }
+    true
+  end
+
   def valid_multiple_car_cdr(tokens)
-    string = ""
+    string = ''
     tokens.join('').each_char do |v|
       string += v
       break if v == 'r'
     end
     return false if string[0] != 'c' && string[string.length] != 'r'
     string = string[1..string.length - 2]
-    string.each_char { |v| return false if v != 'd' && v != 'a' }
-    true
+    validation_car_cdr_helper(string)
   end
 
   def convert_str_to_arr(string)
@@ -364,24 +364,35 @@ module SchemeList
     fn_first = tokens[0]
     fn_second = tokens[1..tokens.length]
     fn_repeat = fn_first[1..fn_first.length - 2]
-    [fn_second, fn_repeat]
+    [fn_second, fn_repeat.reverse]
+  end
+
+  def multi_car_cdr_helper(result)
+    if get_err_string(result.to_s)
+      display_error
+    else
+      result
+    end
   end
 
   def multiple_car_cdr(tokens)
     fn_second, fn_repeat = get_first_second(tokens)
-    fn_repeat.reverse.each_char.each_with_index do |v, i|
+    fn_repeat.each_char.each_with_index do |v, i|
       fn_second = car(fn_second) if v == 'a'
       fn_second = cdr(fn_second) if v == 'd'
       break if i == fn_repeat.length - 1
       fn_second = convert_str_to_arr(fn_second.split(''))
     end
-    return get_err_string(fn_second.to_s) ? display_error : fn_second
+    multi_car_cdr_helper(fn_second)
   end
 end
 
 module SchemeCalculations
   def single_digit(tokens)
-    x, y, idx, minus = 0, 0, 0, 1
+    x = 0
+    y = 0
+    idx = 0
+    minus = 1
     if tokens[idx] == '-'
       minus = -1
       return display_error if tokens[idx + 1] == '('
@@ -401,8 +412,16 @@ module SchemeCalculations
     end
     return display_error if x.class == String || y.class == String
     res = (x.to_f / y.to_f) * minus if y != 0
-    res = x.to_f * minus if y == 0
+    res = x.to_f * minus if y.zero?
     res
+  end
+
+  def numerator_helper(res)
+    if res.class.superclass == Integer
+      res
+    else
+      display_error
+    end
   end
 
   def numerator(tokens)
@@ -414,21 +433,24 @@ module SchemeCalculations
     else
       res = calculate_digit_scheme(tokens, 0)
     end
-    (res.class.superclass == Integer ? res : display_error)
+    numerator_helper(res)
+  end
+
+  def denominator_helper(tokens, res)
+    if numerator(tokens) < 0
+      res * -1
+    else
+      res
+    end
   end
 
   def denominator(tokens)
-    return display_error if numerator(tokens).class == String
+    return display_error if get_err_digit(numerator(tokens))
     return -1 if !tokens.include?('/') && numerator(tokens) < 0
-    return 1 if !tokens.include?('/')
+    return 1 unless tokens.include?('/')
     idx = tokens.index('/') + 1
-    res =
-    if tokens[idx] == '('
-      calc_fn_val(tokens[idx + 1..tokens.length])
-    else
-      calculate_digit_scheme(tokens, idx)
-    end
-    (numerator(tokens) < 0 ? res * -1 : res)
+    res = calculate_digit_scheme(tokens, idx)[0].to_f
+    denominator_helper(tokens, res)
   end
 
   def truncate(tokens)
@@ -444,17 +466,23 @@ module SchemeCalculations
     temp.ceil
   end
 
-  def abs(tokens)
-    result =
-    calc_fn_val(tokens[1..tokens.length]) if tokens[0] == '('
-    result =
-    calculate_digit_scheme(tokens, 0) if tokens[0] != '-'
-    result =
-    calculate_digit_scheme(tokens, 1) if tokens[0] == '-'
-    return (result.class == String ? result : result.abs)
+  def abs_result(result)
+    if get_err_string(result)
+      result
+    else
+      result.abs
+    end
   end
 
-  def find_first_digit(tokens, start_value, index, minus)
+  def abs(tokens)
+    if tokens[0] == '-'
+      abs_result(calculate_digit_scheme(tokens, 1)[0].to_f)
+    else
+      abs_result(calculate_digit_scheme(tokens, 0)[0].to_f)
+    end
+  end
+
+  def find_first_digit(tokens, start_value, _index, minus)
     if tokens[0] == '('
       start_value = calc_fn_val(tokens)
     elsif tokens[0] == '-'
