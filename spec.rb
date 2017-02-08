@@ -241,13 +241,22 @@ RSpec.describe 'Parser' do
       expect(@parser.read('(if #f 1 2)')).to eq 2
     end
 
-    it 'can use if with function value' do
+    it 'can use if with functions statement' do
       expect(@parser.read('(if (< 2 3) #t #f)')).to eq '#t'
       expect(@parser.read('(if (not #t) #t #f)')).to eq '#f'
       expect(@parser.read('(if (not (not #t)) "Pesho" "Gosho")')).to eq 'Pesho'
       expect(@parser.read('(if (not (< 2 3)) "Pesho" "Gosho")')).to eq 'Gosho'
       expect(@parser.read('(if (not #f) 1 2)')).to eq 1
       expect(@parser.read('(if (= 5 5) 1 2)')).to eq 1
+    end
+
+    it 'can use if with functions results' do
+      expect(@parser.read('(if (< 2 3) (not #f) #f)')).to eq '#t'
+      expect(@parser.read('(if (not #t) #t (not #t))')).to eq '#f'
+      expect(@parser.read('(if #t (substring "Pesho" 0) 1)')).to eq 'Pesho'
+      expect(@parser.read('(if #f 1 (substring "Gosho" 0))')).to eq 'Gosho'
+      expect(@parser.read('(if (not #f) (+ 1 0) 2)')).to eq 1
+      expect(@parser.read('(if (= 5 5) (+ 0.5 0.5) 2)')).to eq 1
     end
   end
 
@@ -265,6 +274,36 @@ RSpec.describe 'Parser' do
     it 'can display strings' do
       expect(@parser.read('"Sample"')).to eq 'Sample'
       expect(@parser.read('"Gosho"')).to eq 'Gosho'
+    end
+
+    it 'can display lists' do
+      expect(@parser.read('(list 1 2)')).to eq '\'(1 2)'
+      expect(@parser.read('\'()')).to eq '\'()'
+      expect(@parser.read('\'(1 2)')).to eq '\'(1 2)'
+    end
+
+    it 'can display cons' do
+      expect(@parser.read('(cons 1 2)')).to eq '(1 . 2)'
+      expect(@parser.read('(cons 1 2 3)')).to eq '(1  2 . 3)'
+      expect(@parser.read('(cons 1 \'())')).to eq '\'(1)'
+    end
+  end
+
+  describe '#variables' do
+    it 'can define variable' do
+      @parser.read('(define x 5)')
+      @parser.read('(define y x)')
+      expect(@parser.read('x')).to eq '5'
+      expect(@parser.read('y')).to eq '5'
+    end
+
+    it 'can use variables in functions' do
+      @parser.read('(define x 5)')
+      @parser.read('(define y x)')
+      expect(@parser.read('(+ x y)')).to eq 10
+      expect(@parser.read('(- x y)')).to eq 0
+      expect(@parser.read('(* x y)')).to eq 25
+      expect(@parser.read('(/ x y)')).to eq 1
     end
   end
 end

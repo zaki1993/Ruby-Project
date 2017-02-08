@@ -1,6 +1,6 @@
 module Display
   def display_result(result)
-    result
+    puts result
   end
 
   def display_error
@@ -99,15 +99,15 @@ module SchemeString
     string = get_string(tokens, idx, end_idx).delete('"')
     return string if get_err_string(string)
     x, y, z = get_digits_pair(tokens[end_idx + 1..tokens.length])
-    check = true if !get_err_digit(y)
-    return display_error if get_err_substr(x[0]*z, y[0], check, string.length)
-    return get_substring_result(x[0].to_i, y[0].to_i, check, string)
+    check = !get_err_string(y) ? true : false
+    return display_error if get_err_substr(x, y, check, string.length)
+    get_substring_result(x.to_i, y.to_i, check, string)
   end
 
   def get_substring_result(x, y, check, string)
     return '' if x == y && check
     return string[x..y - 1] if check
-    return string[x..string.length]
+    string[x..string.length]
   end
 
   def get_string_sign(tokens)
@@ -128,7 +128,7 @@ module SchemeString
     end_idx = find_next_quote(tokens)
     y = get_string(tokens, 0, end_idx).delete('"')
     return y if get_err_string(y)
-    return convert_boolean_to_scheme compare_strings(x, y, sign)
+    convert_boolean_to_scheme compare_strings(x, y, sign)
   end
 
   def compare_strings(x, y, sign)
@@ -178,11 +178,13 @@ module SchemeList
   end
 
   def get_list_elem(tokens)
+    puts tokens.join('')
     if tokens.join('').start_with?('\'(')
-      idx = find_last_bracket(tokens[1..tokens.length]) + 1
+      idx = find_last_bracket(tokens[1..tokens.length].push(')')) + 1
       res = list(tokens[2..idx]).delete('\'')
       [res, tokens[2..idx].length]
     elsif tokens[0] == '('
+      tokens = tokens.push(')')
       idx = find_last_bracket(tokens)
       res = calc_fn_val(tokens[1..idx]).to_s
       res = res.delete('\'') if list?(res.split(''))
@@ -191,51 +193,41 @@ module SchemeList
         res = res[2..res.length - 2]
       end
       [res, idx]
-    elsif tokens[0] == '"'
-      idx = find_next_quote(tokens)
-      [get_string(tokens, 0, idx).to_s, idx]
-    elsif tokens[0] == '#'
-      [get_boolean_scheme(tokens)[0], 1]
-    elsif check_for_instance_var(tokens, 0)
-      [get_instance_var(tokens, 0), 0]
     else
-      [calculate_digit_scheme(tokens, 0)[0].to_s, 0]
+      puts "A"
+      q = calculate_var(tokens)
+      puts q
+      q
     end
   end
 
-  def list_helper(tokens, result, skips)
+  def list_helper(tokens, skips)
+    result = '\'('
     tokens = tokens[0..tokens.length - 2]
     tokens.each_with_index do |v, i|
       next if (skips -= 1) >= 0 || v == ')'
       res, skips = get_list_elem(tokens[i..tokens.length])
       return res if get_err_string(res.to_s)
-      result += res + ' '
+      result += res.to_s + ' '
     end
+    result.insert(result.length - 1, ')').rstrip
   end
 
   def list(tokens)
     string = tokens.join('')
     return '\'()' if string == '\'())' || string == '())'
     return display_error if get_err_list(tokens)
-    result = '\'('
-    result += list_helper(tokens, result, 0)
-    result.insert(result.length - 1, ')').rstrip
+    list_helper(tokens, 0)
   end
 
   def get_first_cons(tokens)
-    if tokens[0] == '('
-      calc_fn_val(tokens[1..find_last_bracket(tokens)])
-    else
-      res = calculate_digit_scheme(tokens, 0)[0]
-      res = get_boolean_scheme(tokens, 0)[0] if get_err_string(res)
-      idx = find_next_quote(tokens)
-      get_string(tokens, 0, idx) if get_err_string(res) && get_err_bool(res)
-    end
+    calculate_var(tokens)[0]
   end
 
   def get_second_cons_helper(tokens)
     if !tokens.join('').start_with?('(cons')
-      [calc_fn_val(tokens[1..tokens.length]), false]
+      idx = find_last_bracket(tokens)
+      [calc_fn_val(tokens[1..idx]), false]
     else
       [list(tokens), true]
     end
@@ -245,7 +237,7 @@ module SchemeList
     return '\'()' if tokens.join('') == '\'())' || tokens.join('') == '())'
     if tokens.join('').start_with?('\'(', '(list')
       [list(tokens[0..tokens.length - 1]), true]
-    elsif list?(tokens) == '#t'
+    elsif tokens.join('').start_with?('(cons', '\'(')
       get_second_cons_helper(tokens)
     else
       [get_first_cons(tokens), false]
@@ -264,17 +256,17 @@ module SchemeList
   def cons_result_helper(result, second, list_or_cons)
     if list_or_cons
       list_or_cons_helper(result, second)
-    elsif second[0] != '('
+    elsif get_err_digit(second) && second[0] != '('
       result + '. ' + second.to_s + ')'
     else
-      result + ' . ' + second.to_s + ')'
+      result + '. ' + second.to_s + ')'
     end
   end
 
   def calculate_cons_result(first, second, list_or_cons)
     return display_error if list?(first.to_s.split('')) == '#t'
     return second if get_err_string(second)
-    result = '('
+    result = '\'('
     result += first.to_s + ' '
     cons_result_helper(result, second, list_or_cons)
   end
@@ -289,7 +281,7 @@ module SchemeList
     return display_error if tokens.join('').start_with?('\'(')
     first = get_first_cons(tokens)
     return first if get_err_string(first)
-    idx = get_index_cons(tokens, first)
+    idx = calculate_var(tokens)[1]
     return display_error if tokens[idx] == ')'
     second = get_second_cons(tokens[idx..tokens.length])
     calculate_cons_result(first, second[0], second[1])
@@ -488,26 +480,23 @@ module SchemeCalculations
 
   def find_first_digit(tokens, start_value, _index, minus)
     if tokens[0] == '('
-      start_value = calc_fn_val(tokens)
+      idx = find_last_bracket(tokens)
+      [calc_fn_val(tokens[0..idx]), idx + 1, 0]
     elsif tokens[0] == '-'
-      start_value = calculate_digit_scheme(tokens, 1)
-      minus = -1
+      [calculate_digit_scheme(tokens, 1)[0], 2, 1]
     else
-      start_value = calculate_digit_scheme(tokens, 0)
+      [calculate_digit_scheme(tokens, 0)[0], 1, 0]
     end
-    [start_value, (minus == -1 ? 1 : 0), minus]
   end
 
   def find_second_digit(tokens, start_value, index, minus)
     if tokens[index] == '('
-      start_value = calc_fn_val(tokens[index + 1..tokens.length])
+      [calc_fn_val(tokens[index + 1..tokens.length]), 1]
     elsif tokens[index] == '-'
-      start_value = calculate_digit_scheme(tokens, index + 1)
-      minus = -1
+      [calculate_digit_scheme(tokens, index + 1)[0], -1]
     else
-      start_value = calculate_digit_scheme(tokens, index)
+      [calculate_digit_scheme(tokens, index)[0], 1]
     end
-    [start_value, minus]
   end
 
   def gcd_helper(x, y)
@@ -542,15 +531,12 @@ module SchemeCalculations
   end
 
   def get_digits_pair(tokens)
-    first = find_first_digit(tokens, 0, 0, 1)
-    x = first[0]
-    idx = first[1]
-    minus = first[2]
-    idx += find_last_bracket(tokens) + 1
+    x, idx, minus = find_first_digit(tokens, 0, 0, 1)
+    return [x, display_error, minus] if tokens[idx] == ')'
     second = find_second_digit(tokens, 0, idx, minus)
     y = second[0]
     minus *= second[1] if minus == 1
-    [x, y, minus]
+    [x.to_f, y.to_f, minus]
   end
 end
 
@@ -723,10 +709,11 @@ class Parser
   end
 
   def parser(tokens)
+    default = check_for_default_print(tokens)
     if tokens.length.zero?
 
-    elsif tokens.length != 0 && check_for_default_print(tokens) != false
-      display_result check_for_default_print(tokens)
+    elsif tokens.length != 0 && default != false
+      display_result default
     elsif tokens.all? { |symbol| symbol == '(' || symbol == ')' }
       # ok
     elsif tokens.include?('define')
@@ -750,13 +737,17 @@ class Parser
     end
   end
 
+  def set_instance_var(var, value)
+    instance_variable_set("@#{var}", value)
+  end
+
   def define(tokens)
     if tokens.length < 3
       display_result display_error
     elsif tokens[0] == '('
       # function with parameters
       puts "Parameters"
-    elsif (/[[:alpha:]]/ =~ tokens[0]) != 0
+    elsif not /[[:alpha:]]/ =~ tokens[0]
       display_result display_error
     elsif tokens[1] != '('
       # define a function without parameters
@@ -768,33 +759,31 @@ class Parser
           variable.insert(variable.length, val)
         end
         variable.insert(variable.length, '"')
-        instance_variable_set("@#{tokens[0]}", variable)
+        set_instance_var(tokens[0], variable)
       elsif tokens[1] == '"' && !tokens[2..tokens.length].include?('"')
         display_result display_error
       elsif tokens[1] == '#'
         if (tokens[2] == 't' || tokens[2] == 'f') && tokens[3] == ')'
           variable = "\##{tokens[2]}"
-          instance_variable_set("@#{tokens[0]}", variable)
+          set_instance_var(tokens[0], variable)
         else
           display_result display_error
         end
-      elsif (variable =~ /[[:alpha:]]/) == 0 && instance_variable_defined?("@#{variable}")
-        instance_variable_set("@#{tokens[0]}", instance_variable_get("@#{variable}"))
+      elsif check_for_instance_var(variable.split(''), 0)
+        set_instance_var(tokens[0], instance_variable_get("@#{variable}"))
       elsif (variable =~ /[[:alpha:]]/) == 0
         display_result display_no_variable_error variable
       else
-        instance_variable_set("@#{tokens[0]}", variable)
+        set_instance_var(tokens[0], variable)
       end
     else
       result = calc_fn_val(tokens[tokens.index(tokens.select{ |var| var == '(' }.first) + 1..tokens.length])
       if result.class == Integer
         result = result.to_i
       elsif result.class == String
-        if result == display_error || result.include?("Undefined variable")
-          return display_result result
-        end
+        return display_result result if get_err_string(result)
       end
-      instance_variable_set("@#{tokens[0]}", result)
+      set_instance_var(tokens[0], result)
     end
   end
 
@@ -808,11 +797,11 @@ class Parser
         return list?(tokens[idx + 2..tokens.length])
       elsif func == 'list'
         return list(tokens[idx + 1..tokens.length])
-      elsif func == 'null' && tokens[1] == '?'
+      elsif func == 'null' && tokens[idx + 1] == '?'
         return null?(tokens[idx + 2..tokens.length])
       elsif func == 'null'
         return null
-      elsif func == 'cons' && tokens[1] == '?'
+      elsif func == 'cons' && tokens[idx + 1] == '?'
         return cons?(tokens[idx + 2..tokens.length])
       elsif func == 'cons'
         return cons(tokens[idx + 1..tokens.length])
@@ -928,8 +917,10 @@ class Parser
     elsif tokens[0] == '('
       idx = find_last_bracket(tokens)
       [calc_fn_val(tokens[1..idx]), idx + 1]
-    else
+    elsif tokens[0] =~ /[[:digit:]]/ || tokens[0] == '#' || tokens[0] == '"'
       calculate_other(tokens)
+    else
+      display_no_variable_error tokens[0]
     end
   end
 
@@ -973,24 +964,30 @@ class Parser
     res
   end
 
+  def get_string_helper(tokens, start, end_idx)
+    if tokens[start] == '"' && tokens[end_idx] == '"'
+      get_string_quote(tokens[start + 1..end_idx - 1])
+    elsif check_for_instance_var(tokens, 0) && start.zero?
+      get_instance_var(tokens, 0)
+    else
+      display_error
+    end
+  end
+
   def get_string(tokens, start, end_idx)
-    res = ''
     if tokens[start] == '('
       idx = find_last_bracket(tokens[start..tokens.length])
-      res = calc_fn_val(tokens[start + 1..idx])
-    elsif tokens[start] == '"' && tokens[end_idx] == '"'
-      res = get_string_quote(tokens[start + 1..end_idx - 1])
-    elsif check_for_instance_var(tokens, 0) && start.zero?
-      res = get_instance_var(tokens, 0)
+      calc_fn_val(tokens[start + 1..idx])
     else
-      return display_error
+      get_string_helper(tokens, start, end_idx)
     end
-    res
   end
 
   def check_for_default_print(tokens)
     if tokens[0] != '('
-      calculate_var(tokens)[0]
+      holder = calculate_var(tokens)
+      return holder if get_err_string(holder)
+      holder[0]
     else
       false
     end
