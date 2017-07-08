@@ -1,59 +1,6 @@
-# ErrorMessages module contains different error messages
-module ErrorMessages
-  def unbalanced_brackets_error
-    'error signaled: unbalanced brackets'
-  end
-
-  def unbalanced_quotes_error
-    'error signaled: unbalanced quotes'
-  end
-end
-
-# Validator module is used to validate if the user input is correct
-module Validator
-  def balanced_brackets?(token)
-    strim = token.gsub(/[^\[\]\(\)\{\}]/, '')
-    return true if strim.empty?
-    return false if strim.size.odd?
-    loop do
-      s = strim.gsub('()', '').gsub('[]', '').gsub('{}', '')
-      return true if s.empty?
-      return false if s == strim
-      strim = s
-    end
-  end
-
-  def balanced_quotes?(token)
-    token.count('"').even?
-  end
-end
-
-# Tokenizer class
-class Tokenizer
-  def initialize
-    @tokens = []
-    @def_functions = []
-    File.readlines('defined_functions.txt').each { |f| @def_functions << f }
-  end
-
-  def tokenize(token)
-    @tokens = []
-    split_token token
-  end
-
-  def split_token(token)
-    token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
-      if t.include? '('
-        t.to_s.split(/(\()/).each { |p| @tokens << p }
-      elsif t.include? ')'
-        t.to_s.split(/(\))/).each { |p| @tokens << p }
-      else
-        @tokens << t
-      end
-    end
-    @tokens.delete('')
-  end
-end
+load 'errors.rb'
+load 'validator.rb'
+load 'tokenizer.rb'
 
 # Parser is used to validate the user input and parse it to the tokenizer
 class Parser
