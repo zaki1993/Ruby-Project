@@ -32,9 +32,8 @@ end
 class Tokenizer
   def initialize
     @tokens = []
-    @defined_functions = []
-    functions_file = File.readlines('defined_functions.txt')
-    functions_file.each { |function| @defined_functions << function }
+    @def_functions = []
+    File.readlines('defined_functions.txt').each { |f| @def_functions << f }
   end
 
   def tokenize(token)
@@ -44,13 +43,13 @@ class Tokenizer
 
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
-       if t.include? '('
-         t.to_s.split(/(\()/).each { |p| @tokens << p }
-       elsif t.include? ')'
-         t.to_s.split(/(\))/).each { |p| @tokens << p }
-       else
-         @tokens << t
-       end
+      if t.include? '('
+        t.to_s.split(/(\()/).each { |p| @tokens << p }
+      elsif t.include? ')'
+        t.to_s.split(/(\))/).each { |p| @tokens << p }
+      else
+        @tokens << t
+      end
     end
     @tokens.delete('')
   end
