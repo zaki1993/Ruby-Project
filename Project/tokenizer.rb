@@ -9,6 +9,8 @@ class Tokenizer
   def tokenize(token)
     @tokens = []
     split_token token
+    puts @tokens.size
+    puts @tokens
   end
 
   def split_token(token)
