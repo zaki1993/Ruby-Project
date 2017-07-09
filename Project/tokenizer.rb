@@ -75,6 +75,26 @@ class Tokenizer
 
   end
 
+  def check_for_boolean(token)
+
+  end
+
+  def check_for_string(token)
+
+  end
+
+  def check_for_number(token)
+
+  end
+
+  def check_for_word(token)
+
+  end
+
+  def check_for_instance_var(token)
+
+  end
+
   def set_var(var, value)
     instance_variable_set("@#{var}", value)
   end
