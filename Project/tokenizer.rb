@@ -13,7 +13,11 @@ class Tokenizer
   def tokenize(token)
     reset
     split_token token
-    calc_input_val @tokens, true
+    begin
+        calc_input_val @tokens, true
+    rescue RuntimeError
+       puts "zdr"
+    end
   end
 
   def reset
@@ -49,7 +53,8 @@ class Tokenizer
           if check_instance_var token
             get_var token.to_s
           else
-            token if valid_var token
+            valid = valid_var token
+            valid ? token : (raise "reisvam exception")
           end
       do_print ? (print_result result) : result
   end
@@ -90,18 +95,23 @@ class Tokenizer
   end
 
   def check_for_bool(token)
-
+    return true if ['#t', '#f'].include? token
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_bool (get_var token))
+    false
   end
 
   def check_for_string(token)
     return true if token.start_with?('"') && token.end_with?('"')
-    return true if (check_instance_var token) && (check_for_string (get_var token))
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_string (get_var token))
     false
   end
 
   def check_for_number(token)
     return true if token.is_number?
-    return true if (check_instance_var token) && (check_for_number (get_var token))
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_number (get_var token))
     false
   end
 
