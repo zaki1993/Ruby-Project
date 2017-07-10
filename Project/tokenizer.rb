@@ -1,3 +1,9 @@
+class Object
+  def is_number?
+    self.to_f.to_s == self.to_s || self.to_i.to_s == self.to_s
+  end
+end
+
 # Tokenizer class
 class Tokenizer
   def initialize
@@ -40,10 +46,10 @@ class Tokenizer
   def get_raw_value(token, do_print)
       token = token.join('') if token.is_a? Array
       result = 
-          if check_for_instance_var token.to_s
+          if check_instance_var token
             get_var token.to_s
           else
-            token
+            token if valid_var token
           end
       do_print ? (print_result result) : result
   end
@@ -83,25 +89,29 @@ class Tokenizer
       puts "function"
   end
 
-  def check_for_boolean(token)
+  def check_for_bool(token)
 
   end
 
   def check_for_string(token)
-
+    return true if token.start_with?('"') && token.end_with?('"')
+    return true if (check_instance_var token) && (check_for_string (get_var token))
+    false
   end
 
   def check_for_number(token)
-
+    return true if token.is_number?
+    return true if (check_instance_var token) && (check_for_number (get_var token))
+    false
   end
 
-  def check_for_word(token)
-
-  end
-
-  def check_for_instance_var(var)
-    return false unless var =~ /[[:alpha:]]/
+  def check_instance_var(var)
+    return false unless (var =~ /[[:alpha:]]/) == 0
     instance_variable_defined?("@#{var}")
+  end
+  
+  def valid_var(var)
+    (check_for_number var) || (check_for_string var) || (check_for_bool var)
   end
 
   def set_var(var, value)
