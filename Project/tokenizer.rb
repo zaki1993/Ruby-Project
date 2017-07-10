@@ -106,13 +106,16 @@ class Tokenizer
 
   def not(tokens)
     open_br = 0
+    idx_param = 0
     tokens.each_with_index do |token, idx|
       open_br += 1 if token == '('
-      next unless token == 'not'
-      fetch_not tokens, idx + 1, tokens.length - open_br - 1
+      idx_param = idx
+      break if token == 'not'
     end
+    fetch_not tokens, idx_param + 1, tokens.length - open_br - 1
   end
 
+#TODO
   def fetch_not(tokens, s_idx, e_idx)
     if tokens[s_idx] == '('
       not_function tokens, s_idx, e_idx
@@ -121,12 +124,14 @@ class Tokenizer
     end
   end
 
+#TODO
   def not_function(tokens, s_idx, e_idx)
-
+    puts "function"
   end
 
   def not_var(var)
-    puts var
+    var = get_var var if check_instance_var var
+    puts var == '#t' ? '#f' : '#t'
   end
 
   def define(tokens)
