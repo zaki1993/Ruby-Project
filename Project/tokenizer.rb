@@ -54,7 +54,7 @@ class Tokenizer
   end
 
   def fetch_define(tokens, start_idx, end_idx)
-    if tokens[start_idx + 1] == '('
+    if tokens[start_idx] == '('
       define_function tokens, start_idx, end_idx
     else
       define_var tokens, start_idx, end_idx
