@@ -16,10 +16,8 @@ class Tokenizer
 
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
-      if t.include? '('
-        t.to_s.split(/(\()/).each { |p| @tokens << p }
-      elsif t.include? ')'
-        t.to_s.split(/(\))/).each { |p| @tokens << p }
+      if t.include?('(') || t.include?(')')
+        t.to_s.split(/(\(|\))/).each { |p| @tokens << p }
       else
         @tokens << t
       end
@@ -28,20 +26,18 @@ class Tokenizer
   end
 
   def calc_input_val(tokens)
-    if tokens.is_a? Array
-      tokens.each do |token|
-        next if ['(', ')'].include? token
-        result = !File.readlines('functions.txt').grep(/#{token}/).empty?
-        next unless result
-        send(token.to_s, tokens)
-      end
-    else
-      get_token_raw_value tokens
+    return get_token_raw_value tokens unless tokens.is_a? Array
+    token_caller = ''
+    tokens.each do |token|
+      next if ['(', ')'].include? token
+      result = !File.readlines('functions.txt').grep(/#{token}/).empty?
+      token_caller = token if result
+      break if result
     end
+    send(token_caller.to_s, tokens)
   end
 
   def get_token_raw_value(token)
-
   end
 
   def define(tokens)
@@ -66,13 +62,12 @@ class Tokenizer
       if start_idx + 1 == end_idx
         calc_input_val tokens[start_idx + 1]
       else
-        calc_input_val tokens[start_idx + 1, end_idx]
+        calc_input_val tokens[start_idx + 1..end_idx]
       end
     set_var tokens[start_idx], value
   end
 
   def define_function(tokens, start_idx, end_idx)
-
   end
 
   def check_for_boolean(token)
