@@ -1,11 +1,46 @@
+# redefine method in Object class
 class Object
-  def is_number?
-    self.to_f.to_s == self.to_s || self.to_i.to_s == self.to_s
+  def number?
+    to_f.to_s == to_s || to_i.to_s == to_s
+  end
+end
+
+# Check if variable is specific type
+module SchemeChecker
+  def check_for_bool(token)
+    return true if ['#t', '#f'].include? token
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_bool get_var token)
+    false
+  end
+
+  def check_for_string(token)
+    return true if token.start_with?('"') && token.end_with?('"')
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_string get_var token)
+    false
+  end
+
+  def check_for_number(token)
+    return true if token.number?
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_number get_var token)
+    false
+  end
+
+  def check_instance_var(var)
+    return false if (var =~ /[[:alpha:]]/) != 0
+    instance_variable_defined?("@#{var}")
+  end
+
+  def valid_var(var)
+    (check_for_number var) || (check_for_string var) || (check_for_bool var)
   end
 end
 
 # Tokenizer class
 class Tokenizer
+  include SchemeChecker
   def initialize
     @tokens = []
   end
@@ -14,9 +49,9 @@ class Tokenizer
     reset
     split_token token
     begin
-        calc_input_val @tokens, true
+      calc_input_val @tokens, true
     rescue RuntimeError
-       puts "zdr"
+      puts 'No variable or function with this name'
     end
   end
 
@@ -35,30 +70,30 @@ class Tokenizer
     @tokens.delete('')
   end
 
-  def calc_input_val(tokens, do_print)
-    return get_raw_value tokens, do_print unless tokens.is_a? Array and tokens.size > 1
+  def calc_input_val(arr, print)
+    return get_raw_value arr, print unless (arr.is_a? Array) && arr.size > 1
     token_caller = ''
-    tokens.each do |token|
+    arr.each do |token|
       next if ['(', ')'].include? token
       result = !File.readlines('functions.txt').grep(/[#{token}]/).empty?
       token_caller = token if result
       break if result
     end
-    send(token_caller.to_s, tokens)
+    send(token_caller.to_s, arr)
   end
 
-  def get_raw_value(token, do_print)
-      token = token.join('') if token.is_a? Array
-      result = 
-          if check_instance_var token
-            get_var token.to_s
-          else
-            valid = valid_var token
-            valid ? token : (raise "reisvam exception")
-          end
-      do_print ? (print_result result) : result
+  def get_raw_value(token, print)
+    token = token.join('') if token.is_a? Array
+    result =
+      if check_instance_var token
+        get_var token.to_s
+      else
+        valid = valid_var token
+        valid ? token : (raise 'reisvam exception')
+      end
+    print ? (print_result result) : result
   end
-  
+
   def print_result(result)
     puts result
   end
@@ -91,37 +126,7 @@ class Tokenizer
   end
 
   def define_function(tokens, start_idx, end_idx)
-      puts "function"
-  end
-
-  def check_for_bool(token)
-    return true if ['#t', '#f'].include? token
-    is_instance_var = check_instance_var token
-    return true if is_instance_var && (check_for_bool (get_var token))
-    false
-  end
-
-  def check_for_string(token)
-    return true if token.start_with?('"') && token.end_with?('"')
-    is_instance_var = check_instance_var token
-    return true if is_instance_var && (check_for_string (get_var token))
-    false
-  end
-
-  def check_for_number(token)
-    return true if token.is_number?
-    is_instance_var = check_instance_var token
-    return true if is_instance_var && (check_for_number (get_var token))
-    false
-  end
-
-  def check_instance_var(var)
-    return false unless (var =~ /[[:alpha:]]/) == 0
-    instance_variable_defined?("@#{var}")
-  end
-  
-  def valid_var(var)
-    (check_for_number var) || (check_for_string var) || (check_for_bool var)
+    puts 'function'
   end
 
   def set_var(var, value)
