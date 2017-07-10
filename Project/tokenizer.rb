@@ -33,6 +33,10 @@ module SchemeChecker
     instance_variable_defined?("@#{var}")
   end
 
+  def valid_var_name(var)
+    !var.match(/^[[:alpha:]]+$/).nil?
+  end
+
   def valid_var(var)
     (check_for_number var) || (check_for_string var) || (check_for_bool var)
   end
@@ -50,6 +54,8 @@ class Tokenizer
     split_token token
     begin
       calc_input_val @tokens, true
+    rescue NameError
+      puts 'Not valid name for variable'
     rescue RuntimeError
       puts 'No variable or function with this name'
     end
@@ -89,13 +95,38 @@ class Tokenizer
         get_var token.to_s
       else
         valid = valid_var token
-        valid ? token : (raise 'reisvam exception')
+        valid ? token : (raise 'No variable or function with this name')
       end
     print ? (print_result result) : result
   end
 
   def print_result(result)
     puts result
+  end
+
+  def not(tokens)
+    open_br = 0
+    tokens.each_with_index do |token, idx|
+      open_br += 1 if token == '('
+      next unless token == 'not'
+      fetch_not tokens, idx + 1, tokens.length - open_br - 1
+    end
+  end
+
+  def fetch_not(tokens, s_idx, e_idx)
+    if tokens[s_idx] == '('
+      not_function tokens, s_idx, e_idx
+    else
+      s_idx == e_idx ? (not_var tokens[s_idx]) : (raise 'Incorrect parameter')
+    end
+  end
+
+  def not_function(tokens, s_idx, e_idx)
+
+  end
+
+  def not_var(var)
+    puts var
   end
 
   def define(tokens)
@@ -122,7 +153,8 @@ class Tokenizer
       else
         calc_input_val tokens[start_idx + 1..end_idx], false
       end
-    set_var tokens[start_idx], value
+    valid = valid_var_name tokens[start_idx]
+    valid ? (set_var tokens[start_idx], value) : (raise 'Incorrect parameter')
   end
 
   def define_function(tokens, start_idx, end_idx)
