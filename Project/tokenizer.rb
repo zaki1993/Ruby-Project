@@ -30,7 +30,7 @@ class Tokenizer
     token_caller = ''
     tokens.each do |token|
       next if ['(', ')'].include? token
-      result = !File.readlines('functions.txt').grep(/#{token}/).empty?
+      result = !File.readlines('functions.txt').grep(/[#{token}]/).empty?
       token_caller = token if result
       break if result
     end
@@ -38,7 +38,7 @@ class Tokenizer
   end
 
   def get_raw_value(token)
-      puts token
+      puts "raw value: " + token.to_s
   end
 
   def define(tokens)
@@ -69,6 +69,7 @@ class Tokenizer
   end
 
   def define_function(tokens, start_idx, end_idx)
+      puts "function"
   end
 
   def check_for_boolean(token)
