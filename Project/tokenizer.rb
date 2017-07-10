@@ -7,7 +7,7 @@ class Tokenizer
   def tokenize(token)
     reset
     split_token token
-    calc_input_val @tokens
+    calc_input_val @tokens, true
   end
 
   def reset
@@ -25,8 +25,8 @@ class Tokenizer
     @tokens.delete('')
   end
 
-  def calc_input_val(tokens)
-    return get_raw_value tokens unless tokens.is_a? Array and tokens.size > 1
+  def calc_input_val(tokens, do_print)
+    return get_raw_value tokens, do_print unless tokens.is_a? Array and tokens.size > 1
     token_caller = ''
     tokens.each do |token|
       next if ['(', ')'].include? token
@@ -37,8 +37,19 @@ class Tokenizer
     send(token_caller.to_s, tokens)
   end
 
-  def get_raw_value(token)
-      puts "raw value: " + token.to_s
+  def get_raw_value(token, do_print)
+      token = token.join('') if token.is_a? Array
+      result = 
+          if check_for_instance_var token.to_s
+            get_var token.to_s
+          else
+            token
+          end
+      do_print ? (print_result result) : result
+  end
+  
+  def print_result(result)
+    puts result
   end
 
   def define(tokens)
@@ -61,9 +72,9 @@ class Tokenizer
   def define_var(tokens, start_idx, end_idx)
     value =
       if start_idx + 1 == end_idx
-        calc_input_val tokens[start_idx + 1]
+        calc_input_val tokens[start_idx + 1], false
       else
-        calc_input_val tokens[start_idx + 1..end_idx]
+        calc_input_val tokens[start_idx + 1..end_idx], false
       end
     set_var tokens[start_idx], value
   end
@@ -88,8 +99,9 @@ class Tokenizer
 
   end
 
-  def check_for_instance_var(token)
-
+  def check_for_instance_var(var)
+    return false unless var =~ /[[:alpha:]]/
+    instance_variable_defined?("@#{var}")
   end
 
   def set_var(var, value)
