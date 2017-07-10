@@ -26,7 +26,7 @@ class Tokenizer
   end
 
   def calc_input_val(tokens)
-    return get_token_raw_value tokens unless tokens.is_a? Array
+    return get_raw_value tokens unless tokens.is_a? Array and tokens.size > 1
     token_caller = ''
     tokens.each do |token|
       next if ['(', ')'].include? token
@@ -37,7 +37,8 @@ class Tokenizer
     send(token_caller.to_s, tokens)
   end
 
-  def get_token_raw_value(token)
+  def get_raw_value(token)
+      puts token
   end
 
   def define(tokens)
