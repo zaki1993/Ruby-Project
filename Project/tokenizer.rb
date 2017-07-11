@@ -3,6 +3,11 @@ class Object
   def number?
     to_f.to_s == to_s || to_i.to_s == to_s
   end
+
+  def to_num
+    return to_f if to_f.to_s == to_s
+    return to_i if to_i.to_s == to_s
+  end
 end
 
 # Check if variable is specific type
@@ -29,7 +34,7 @@ module SchemeChecker
   end
 
   def check_instance_var(var)
-    return false if (var =~ /[[:alpha:]]/) != 0
+    return false unless valid_var_name var
     instance_variable_defined?("@#{var}")
   end
 
@@ -39,6 +44,11 @@ module SchemeChecker
 
   def valid_var(var)
     (check_for_number var) || (check_for_string var) || (check_for_bool var)
+  end
+
+  def divide_number(a, b)
+    return a / b if (a / b).to_i.to_f == a / b.to_f
+    a / b.to_f
   end
 end
 
@@ -53,7 +63,7 @@ class Tokenizer
     reset
     split_token token
     begin
-      calc_input_val @tokens, true
+      puts calc_input_val @tokens
     rescue NameError
       puts 'Not valid name for variable'
     rescue RuntimeError
@@ -76,8 +86,8 @@ class Tokenizer
     @tokens.delete('')
   end
 
-  def calc_input_val(arr, print)
-    return get_raw_value arr, print unless (arr.is_a? Array) && arr.size > 1
+  def calc_input_val(arr)
+    return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
     token_caller = ''
     arr.each do |token|
       next if ['(', ')'].include? token
@@ -88,7 +98,7 @@ class Tokenizer
     send(token_caller.to_s, arr)
   end
 
-  def get_raw_value(token, print)
+  def get_raw_value(token)
     token = token.join('') if token.is_a? Array
     result =
       if check_instance_var token
@@ -97,73 +107,129 @@ class Tokenizer
         valid = valid_var token
         valid ? token : (raise 'No variable or function with this name')
       end
-    print ? (print_result result) : result
+    result
   end
 
-  def print_result(result)
-    puts result
+  def find_matching_bracket_idx(tokens, first_bracket)
+    open_br = 0
+    tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
+      open_br += 1 if token == '('
+      open_br -= 1 if token == ')'
+      return idx + first_bracket if open_br.zero?
+    end
+  end
+
+  def find_next_value(tokens)
+    if tokens[0] == '('
+      idx = (find_matching_bracket_idx tokens, 0)
+      value = calc_input_val tokens[0..idx]
+      tokens = tokens[idx + 1..tokens.size]
+      [value.to_num, tokens]
+    else
+      [(get_var tokens[0]).to_num, tokens[1..tokens.size]]
+    end
+  end
+
+  def +(other)
+    other = other[2..other.size - 2]
+    return 0 if other.size.zero?
+    result, other = find_next_value(other)
+    until other.empty?
+      x, other = find_next_value(other)
+      result += x
+    end
+    result
+  end
+
+  def -(other)
+    other = other[2..other.size - 2]
+    raise 'Too little arguments' if other.size.zero?
+    result, other = find_next_value(other)
+    until other.empty?
+      x, other = find_next_value(other)
+      result -= x
+    end
+    result
+  end
+
+  def *(other)
+    other = other[2..other.size - 2]
+    return 1 if other.empty?
+    result, other = find_next_value(other)
+    until other.empty?
+      x, other = find_next_value(other)
+      result *= x
+    end
+    result
+  end
+
+  def /(other)
+    other = other[2..other.size - 2]
+    raise 'too little arguments' if other.empty?
+    result = 1 if other.size == 1
+    result, other = find_next_value(other) if other.size > 1
+    until other.empty?
+      x, other = find_next_value(other)
+      result = divide_number(result, x)
+    end
+    result
   end
 
   def not(tokens)
     open_br = 0
-    idx_param = 0
-    tokens.each_with_index do |token, idx|
+    tokens.each do |token|
       open_br += 1 if token == '('
-      idx_param = idx
       break if token == 'not'
     end
-    fetch_not tokens, idx_param + 1, tokens.length - open_br - 1
+    arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
+    fetch_not arr_param
   end
 
-#TODO
-  def fetch_not(tokens, s_idx, e_idx)
-    if tokens[s_idx] == '('
-      not_function tokens, s_idx, e_idx
+  def fetch_not(tokens)
+    if tokens[0] == '('
+      res = calc_input_val tokens[0..tokens.size - 1]
+      not_var res
     else
-      s_idx == e_idx ? (not_var tokens[s_idx]) : (raise 'Incorrect parameter')
+      tokens.size == 1 ? (not_var tokens[0]) : (raise 'Incorrect parameter')
     end
-  end
-
-#TODO
-  def not_function(tokens, s_idx, e_idx)
-    puts "function"
   end
 
   def not_var(var)
-    var = get_var var if check_instance_var var
-    puts var == '#t' ? '#f' : '#t'
+    raise 'Incorrect boolean' unless check_for_bool var
+    (get_var var) == '#t' ? '#f' : '#t'
   end
 
   def define(tokens)
     open_br = 0
-    tokens.each_with_index do |token, idx|
+    tokens.each do |token|
       open_br += 1 if token == '('
-      next unless token == 'define'
-      fetch_define tokens, idx + 1, tokens.length - open_br - 1
+      break if token == 'define'
     end
+    arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
+    fetch_define arr_param
   end
 
-  def fetch_define(tokens, start_idx, end_idx)
-    if tokens[start_idx] == '('
-      define_function tokens, start_idx, end_idx
+  def fetch_define(tokens)
+    if tokens[0] == '('
+      define_function tokens[0..tokens.size - 1]
     else
-      define_var tokens, start_idx, end_idx
+      define_var tokens
     end
   end
 
-  def define_var(tokens, start_idx, end_idx)
+  def define_var(tokens)
     value =
-      if start_idx + 1 == end_idx
-        calc_input_val tokens[start_idx + 1], false
+      if tokens.size == 2
+        get_var tokens[1]
       else
-        calc_input_val tokens[start_idx + 1..end_idx], false
+        calc_input_val tokens[1..tokens.size - 1]
       end
-    valid = valid_var_name tokens[start_idx]
-    valid ? (set_var tokens[start_idx], value) : (raise 'Incorrect parameter')
+    valid = valid_var_name tokens[0]
+    valid ? (set_var tokens[0], value) : (raise 'Incorrect parameter')
   end
 
-  def define_function(tokens, start_idx, end_idx)
-    puts 'function'
+  def define_function(tokens)
+    puts 'function: ' + tokens.to_s
   end
 
   def set_var(var, value)
@@ -171,6 +237,7 @@ class Tokenizer
   end
 
   def get_var(var)
-    instance_variable_get("@#{var}")
+    check = check_instance_var var
+    check ? instance_variable_get("@#{var}") : var
   end
 end
