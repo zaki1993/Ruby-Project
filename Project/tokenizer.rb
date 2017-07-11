@@ -29,7 +29,7 @@ module SchemeChecker
   end
 
   def check_instance_var(var)
-    return false if (var =~ /[[:alpha:]]/) != 0
+    return false if !valid_var_name var
     instance_variable_defined?("@#{var}")
   end
 
@@ -108,25 +108,25 @@ class Tokenizer
     open_br = 0
     tokens.each_with_index do |token, idx|
       open_br += 1 if token == '('
-      next unless token == 'not'
-      fetch_not tokens, idx + 1, tokens.length - open_br - 1
+      break if token == 'not'
     end
+    arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
+    result = fetch_not arr_param
+    puts result
   end
 
-  def fetch_not(tokens, s_idx, e_idx)
-    if tokens[s_idx] == '('
-      not_function tokens, s_idx, e_idx
+  def fetch_not(tokens)
+    if tokens[0] == '('
+      res = calc_input_val tokens[0..tokens.length - 1], false
+      not_var res
     else
-      s_idx == e_idx ? (not_var tokens[s_idx]) : (raise 'Incorrect parameter')
+      tokens.size == 1 ? (not_var tokens[0]) : (raise 'Incorrect parameter')
     end
-  end
-
-  def not_function(tokens, s_idx, e_idx)
-
   end
 
   def not_var(var)
-    puts var
+    raise 'Incorrect boolean' if !check_for_bool var
+    (get_var var) == '#t' ? '#f' : '#t'
   end
 
   def define(tokens)
@@ -166,6 +166,6 @@ class Tokenizer
   end
 
   def get_var(var)
-    instance_variable_get("@#{var}")
+    (check_instance_var var) ? instance_variable_get("@#{var}") : var
   end
 end
