@@ -3,6 +3,11 @@ class Object
   def number?
     to_f.to_s == to_s || to_i.to_s == to_s
   end
+  
+  def to_num
+    return to_f if to_f.to_s == to_s
+    return to_i if to_i.to_s == to_s
+  end
 end
 
 # Check if variable is specific type
@@ -53,7 +58,7 @@ class Tokenizer
     reset
     split_token token
     begin
-      calc_input_val @tokens, true
+      puts calc_input_val @tokens
     rescue NameError
       puts 'Not valid name for variable'
     rescue RuntimeError
@@ -76,8 +81,8 @@ class Tokenizer
     @tokens.delete('')
   end
 
-  def calc_input_val(arr, print)
-    return get_raw_value arr, print unless (arr.is_a? Array) && arr.size > 1
+  def calc_input_val(arr)
+    return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
     token_caller = ''
     arr.each do |token|
       next if ['(', ')'].include? token
@@ -88,7 +93,7 @@ class Tokenizer
     send(token_caller.to_s, arr)
   end
 
-  def get_raw_value(token, print)
+  def get_raw_value(token)
     token = token.join('') if token.is_a? Array
     result =
       if check_instance_var token
@@ -97,11 +102,88 @@ class Tokenizer
         valid = valid_var token
         valid ? token : (raise 'No variable or function with this name')
       end
-    print ? (print_result result) : result
+    result
   end
-
-  def print_result(result)
-    puts result
+  
+  def find_matching_bracket_idx(tokens, first_bracket)
+    open_br = 0
+    tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
+      open_br += 1 if token == '('
+      open_br -= 1 if token == ')'
+      return idx + first_bracket if open_br == 0
+    end
+  end
+  
+  def +(tokens)
+    result = 0
+    skip = 0
+    tokens[2..tokens.size - 2].each_with_index do |t, i|
+      skip -= 1 if skip > 0
+      next if skip > 0
+      if t == '('
+        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
+        res = calc_input_val tokens[i + 2..idx + 2]
+        skip = idx - i
+        result += res.to_num if check_for_number res.to_s
+      else
+        result += (get_var t).to_num if check_for_number t.to_s
+      end
+    end
+    result
+  end
+  
+  def -(tokens)
+    result = 0
+    skip = 0
+    tokens[2..tokens.size - 2].each_with_index do |t, i|
+      skip -= 1 if skip > 0
+      next if skip > 0
+      if t == '('
+        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
+        res = calc_input_val tokens[i + 2..idx + 2]
+        skip = idx - i
+        result -= res.to_num if check_for_number res.to_s
+      else
+        result -= (get_var t).to_num if check_for_number t.to_s
+      end
+    end
+    result
+  end
+  
+  def *(tokens)
+    result = 1
+    skip = 0
+    tokens[2..tokens.size - 2].each_with_index do |t, i|
+      skip -= 1 if skip > 0
+      next if skip > 0
+      if t == '('
+        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
+        res = calc_input_val tokens[i + 2..idx + 2]
+        skip = idx - i
+        result *= res.to_num if check_for_number res.to_s
+      else
+        result *= (get_var t).to_num if check_for_number t.to_s
+      end
+    end
+    result
+  end
+  
+  def /(tokens)
+    result = 0
+    skip = 0
+    tokens[2..tokens.size - 2].each_with_index do |t, i|
+      skip -= 1 if skip > 0
+      next if skip > 0
+      if t == '('
+        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
+        res = calc_input_val tokens[i + 2..idx + 2]
+        skip = idx - i
+        result /= res.to_num if check_for_number res.to_s
+      else
+        result /= (get_var t).to_num if check_for_number t.to_s
+      end
+    end
+    result
   end
 
   def not(tokens)
@@ -116,7 +198,7 @@ class Tokenizer
 
   def fetch_not(tokens)
     if tokens[0] == '('
-      res = calc_input_val tokens[0..tokens.size - 1], false
+      res = calc_input_val tokens[0..tokens.size - 1]
       not_var res
     else
       tokens.size == 1 ? (not_var tokens[0]) : (raise 'Incorrect parameter')
@@ -149,9 +231,9 @@ class Tokenizer
   def define_var(tokens)
     value =
       if tokens.size == 2
-        calc_input_val tokens[1], false
+        get_var tokens[1]
       else
-        calc_input_val tokens[1..tokens.size - 1], false
+        calc_input_val tokens[1..tokens.size - 1]
       end
     valid = valid_var_name tokens[0]
     valid ? (set_var tokens[0], value) : (raise 'Incorrect parameter')
