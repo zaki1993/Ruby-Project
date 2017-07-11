@@ -82,6 +82,7 @@ class Tokenizer
   end
 
   def calc_input_val(arr)
+    puts 'calc_input_val: ' + arr.to_s
     return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
     token_caller = ''
     arr.each do |token|
@@ -114,74 +115,57 @@ class Tokenizer
     end
   end
   
+  def find_next_value(tokens)
+    if tokens[0] == '('
+      idx = (find_matching_bracket_idx tokens, 0)
+      value = calc_input_val tokens[0..idx]
+      tokens = tokens[idx + 1..tokens.size]
+      [value.to_num, tokens]
+    else
+      [(get_var tokens[0]).to_num, tokens[1..tokens.size]]
+    end
+  end
+  
   def +(tokens)
-    result = 0
-    skip = 0
-    tokens[2..tokens.size - 2].each_with_index do |t, i|
-      skip -= 1 if skip > 0
-      next if skip > 0
-      if t == '('
-        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
-        res = calc_input_val tokens[i + 2..idx + 2]
-        skip = idx - i
-        result += res.to_num if check_for_number res.to_s
-      else
-        result += (get_var t).to_num if check_for_number t.to_s
-      end
+    tokens = tokens[2..tokens.size - 2]
+    return 0 if tokens.size == 0
+    result, tokens = find_next_value(tokens)
+    while tokens.size > 0 do
+      x, tokens = find_next_value(tokens)
+      result += x
     end
     result
   end
   
   def -(tokens)
-    result = 0
-    skip = 0
-    tokens[2..tokens.size - 2].each_with_index do |t, i|
-      skip -= 1 if skip > 0
-      next if skip > 0
-      if t == '('
-        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
-        res = calc_input_val tokens[i + 2..idx + 2]
-        skip = idx - i
-        result -= res.to_num if check_for_number res.to_s
-      else
-        result -= (get_var t).to_num if check_for_number t.to_s
-      end
+    tokens = tokens[2..tokens.size - 2]
+    raise 'Too little arguments' if tokens.size == 0
+    result, tokens = find_next_value(tokens)
+    while tokens.size > 0 do
+      x, tokens = find_next_value(tokens)
+      result -= x
     end
     result
   end
   
   def *(tokens)
-    result = 1
-    skip = 0
-    tokens[2..tokens.size - 2].each_with_index do |t, i|
-      skip -= 1 if skip > 0
-      next if skip > 0
-      if t == '('
-        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
-        res = calc_input_val tokens[i + 2..idx + 2]
-        skip = idx - i
-        result *= res.to_num if check_for_number res.to_s
-      else
-        result *= (get_var t).to_num if check_for_number t.to_s
-      end
+    tokens = tokens[2..tokens.size - 2]
+    return 1 if tokens.size == 0
+    result, tokens = find_next_value(tokens)
+    while tokens.size > 0 do
+      x, tokens = find_next_value(tokens)
+      result *= x
     end
     result
   end
   
   def /(tokens)
-    result = 0
-    skip = 0
-    tokens[2..tokens.size - 2].each_with_index do |t, i|
-      skip -= 1 if skip > 0
-      next if skip > 0
-      if t == '('
-        idx = (find_matching_bracket_idx tokens[2..tokens.size - 2], i)
-        res = calc_input_val tokens[i + 2..idx + 2]
-        skip = idx - i
-        result /= res.to_num if check_for_number res.to_s
-      else
-        result /= (get_var t).to_num if check_for_number t.to_s
-      end
+    tokens = tokens[2..tokens.size - 2]
+    raise 'too little arguments' if tokens.size == 0
+    result, tokens = find_next_value(tokens)
+    while tokens.size > 0 do
+      x, tokens = find_next_value(tokens)
+      result /= x
     end
     result
   end
