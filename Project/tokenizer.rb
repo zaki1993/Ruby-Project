@@ -111,13 +111,12 @@ class Tokenizer
       break if token == 'not'
     end
     arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
-    result = fetch_not arr_param
-    puts result
+    fetch_not arr_param
   end
 
   def fetch_not(tokens)
     if tokens[0] == '('
-      res = calc_input_val tokens[0..tokens.length - 1], false
+      res = calc_input_val tokens[0..tokens.size - 1], false
       not_var res
     else
       tokens.size == 1 ? (not_var tokens[0]) : (raise 'Incorrect parameter')
@@ -133,32 +132,33 @@ class Tokenizer
     open_br = 0
     tokens.each_with_index do |token, idx|
       open_br += 1 if token == '('
-      next unless token == 'define'
-      fetch_define tokens, idx + 1, tokens.length - open_br - 1
+      break if token == 'define'
     end
+    arr_param = tokens[open_br + 1 .. tokens.length - open_br - 1]
+    fetch_define arr_param
   end
 
-  def fetch_define(tokens, start_idx, end_idx)
-    if tokens[start_idx] == '('
-      define_function tokens, start_idx, end_idx
+  def fetch_define(tokens)
+    if tokens[0] == '('
+      define_function tokens[0..tokens.size - 1]
     else
-      define_var tokens, start_idx, end_idx
+      define_var tokens
     end
   end
 
-  def define_var(tokens, start_idx, end_idx)
+  def define_var(tokens)
     value =
-      if start_idx + 1 == end_idx
-        calc_input_val tokens[start_idx + 1], false
+      if tokens.size == 2
+        calc_input_val tokens[1], false
       else
-        calc_input_val tokens[start_idx + 1..end_idx], false
+        calc_input_val tokens[1..tokens.size - 1], false
       end
-    valid = valid_var_name tokens[start_idx]
-    valid ? (set_var tokens[start_idx], value) : (raise 'Incorrect parameter')
+    valid = valid_var_name tokens[0]
+    valid ? (set_var tokens[0], value) : (raise 'Incorrect parameter')
   end
 
-  def define_function(tokens, start_idx, end_idx)
-    puts 'function'
+  def define_function(tokens)
+    puts 'function: ' + tokens.to_s
   end
 
   def set_var(var, value)
