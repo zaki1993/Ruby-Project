@@ -45,6 +45,11 @@ module SchemeChecker
   def valid_var(var)
     (check_for_number var) || (check_for_string var) || (check_for_bool var)
   end
+  
+  def divide_number(a, b)
+    return a / b if (a / b).to_i.to_f == a / b.to_f
+    a / b.to_f
+  end
 end
 
 # Tokenizer class
@@ -162,10 +167,11 @@ class Tokenizer
   def /(tokens)
     tokens = tokens[2..tokens.size - 2]
     raise 'too little arguments' if tokens.size == 0
-    result, tokens = find_next_value(tokens)
+    result = 1.0 if tokens.size == 1
+    result, tokens = find_next_value(tokens) if tokens.size > 1
     while tokens.size > 0 do
       x, tokens = find_next_value(tokens)
-      result /= x
+      result = divide_number(result, x)
     end
     result
   end
