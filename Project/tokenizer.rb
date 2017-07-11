@@ -110,6 +110,14 @@ class Tokenizer
     result
   end
 
+  def equal?(other)
+    other = other[2..other.size - 2]
+    first, other = find_next_value other
+    second, other = find_next_value other
+    raise 'Too many arguments' unless other.empty?
+    first.to_s == second.to_s ? '#t' : '#f'
+  end
+
   def find_matching_bracket_idx(tokens, first_bracket)
     open_br = 0
     tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
@@ -124,7 +132,7 @@ class Tokenizer
       idx = (find_matching_bracket_idx tokens, 0)
       value = calc_input_val tokens[0..idx]
       tokens = tokens[idx + 1..tokens.size]
-      [value.to_num, tokens]
+      [value, tokens]
     else
       [(get_var tokens[0]).to_num, tokens[1..tokens.size]]
     end
@@ -136,7 +144,7 @@ class Tokenizer
     result, other = find_next_value(other)
     until other.empty?
       x, other = find_next_value(other)
-      result += x
+      result += x.to_num
     end
     result
   end
@@ -147,7 +155,7 @@ class Tokenizer
     result, other = find_next_value(other)
     until other.empty?
       x, other = find_next_value(other)
-      result -= x
+      result -= x.to_num
     end
     result
   end
@@ -158,7 +166,7 @@ class Tokenizer
     result, other = find_next_value(other)
     until other.empty?
       x, other = find_next_value(other)
-      result *= x
+      result *= x.to_num
     end
     result
   end
@@ -170,7 +178,7 @@ class Tokenizer
     result, other = find_next_value(other) if other.size > 1
     until other.empty?
       x, other = find_next_value(other)
-      result = divide_number(result, x)
+      result = divide_number(result, x.to_num)
     end
     result
   end
