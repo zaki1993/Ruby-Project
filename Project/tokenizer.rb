@@ -90,7 +90,7 @@ class Tokenizer
     return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
     token_caller = ''
     arr.each do |token|
-      next if ['(', ')'].include? token
+      next if token == '('
       result = !File.readlines('functions.txt').grep(/[#{token}]/).empty?
       token_caller = token if result
       break if result
@@ -191,17 +191,19 @@ class Tokenizer
     result
   end
   
-  def get_args_primary_fun_numbers(tokens)
+  def get_args_primary_fun_numbers(tokens, return_tokens)
     tokens = tokens[2..tokens.size - 2]
+    raise 'Too little arguments' if tokens.empty?
     x, tokens = find_next_value tokens, true
+    raise 'Too little arguments' if tokens.empty?
     y, tokens = find_next_value tokens, true
-    raise 'Too much arguments' unless tokens.empty?
+    raise 'Too much arguments' unless tokens.empty? || return_tokens
     raise 'Number required' unless (check_for_number x) && (check_for_number y)
-    [x, y]
+    return_tokens ? [x, y, tokens] : [x, y]
   end
   
   def primary_func_numbers(tokens, oper)
-    x, y = get_args_primary_fun_numbers tokens
+    x, y = get_args_primary_fun_numbers tokens, false
     case oper
     when 'remainder' then (x.abs % y.abs) * (x / x.abs)
     when 'modulo' then x.modulo(y)
@@ -265,8 +267,28 @@ class Tokenizer
   end
   
   def sub1(tokens)
-   x = get_one_arg_function tokens
+    x = get_one_arg_function tokens
     x - 1
+  end
+  
+  def min(tokens)
+    x, y, tokens = get_args_primary_fun_numbers tokens, true
+    result = x < y ? x : y
+    unless tokens.empty?
+      next_val, tokens = find_next_value tokens, true
+      result = next_val if result > next_val
+    end
+    result
+  end
+  
+  def max(tokens)
+    x, y, tokens = get_args_primary_fun_numbers tokens, true
+    result = x > y ? x : y
+    unless tokens.empty?
+      next_val, tokens = find_next_value tokens, true
+      result = next_val if result < next_val
+    end
+    result
   end
 
   def not(tokens)
@@ -299,6 +321,7 @@ class Tokenizer
       open_br += 1 if token == '('
       break if token == 'define'
     end
+    raise 'Incorrect function' if open_br != 1
     arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
     fetch_define arr_param
   end
