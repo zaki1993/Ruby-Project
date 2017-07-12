@@ -144,38 +144,39 @@ class Tokenizer
       [is_num ? value.to_num : value, tokens[1..tokens.size]]
     end
   end
+  
+  def calculate_value_arithmetic(tokens, result, sign)
+    until tokens.empty?
+      x, tokens = find_next_value tokens, true
+      case sign
+      when '+' then result += x
+      when '-' then result -= x
+      when '*' then result *= x
+      when '/' then result = divide_number(result, x)
+      end
+    end
+    result
+  end
 
   def +(other)
     other = other[2..other.size - 2]
     return 0 if other.size.zero?
     result, other = find_next_value other, true
-    until other.empty?
-      x, other = find_next_value other, true
-      result += x
-    end
-    result
+    calculate_value_arithmetic other, result, '+'
   end
 
   def -(other)
     other = other[2..other.size - 2]
     raise 'Too little arguments' if other.empty?
     result, other = find_next_value other, true
-    until other.empty?
-      x, other = find_next_value other, true
-      result -= x
-    end
-    result
+    calculate_value_arithmetic other, result, '-'
   end
 
   def *(other)
     other = other[2..other.size - 2]
     return 1 if other.empty?
     result, other = find_next_value other, true
-    until other.empty?
-      x, other = find_next_value other, true
-      result *= x
-    end
-    result
+    calculate_value_arithmetic other, result, '*'
   end
 
   #TODO division by zero
@@ -184,11 +185,7 @@ class Tokenizer
     raise 'too little arguments' if other.empty?
     result = 1 if other.size == 1
     result, other = find_next_value other, true if other.size > 1
-    until other.empty?
-      x, other = find_next_value other, true
-      result = divide_number(result, x)
-    end
-    result
+    calculate_value_arithmetic other, result, '/'
   end
   
   def get_args_primary_fun_numbers(tokens, return_tokens)
@@ -297,6 +294,7 @@ class Tokenizer
       open_br += 1 if token == '('
       break if token == 'not'
     end
+    raise 'Incorrect function' if open_br != 1
     arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
     fetch_not arr_param
   end
