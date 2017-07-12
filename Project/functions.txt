@@ -10,6 +10,9 @@ remainder
 modulo
 numerator
 denominator
+abs
+add1
+sub1
 string-length
 substring
 string-upcase
