@@ -245,6 +245,29 @@ class Tokenizer
     tokens = tokens[2..tokens.size - 2]
     (get_real_number tokens)[1].to_num
   end
+  
+  def get_one_arg_function(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    raise 'Too little arguments' if tokens.empty?
+    x, tokens = find_next_value tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    x
+  end
+  
+  def abs(tokens)
+    x = get_one_arg_function tokens
+    x.abs
+  end
+  
+  def add1(tokens)
+    x = get_one_arg_function tokens
+    x + 1
+  end
+  
+  def sub1(tokens)
+   x = get_one_arg_function tokens
+    x - 1
+  end
 
   def not(tokens)
     open_br = 0
