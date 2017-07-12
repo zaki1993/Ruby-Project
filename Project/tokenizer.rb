@@ -221,31 +221,38 @@ class Tokenizer
   end
 
   # TODO
-  def get_real_number(tokens)
-    if tokens.size == 1 && (check_for_number tokens[0])
-      [(get_var tokens[0]), 1]
-    elsif tokens.size == 1 && (tokens[0].include? '/')
-      split_values = tokens[0].split('/')
-      [(get_var split_values[0]), (get_var split_values[1])]
-    else
-      first, tokens = find_next_value tokens, true
-      second, tokens = find_next_value tokens, true unless tokens.empty?
-      [first, second.nil? ? 1 : second]
+  def get_number_num_denom(tokens)
+    puts tokens.to_s
+    num, tokens = find_next_value tokens, true
+    return [num, 1] if tokens.empty?
+    denom, tokens = find_next_value tokens, true
+    return [num, denom] if tokens.empty?
+    raise 'Too much arguments'
+  end
+
+  def remove_backslash(tokens)
+    tokens.each_with_index do |t, i|
+
     end
   end
 
-  # TODO
   def numerator(tokens)
     puts tokens.to_s
     tokens = tokens[2..tokens.size - 2]
-    (get_real_number tokens)[0].to_num
+    raise 'Too little arguments' if tokens.empty?
+    if(tokens.size == 1)
+      tokens = tokens[0].split('/')
+    else
+      tokens = remove_backslash tokens
+    end
+    (get_number_num_denom tokens[0].split('/'))[0].to_num
   end
 
-  # TODO
   def denominator(tokens)
     puts tokens.to_s
     tokens = tokens[2..tokens.size - 2]
-    (get_real_number tokens)[1].to_num
+    raise 'Too little arguments' if tokens.empty?
+    (get_number_num_denom tokens[0].split('/'))[1].to_num
   end
 
   def get_one_arg_function(tokens)
