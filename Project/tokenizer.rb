@@ -111,9 +111,7 @@ class Tokenizer
   end
 
   def equal?(other)
-    other = other[2..other.size - 2]
-    first, other = find_next_value other, false
-    second, other = find_next_value other, false
+    first, second, other = (get_k_arguments other, true, 2, false)
     raise 'Too many arguments' unless other.empty?
     raise 'Unbound symbol' unless (valid_var first) && (valid_var second)
     first.to_s == second.to_s ? '#t' : '#f'
@@ -127,7 +125,7 @@ class Tokenizer
       return idx + first_bracket if open_br.zero?
     end
   end
-  
+
   def find_next_function_value(tokens)
     idx = (find_matching_bracket_idx tokens, 0)
     value = calc_input_val tokens[0..idx]
@@ -144,7 +142,7 @@ class Tokenizer
       [is_num ? value.to_num : value, tokens[1..tokens.size]]
     end
   end
-  
+
   def calculate_value_arithmetic(tokens, result, sign)
     until tokens.empty?
       x, tokens = find_next_value tokens, true
@@ -179,7 +177,7 @@ class Tokenizer
     calculate_value_arithmetic other, result, '*'
   end
 
-  #TODO division by zero
+  # TODO: Division by zero
   def /(other)
     other = other[2..other.size - 2]
     raise 'too little arguments' if other.empty?
@@ -187,39 +185,42 @@ class Tokenizer
     result, other = find_next_value other, true if other.size > 1
     calculate_value_arithmetic other, result, '/'
   end
-  
-  def get_args_primary_fun_numbers(tokens, return_tokens)
+
+  def get_k_arguments(tokens, return_tokens, k, to_number)
     tokens = tokens[2..tokens.size - 2]
-    raise 'Too little arguments' if tokens.empty?
-    x, tokens = find_next_value tokens, true
-    raise 'Too little arguments' if tokens.empty?
-    y, tokens = find_next_value tokens, true
-    raise 'Too much arguments' unless tokens.empty? || return_tokens
-    raise 'Number required' unless (check_for_number x) && (check_for_number y)
-    return_tokens ? [x, y, tokens] : [x, y]
+    result = []
+    while (k -= 1) >= 0
+      raise 'Too little arguments' if tokens.empty?
+      x, tokens = find_next_value tokens, to_number
+      result << x
+    end
+    result << tokens if return_tokens
+    result
   end
-  
+
   def primary_func_numbers(tokens, oper)
-    x, y = get_args_primary_fun_numbers tokens, false
+    x, y, tokens = get_k_arguments tokens, true, 2, true
+    raise 'Too manu arguments' unless tokens.empty?
     case oper
     when 'remainder' then (x.abs % y.abs) * (x / x.abs)
     when 'modulo' then x.modulo(y)
     when 'quotient' then quotient_helper(x, y, minus)
     end
   end
-  
+
   def quotient(tokens)
     primary_func_numbers(tokens, 'quotient')
   end
-  
+
   def remainder(tokens)
     primary_func_numbers(tokens, 'remainder')
   end
-  
+
   def modulo(tokens)
     primary_func_numbers(tokens, 'modulo')
   end
-  
+
+  # TODO
   def get_real_number(tokens)
     if tokens.size == 1 && (check_for_number tokens[0])
       [(get_var tokens[0]), 1]
@@ -232,19 +233,21 @@ class Tokenizer
       [first, second.nil? ? 1 : second]
     end
   end
-  
+
+  # TODO
   def numerator(tokens)
     puts tokens.to_s
     tokens = tokens[2..tokens.size - 2]
     (get_real_number tokens)[0].to_num
   end
-  
+
+  # TODO
   def denominator(tokens)
     puts tokens.to_s
     tokens = tokens[2..tokens.size - 2]
     (get_real_number tokens)[1].to_num
   end
-  
+
   def get_one_arg_function(tokens)
     tokens = tokens[2..tokens.size - 2]
     raise 'Too little arguments' if tokens.empty?
@@ -252,36 +255,36 @@ class Tokenizer
     raise 'Too much arguments' unless tokens.empty?
     x
   end
-  
+
   def abs(tokens)
     x = get_one_arg_function tokens
     x.abs
   end
-  
+
   def add1(tokens)
     x = get_one_arg_function tokens
     x + 1
   end
-  
+
   def sub1(tokens)
     x = get_one_arg_function tokens
     x - 1
   end
-  
+
   def min(tokens)
-    x, y, tokens = get_args_primary_fun_numbers tokens, true
+    x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x < y ? x : y
-    unless tokens.empty?
+    until tokens.empty?
       next_val, tokens = find_next_value tokens, true
       result = next_val if result > next_val
     end
     result
   end
-  
+
   def max(tokens)
-    x, y, tokens = get_args_primary_fun_numbers tokens, true
+    x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x > y ? x : y
-    unless tokens.empty?
+    until tokens.empty?
       next_val, tokens = find_next_value tokens, true
       result = next_val if result < next_val
     end
