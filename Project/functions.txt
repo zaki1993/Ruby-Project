@@ -13,6 +13,8 @@ denominator
 abs
 add1
 sub1
+min
+max
 string-length
 substring
 string-upcase
