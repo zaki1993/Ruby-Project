@@ -112,9 +112,10 @@ class Tokenizer
 
   def equal?(other)
     other = other[2..other.size - 2]
-    first, other = find_next_value other
-    second, other = find_next_value other
+    first, other = find_next_value other, false
+    second, other = find_next_value other, false
     raise 'Too many arguments' unless other.empty?
+    raise 'Unbound symbol' unless (valid_var first) && (valid_var second)
     first.to_s == second.to_s ? '#t' : '#f'
   end
 
@@ -126,36 +127,42 @@ class Tokenizer
       return idx + first_bracket if open_br.zero?
     end
   end
+  
+  def find_next_function_value(tokens)
+    idx = (find_matching_bracket_idx tokens, 0)
+    value = calc_input_val tokens[0..idx]
+    tokens = tokens[idx + 1..tokens.size]
+    [value, tokens]
+  end
 
-  def find_next_value(tokens)
+  def find_next_value(tokens, is_num)
     if tokens[0] == '('
-      idx = (find_matching_bracket_idx tokens, 0)
-      value = calc_input_val tokens[0..idx]
-      tokens = tokens[idx + 1..tokens.size]
-      [value, tokens]
+      value, tokens = find_next_function_value tokens
+      [is_num ? value.to_num : value, tokens]
     else
-      [(get_var tokens[0]).to_num, tokens[1..tokens.size]]
+      value = get_var tokens[0]
+      [is_num ? value.to_num : value, tokens[1..tokens.size]]
     end
   end
 
   def +(other)
     other = other[2..other.size - 2]
     return 0 if other.size.zero?
-    result, other = find_next_value(other)
+    result, other = find_next_value other, true
     until other.empty?
-      x, other = find_next_value(other)
-      result += x.to_num
+      x, other = find_next_value other, true
+      result += x
     end
     result
   end
 
   def -(other)
     other = other[2..other.size - 2]
-    raise 'Too little arguments' if other.size.zero?
-    result, other = find_next_value(other)
+    raise 'Too little arguments' if other.empty?
+    result, other = find_next_value other, true
     until other.empty?
-      x, other = find_next_value(other)
-      result -= x.to_num
+      x, other = find_next_value other, true
+      result -= x
     end
     result
   end
@@ -163,24 +170,80 @@ class Tokenizer
   def *(other)
     other = other[2..other.size - 2]
     return 1 if other.empty?
-    result, other = find_next_value(other)
+    result, other = find_next_value other, true
     until other.empty?
-      x, other = find_next_value(other)
-      result *= x.to_num
+      x, other = find_next_value other, true
+      result *= x
     end
     result
   end
 
+  #TODO division by zero
   def /(other)
     other = other[2..other.size - 2]
     raise 'too little arguments' if other.empty?
     result = 1 if other.size == 1
-    result, other = find_next_value(other) if other.size > 1
+    result, other = find_next_value other, true if other.size > 1
     until other.empty?
-      x, other = find_next_value(other)
-      result = divide_number(result, x.to_num)
+      x, other = find_next_value other, true
+      result = divide_number(result, x)
     end
     result
+  end
+  
+  def get_args_primary_fun_numbers(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    x, tokens = find_next_value tokens, true
+    y, tokens = find_next_value tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    raise 'Number required' unless (check_for_number x) && (check_for_number y)
+    [x, y]
+  end
+  
+  def primary_func_numbers(tokens, oper)
+    x, y = get_args_primary_fun_numbers tokens
+    case oper
+    when 'remainder' then (x.abs % y.abs) * (x / x.abs)
+    when 'modulo' then x.modulo(y)
+    when 'quotient' then quotient_helper(x, y, minus)
+    end
+  end
+  
+  def quotient(tokens)
+    primary_func_numbers(tokens, 'quotient')
+  end
+  
+  def remainder(tokens)
+    primary_func_numbers(tokens, 'remainder')
+  end
+  
+  def modulo(tokens)
+    primary_func_numbers(tokens, 'modulo')
+  end
+  
+  def get_real_number(tokens)
+    if tokens.size == 1 && (check_for_number tokens[0])
+      [(get_var tokens[0]), 1]
+    elsif tokens.size == 1 && (tokens[0].include? '/')
+      split_values = tokens[0].split('/')
+      [(get_var split_values[0]), (get_var split_values[1])]
+    else
+      first, tokens = find_next_value tokens, true
+      second, tokens = find_next_value tokens, true unless tokens.empty?
+      [first, second.nil? ? 1 : second]
+    end
+  end
+  
+  def numerator(tokens)
+    puts tokens.to_s
+    tokens = tokens[2..tokens.size - 2]
+    (get_real_number tokens)[0].to_num
+  end
+  
+  def denominator(tokens)
+    puts tokens.to_s
+    tokens = tokens[2..tokens.size - 2]
+    (get_real_number tokens)[1].to_num
   end
 
   def not(tokens)
