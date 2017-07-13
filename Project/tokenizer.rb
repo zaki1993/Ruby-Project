@@ -205,7 +205,7 @@ class Tokenizer
     case oper
     when 'remainder' then (x.abs % y.abs) * (x / x.abs)
     when 'modulo' then x.modulo(y)
-    when 'quotient' then quotient_helper(x, y, minus)
+    when 'quotient' then (x/y).floor
     end
   end
 
@@ -235,6 +235,7 @@ class Tokenizer
     if tokens.size == 1
       tokens = tokens[0].split('/')
     else
+      raise 'Too much arguments' unless (find_next_value tokens, true)[1][0] == '/'
       i = (tokens[0] == '(') ? (find_matching_bracket_idx tokens, 0) + 1 : 1
       tokens.delete_at(i)
     end
