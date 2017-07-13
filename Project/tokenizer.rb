@@ -78,7 +78,7 @@ class Tokenizer
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
       if t.include?('(') || t.include?(')')
-        t.to_s.split(/(\(|\))/).each { |p| @tokens << p }
+        t.to_s.split(/(\(|\)|\/)/).each { |p| @tokens << p }
       else
         @tokens << t
       end
@@ -113,7 +113,6 @@ class Tokenizer
   def equal?(other)
     first, second, other = (get_k_arguments other, true, 2, false)
     raise 'Too many arguments' unless other.empty?
-    raise 'Unbound symbol' unless (valid_var first) && (valid_var second)
     first.to_s == second.to_s ? '#t' : '#f'
   end
 
@@ -136,9 +135,11 @@ class Tokenizer
   def find_next_value(tokens, is_num)
     if tokens[0] == '('
       value, tokens = find_next_function_value tokens
+      raise 'Unbound symbol' unless valid_var value
       [is_num ? value.to_num : value, tokens]
     else
       value = get_var tokens[0]
+      raise 'Unbound symbol' unless valid_var value
       [is_num ? value.to_num : value, tokens[1..tokens.size]]
     end
   end
@@ -220,32 +221,34 @@ class Tokenizer
     primary_func_numbers(tokens, 'modulo')
   end
 
-  # TODO
-  def get_real_number(tokens)
-    if tokens.size == 1 && (check_for_number tokens[0])
-      [(get_var tokens[0]), 1]
-    elsif tokens.size == 1 && (tokens[0].include? '/')
-      split_values = tokens[0].split('/')
-      [(get_var split_values[0]), (get_var split_values[1])]
+  def get_num_denom(tokens)
+    raise 'Too little arguments' if tokens.empty?
+    num, tokens = find_next_value tokens, true
+    return [num, 1] if tokens.empty?
+    denom, tokens = find_next_value tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    [num, denom]
+  end
+  
+  def num_denom_helper(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    if tokens.size == 1
+      tokens = tokens[0].split('/')
     else
-      first, tokens = find_next_value tokens, true
-      second, tokens = find_next_value tokens, true unless tokens.empty?
-      [first, second.nil? ? 1 : second]
+      i = (tokens[0] == '(') ? (find_matching_bracket_idx tokens, 0) + 1 : 1
+      tokens.delete_at(i)
     end
+    tokens
   end
 
-  # TODO
   def numerator(tokens)
-    puts tokens.to_s
-    tokens = tokens[2..tokens.size - 2]
-    (get_real_number tokens)[0].to_num
+    tokens = num_denom_helper tokens
+    (get_num_denom tokens)[0].to_num
   end
 
-  # TODO
   def denominator(tokens)
-    puts tokens.to_s
-    tokens = tokens[2..tokens.size - 2]
-    (get_real_number tokens)[1].to_num
+    tokens = num_denom_helper tokens
+    (get_num_denom tokens)[1].to_num
   end
 
   def get_one_arg_function(tokens)
