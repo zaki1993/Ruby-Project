@@ -336,7 +336,15 @@ class Tokenizer
     raise 'Too much arguments' unless tokens.empty?
     '"' + (str[1..str.size - 2])[from..(to.nil? ? -1 : to - 1)] + '"'
   end
-
+  
+  def string?(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    raise 'Too little arguments' if tokens.empty?
+    str, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    (check_for_string str) ? '#t' : '#f'
+  end
+  
   def define(tokens)
     open_br = 0
     tokens.each do |token|
