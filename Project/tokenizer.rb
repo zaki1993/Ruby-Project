@@ -57,6 +57,9 @@ class Tokenizer
   include SchemeChecker
   def initialize
     @tokens = []
+    @functions = { 'string-length' => 'strlen', 'string-upcase' => 'strupcase',
+                   'string-contains?' => 'strcontains', 'string->list' => 'strlist',
+                   'string-split' => 'strsplit' }
   end
 
   def tokenize(token)
@@ -78,7 +81,7 @@ class Tokenizer
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
       if t.include?('(') || t.include?(')')
-        t.to_s.split(/(\(|\))/).each { |p| @tokens << p }
+        t.to_s.split(%r{(\(|\)|\/)}).each { |p| @tokens << p }
       else
         @tokens << t
       end
@@ -111,9 +114,9 @@ class Tokenizer
   end
 
   def equal?(other)
+    other = other[2..other.size - 2]
     first, second, other = (get_k_arguments other, true, 2, false)
     raise 'Too many arguments' unless other.empty?
-    raise 'Unbound symbol' unless (valid_var first) && (valid_var second)
     first.to_s == second.to_s ? '#t' : '#f'
   end
 
@@ -136,9 +139,11 @@ class Tokenizer
   def find_next_value(tokens, is_num)
     if tokens[0] == '('
       value, tokens = find_next_function_value tokens
+      raise 'Unbound symbol' unless valid_var value
       [is_num ? value.to_num : value, tokens]
     else
       value = get_var tokens[0]
+      raise 'Unbound symbol' unless valid_var value
       [is_num ? value.to_num : value, tokens[1..tokens.size]]
     end
   end
@@ -165,7 +170,6 @@ class Tokenizer
 
   def -(other)
     other = other[2..other.size - 2]
-    raise 'Too little arguments' if other.empty?
     result, other = find_next_value other, true
     calculate_value_arithmetic other, result, '-'
   end
@@ -180,17 +184,14 @@ class Tokenizer
   # TODO: Division by zero
   def /(other)
     other = other[2..other.size - 2]
-    raise 'too little arguments' if other.empty?
     result = 1 if other.size == 1
     result, other = find_next_value other, true if other.size > 1
     calculate_value_arithmetic other, result, '/'
   end
 
   def get_k_arguments(tokens, return_tokens, k, to_number)
-    tokens = tokens[2..tokens.size - 2]
     result = []
     while (k -= 1) >= 0
-      raise 'Too little arguments' if tokens.empty?
       x, tokens = find_next_value tokens, to_number
       result << x
     end
@@ -198,66 +199,71 @@ class Tokenizer
     result
   end
 
-  def primary_func_numbers(tokens, oper)
-    x, y, tokens = get_k_arguments tokens, true, 2, true
-    raise 'Too manu arguments' unless tokens.empty?
+  def primary_func_parser(oper, x, y)
     case oper
     when 'remainder' then (x.abs % y.abs) * (x / x.abs)
     when 'modulo' then x.modulo(y)
-    when 'quotient' then quotient_helper(x, y, minus)
+    when 'quotient' then (x / y).floor
     end
+  end
+
+  def primary_func_tokenizer(tokens, oper)
+    tokens = tokens[2..tokens.size - 2]
+    x, y, tokens = get_k_arguments tokens, true, 2, true
+    raise 'Too many arguments' unless tokens.empty?
+    primary_func_parser(oper, x, y)
   end
 
   def quotient(tokens)
-    primary_func_numbers(tokens, 'quotient')
+    primary_func_parser(tokens, 'quotient')
   end
 
   def remainder(tokens)
-    primary_func_numbers(tokens, 'remainder')
+    primary_func_parser(tokens, 'remainder')
   end
 
   def modulo(tokens)
-    primary_func_numbers(tokens, 'modulo')
+    primary_func_parser(tokens, 'modulo')
   end
 
-  # TODO
-  def get_number_num_denom(tokens)
-    puts tokens.to_s
+  def get_num_denom(tokens)
     num, tokens = find_next_value tokens, true
     return [num, 1] if tokens.empty?
     denom, tokens = find_next_value tokens, true
-    return [num, denom] if tokens.empty?
-    raise 'Too much arguments'
+    raise 'Too much arguments' unless tokens.empty?
+    [num, denom]
   end
 
-  def remove_backslash(tokens)
-    tokens.each_with_index do |t, i|
+  def find_idx_numerators(tokens)
+    tokens[0] == '(' ? (find_matching_bracket_idx tokens, 0) + 1 : 1
+  end
 
+  def num_denom_helper(tokens)
+    if tokens.size == 1
+      tokens = tokens[0].split('/')
+    else
+      _, temp = find_next_value tokens, true
+      raise 'Too much arguments' unless temp[0] == '/' || temp.empty?
+      i = find_idx_numerators tokens
+      tokens.delete_at(i)
     end
+    tokens
   end
 
   def numerator(tokens)
-    puts tokens.to_s
     tokens = tokens[2..tokens.size - 2]
-    raise 'Too little arguments' if tokens.empty?
-    if(tokens.size == 1)
-      tokens = tokens[0].split('/')
-    else
-      tokens = remove_backslash tokens
-    end
-    (get_number_num_denom tokens[0].split('/'))[0].to_num
+    tokens = num_denom_helper tokens
+    (get_num_denom tokens)[0].to_num
   end
 
   def denominator(tokens)
-    puts tokens.to_s
     tokens = tokens[2..tokens.size - 2]
-    raise 'Too little arguments' if tokens.empty?
-    (get_number_num_denom tokens[0].split('/'))[1].to_num
+    tokens = num_denom_helper tokens
+    (get_num_denom tokens)[1].to_num
   end
 
   def get_one_arg_function(tokens)
     tokens = tokens[2..tokens.size - 2]
-    raise 'Too little arguments' if tokens.empty?
     x, tokens = find_next_value tokens, true
     raise 'Too much arguments' unless tokens.empty?
     x
@@ -279,6 +285,7 @@ class Tokenizer
   end
 
   def min(tokens)
+    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x < y ? x : y
     until tokens.empty?
@@ -289,6 +296,7 @@ class Tokenizer
   end
 
   def max(tokens)
+    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x > y ? x : y
     until tokens.empty?
@@ -321,6 +329,26 @@ class Tokenizer
   def not_var(var)
     raise 'Incorrect boolean' unless check_for_bool var
     (get_var var) == '#t' ? '#f' : '#t'
+  end
+
+  def substring_builder(str, from, to)
+    '"' + (str[1..str.size - 2])[from..(to.nil? ? -1 : to - 1)] + '"'
+  end
+
+  def substring(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    str, tokens = find_next_value tokens, false
+    from, tokens = find_next_value tokens, true
+    to, tokens = find_next_value tokens, true unless tokens.empty?
+    raise 'Too much arguments' unless tokens.empty?
+    substring_builder str, from, to
+  end
+
+  def string?(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    str, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    check_for_string str ? '#t' : '#f'
   end
 
   def define(tokens)
