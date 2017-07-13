@@ -215,15 +215,15 @@ class Tokenizer
   end
 
   def quotient(tokens)
-    primary_func_parser(tokens, 'quotient')
+    primary_func_tokenizer(tokens, 'quotient')
   end
 
   def remainder(tokens)
-    primary_func_parser(tokens, 'remainder')
+    primary_func_tokenizer(tokens, 'remainder')
   end
 
   def modulo(tokens)
-    primary_func_parser(tokens, 'modulo')
+    primary_func_tokenizer(tokens, 'modulo')
   end
 
   def get_num_denom(tokens)
