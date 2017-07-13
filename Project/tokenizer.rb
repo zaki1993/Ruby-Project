@@ -57,6 +57,9 @@ class Tokenizer
   include SchemeChecker
   def initialize
     @tokens = []
+    @functions = { 'string-length' => 'strlen', 'string-upcase' => 'strupcase',
+                   'string-contains?' => 'strcontains', 'string->list' => 'strlist',
+                   'string-split' => 'strsplit' }
   end
 
   def tokenize(token)
@@ -111,6 +114,7 @@ class Tokenizer
   end
 
   def equal?(other)
+    other = other[2..other.size - 2]
     first, second, other = (get_k_arguments other, true, 2, false)
     raise 'Too many arguments' unless other.empty?
     first.to_s == second.to_s ? '#t' : '#f'
@@ -188,7 +192,6 @@ class Tokenizer
   end
 
   def get_k_arguments(tokens, return_tokens, k, to_number)
-    tokens = tokens[2..tokens.size - 2]
     result = []
     while (k -= 1) >= 0
       raise 'Too little arguments' if tokens.empty?
@@ -200,6 +203,7 @@ class Tokenizer
   end
 
   def primary_func_numbers(tokens, oper)
+    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     raise 'Too manu arguments' unless tokens.empty?
     case oper
@@ -276,6 +280,7 @@ class Tokenizer
   end
 
   def min(tokens)
+    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x < y ? x : y
     until tokens.empty?
@@ -286,6 +291,7 @@ class Tokenizer
   end
 
   def max(tokens)
+    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x > y ? x : y
     until tokens.empty?
@@ -318,6 +324,17 @@ class Tokenizer
   def not_var(var)
     raise 'Incorrect boolean' unless check_for_bool var
     (get_var var) == '#t' ? '#f' : '#t'
+  end
+  
+  def substring(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    raise 'Too little arguments' if tokens.empty?
+    str, tokens = find_next_value tokens, false
+    raise 'Too little arguments' if tokens.empty?
+    from, tokens = find_next_value tokens, true
+    to, tokens = find_next_value tokens, true unless tokens.empty?
+    raise 'Too much arguments' unless tokens.empty?
+    '"' + (str[1..str.size - 2])[from..(to.nil? ? -1 : to - 1)] + '"'
   end
 
   def define(tokens)
