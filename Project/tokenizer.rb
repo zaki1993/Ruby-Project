@@ -17,7 +17,11 @@ class Object
   end
   
   def string?
-    (start_with? '"') && (end_with? '"')
+    (start_with? '"') && (end_with? '"') && (size != 1)
+  end
+  
+  def list?
+    ((self[0..1].join == '\'(') || (self[0..1].join == '(list')) && self[-1] == ')'
   end
 end
 
@@ -74,12 +78,19 @@ class Tokenizer
     @tokens = []
     @predefined = []
     File.readlines('functions.txt').each { |l| @predefined << l.chomp }
-    @functions = { 'string-length' => 'strlen',
-                   'string-upcase' => 'strupcase',
-                   'string-contains?' => 'strcontains',
-                   'string->list' => 'strlist',
-                   'string-split' => 'strsplit',
-                   'string-replace' => 'strreplace'}
+    @functions = 
+      { 
+        'string-length' => 'strlen',
+        'string-upcase' => 'strupcase',
+        'string-downcase' => 'strdowncase',
+        'string-contains?' => 'strcontains',
+        'string->list' => 'strlist',
+        'string-split' => 'strsplit',
+        'string-replace' => 'strreplace',
+        'string-prefix?' => 'strprefix',
+        'string-sufix?' => 'strsufix',
+        'string-join' => 'strjoin'
+      }
   end
 
   def tokenize(token)
@@ -124,8 +135,9 @@ class Tokenizer
   end
   
   def predefined_method_caller(arr)
-    arr.each { |t| return t if @predefined.include? t }
-    arr.each { |t| return @functions[t] if @functions.key? t }
+    method_name = arr.find { |t| !t.match(/[[:alpha:]]/).nil? }
+    return method_name if @predefined.include? method_name
+    return @functions[method_name] if @functions.key? method_name
   end
   
   def custom_method_caller(arr)
@@ -246,6 +258,13 @@ class Tokenizer
     str.upcase
   end
   
+  def strdowncase(tokens)
+    tokens = tokens[2..-2]
+    str, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    str.downcase
+  end
+  
   def strcontains(tokens)
     tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
@@ -288,6 +307,44 @@ class Tokenizer
     replace_with, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     string.gsub(to_replace[1..-2], replace_with[1..-2])
+  end
+  
+  def strprefix(tokens)
+    tokens = tokens[2..-2]
+    string, tokens = string_getter tokens, true
+    to_check, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    result = string[1..-1].start_with? to_check[1..-2]
+    result ? '#t' : '#f'
+  end
+  
+  def strsufix(tokens)
+    tokens = tokens[2..-2]
+    string, tokens = string_getter tokens, true
+    to_check, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    result = string[1..-1].end_with? to_check[1..-2]
+    result ? '#t' : '#f'
+  end
+  
+  def find_list_delimeter_for_join(tokens, idx)
+    delimeter_arr = tokens[idx + 1..-1]
+    tokens = tokens[1..idx]
+    result = []
+    until tokens.empty?
+      temp, tokens = string_
+    end
+  end
+  
+  def find_to_evaluate_or_not(tokens)
+    
+  end
+  
+  def strjoin(tokens)
+    tokens = tokens[2..-2]
+    raise 'List expected' unless tokens.list?
+    find_to_evaluate_or_not tokens
+    puts "asdsad"
   end
 
   def define(tokens)
