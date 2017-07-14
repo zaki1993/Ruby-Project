@@ -21,6 +21,6 @@ module Validator
   end
 
   def valid_var(var)
-    (check_for_number var) || (check_for_string var) || (check_for_bool var)
+    (check_for_number var) || (check_for_string var) || (check_for_bool var) || (check_for_symbol var)
   end
 end
