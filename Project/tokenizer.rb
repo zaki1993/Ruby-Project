@@ -57,8 +57,10 @@ class Tokenizer
     @tokens = []
     @predefined = []
     File.readlines('functions.txt').each { |l| @predefined << l.chomp }
-    @functions = { 'string-length' => 'strlen', 'string-upcase' => 'strupcase',
-                   'string-contains?' => 'strcontains', 'string->list' => 'strlist',
+    @functions = { 'string-length' => 'strlen',
+                   'string-upcase' => 'strupcase',
+                   'string-contains?' => 'strcontains',
+                   'string->list' => 'strlist',
                    'string-split' => 'strsplit' }
   end
 
@@ -253,6 +255,14 @@ class Tokenizer
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
     '\'(' + str.split(' ').map { |s| '"'+ s + '"' }.join(' ') + ')'
+  end
+  
+  def strlist(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    str, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    '\'(' + str[1..str.size - 2].chars.
+    map { |c| '#\\' + (c == ' ' ? 'space' : c) }.join(' ') + ')'
   end
 
   def define(tokens)
