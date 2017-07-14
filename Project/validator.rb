@@ -15,4 +15,12 @@ module Validator
   def balanced_quotes?(token)
     token.count('"').even?
   end
+  
+  def valid_var_name(var)
+    !var.match(/^[[:alpha:]]+$/).nil?
+  end
+
+  def valid_var(var)
+    (check_for_number var) || (check_for_string var) || (check_for_bool var)
+  end
 end
