@@ -11,15 +11,15 @@ class Object
     return to_f if to_f.to_s == to_s
     return to_i if to_i.to_s == to_s
   end
-  
+
   def symbol?
     (start_with? '#\\') && (('a'..'z').to_a.include? self[2]) && size == 3
   end
-  
+
   def string?
     (start_with? '"') && (end_with? '"') && (size != 1)
   end
-  
+
   def list?
     ((self[0..1].join == '\'(') || (self[0..1].join == '(list')) && self[-1] == ')'
   end
@@ -52,7 +52,7 @@ module SchemeChecker
     return false unless valid_var_name var
     instance_variable_defined?("@#{var}")
   end
-  
+
   def check_for_symbol(var)
     var = var.join('') if var.is_a? Array
     return true if var == '#\space'
@@ -61,7 +61,7 @@ module SchemeChecker
     return true if is_instance_var && (check_for_symbol get_var var)
     false
   end
-  
+
   def divide_number(a, b)
     return a / b if (a / b).to_i.to_f == a / b.to_f
     a / b.to_f
@@ -73,13 +73,13 @@ class Tokenizer
   include SchemeChecker
   include Validator
   include SchemeNumbers
-  
+
   def initialize
     @tokens = []
     @predefined = []
     File.readlines('functions.txt').each { |l| @predefined << l.chomp }
-    @functions = 
-      { 
+    @functions =
+      {
         'string-length' => 'strlen',
         'string-upcase' => 'strupcase',
         'string-downcase' => 'strdowncase',
@@ -133,15 +133,15 @@ class Tokenizer
       custom_method_caller arr
     end
   end
-  
+
   def predefined_method_caller(arr)
     method_name = arr.find { |t| !t.match(/[[:alpha:]]/).nil? }
     return method_name if @predefined.include? method_name
     return @functions[method_name] if @functions.key? method_name
   end
-  
+
   def custom_method_caller(arr)
-    puts 'trying custom methods'
+    puts 'trying custom methods: ' + arr.to_s
   end
 
   def get_raw_value(token)
@@ -216,7 +216,7 @@ class Tokenizer
     raise 'Incorrect boolean' unless check_for_bool var
     (get_var var) == '#t' ? '#f' : '#t'
   end
-  
+
   def string_getter(tokens, get_tokens)
     str, tokens = find_next_value tokens, false
     raise 'String needed' unless check_for_string str
@@ -243,28 +243,28 @@ class Tokenizer
     result = check_for_string str
     result ? '#t' : '#f'
   end
-  
+
   def strlen(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str[1..-2].length
   end
-  
+
   def strupcase(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str.upcase
   end
-  
+
   def strdowncase(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str.downcase
   end
-  
+
   def strcontains(tokens)
     tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
@@ -273,33 +273,31 @@ class Tokenizer
     result = string.include? to_check[1..-2]
     result ? '#t' : '#f'
   end
-  
+
   def remove_carriage(str)
     str = str[1..-2]
-    str.gsub('\n', '').
-        gsub('\r', '').
-        gsub('\t', '').
-        strip.
-        squeeze(' ')
+    str.gsub('\n', '').gsub('\r', '').gsub('\t', '').strip.squeeze(' ')
   end
-  
+
   def strsplit(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
-    '\'(' + str.split(' ').
-    map { |s| '"'+ s + '"' }.join(' ') + ')'
+    '\'(' + str.split(' ').map { |s| '"' + s + '"' }.join(' ') + ')'
   end
-  
+
+  def build_symbol(char)
+    '#\\' + (char == ' ' ? 'space' : char)
+  end
+
   def strlist(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    '\'(' + str[1..-2].chars.
-    map { |c| '#\\' + (c == ' ' ? 'space' : c) }.join(' ') + ')'
+    '\'(' + str[1..-2].chars.map { |c| build_symbol c }.join(' ') + ')'
   end
-  
+
   def strreplace(tokens)
     tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
@@ -308,7 +306,7 @@ class Tokenizer
     raise 'Too much arguments' unless tokens.empty?
     string.gsub(to_replace[1..-2], replace_with[1..-2])
   end
-  
+
   def strprefix(tokens)
     tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
@@ -317,7 +315,7 @@ class Tokenizer
     result = string[1..-1].start_with? to_check[1..-2]
     result ? '#t' : '#f'
   end
-  
+
   def strsufix(tokens)
     tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
@@ -326,7 +324,8 @@ class Tokenizer
     result = string[1..-1].end_with? to_check[1..-2]
     result ? '#t' : '#f'
   end
-  
+
+=begin
   def find_list_delimeter_for_join(tokens, idx)
     delimeter_arr = tokens[idx + 1..-1]
     tokens = tokens[1..idx]
@@ -335,11 +334,10 @@ class Tokenizer
       temp, tokens = string_
     end
   end
-  
-  def find_to_evaluate_or_not(tokens)
-    
-  end
-  
+=end
+
+  def find_to_evaluate_or_not(tokens) end
+
   def strjoin(tokens)
     tokens = tokens[2..-2]
     raise 'List expected' unless tokens.list?

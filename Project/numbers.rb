@@ -40,8 +40,7 @@ module SchemeNumbers
     result, other = find_next_value other, true if other.size > 1
     calculate_value_arithmetic other, result, '/'
   end
-  
-  
+
   def primary_func_parser(oper, x, y)
     case oper
     when 'remainder' then (x.abs % y.abs) * (x / x.abs)
@@ -104,8 +103,8 @@ module SchemeNumbers
     tokens = num_denom_helper tokens
     (get_num_denom tokens)[1].to_num
   end
-  
-    def get_one_arg_function(tokens)
+
+  def get_one_arg_function(tokens)
     tokens = tokens[2..tokens.size - 2]
     x, tokens = find_next_value tokens, true
     raise 'Too much arguments' unless tokens.empty?
