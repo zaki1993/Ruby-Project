@@ -78,7 +78,8 @@ class Tokenizer
                    'string-upcase' => 'strupcase',
                    'string-contains?' => 'strcontains',
                    'string->list' => 'strlist',
-                   'string-split' => 'strsplit' }
+                   'string-split' => 'strsplit',
+                   'string-replace' => 'strreplace'}
   end
 
   def tokenize(token)
@@ -211,11 +212,11 @@ class Tokenizer
   end
 
   def substring_builder(str, from, to)
-    '"' + (str[1..str.size - 2])[from..(to.nil? ? -1 : to - 1)] + '"'
+    '"' + (str[1..-2])[from..(to.nil? ? -1 : to - 1)] + '"'
   end
 
   def substring(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     from, tokens = find_next_value tokens, true
     to, tokens = find_next_value tokens, true unless tokens.empty?
@@ -224,7 +225,7 @@ class Tokenizer
   end
 
   def string?(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     str, tokens = find_next_value tokens, false
     raise 'Too much arguments' unless tokens.empty?
     result = check_for_string str
@@ -232,30 +233,30 @@ class Tokenizer
   end
   
   def strlen(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    str[1..str.size - 2].length
+    str[1..-2].length
   end
   
   def strupcase(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str.upcase
   end
   
   def strcontains(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
     to_check, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    result = string.include? to_check[1..to_check.size - 2]
+    result = string.include? to_check[1..-2]
     result ? '#t' : '#f'
   end
   
   def remove_carriage(str)
-    str = str[1..str.size - 2]
+    str = str[1..-2]
     str.gsub('\n', '').
         gsub('\r', '').
         gsub('\t', '').
@@ -264,7 +265,7 @@ class Tokenizer
   end
   
   def strsplit(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
@@ -273,11 +274,20 @@ class Tokenizer
   end
   
   def strlist(tokens)
-    tokens = tokens[2..tokens.size - 2]
+    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    '\'(' + str[1..str.size - 2].chars.
+    '\'(' + str[1..-2].chars.
     map { |c| '#\\' + (c == ' ' ? 'space' : c) }.join(' ') + ')'
+  end
+  
+  def strreplace(tokens)
+    tokens = tokens[2..-2]
+    string, tokens = string_getter tokens, true
+    to_replace, tokens = string_getter tokens, true
+    replace_with, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    string.gsub(to_replace[1..-2], replace_with[1..-2])
   end
 
   def define(tokens)
@@ -293,7 +303,7 @@ class Tokenizer
 
   def fetch_define(tokens)
     if tokens[0] == '('
-      define_function tokens[0..tokens.size - 1]
+      define_function tokens
     else
       define_var tokens
     end
@@ -301,7 +311,7 @@ class Tokenizer
 
   def define_var(tokens)
     var_name = tokens[0]
-    value, tokens = find_next_value tokens[1..tokens.size - 1], false
+    value, tokens = find_next_value tokens[1..-1], false
     raise 'Too much arguments' unless tokens.empty?
     valid = valid_var_name var_name
     valid ? (set_var var_name, value) : (raise 'Incorrect parameter')
