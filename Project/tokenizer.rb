@@ -101,7 +101,7 @@ class Tokenizer
   
   def predefined_method_caller(arr)
     arr.each { |t| return t if @predefined.include? t }
-    arr.each { |t| return t if @functions.key? t }
+    arr.each { |t| return @functions[t] if @functions.key? t }
   end
   
   def custom_method_caller(arr)
@@ -189,6 +189,12 @@ class Tokenizer
     raise 'Incorrect boolean' unless check_for_bool var
     (get_var var) == '#t' ? '#f' : '#t'
   end
+  
+  def string_getter(tokens, get_tokens)
+    str, tokens = find_next_value tokens, false
+    raise 'String needed' unless check_for_string str
+    [str, get_tokens ? tokens : _]
+  end
 
   def substring_builder(str, from, to)
     '"' + (str[1..str.size - 2])[from..(to.nil? ? -1 : to - 1)] + '"'
@@ -196,7 +202,7 @@ class Tokenizer
 
   def substring(tokens)
     tokens = tokens[2..tokens.size - 2]
-    str, tokens = find_next_value tokens, false
+    str, tokens = string_getter tokens, true
     from, tokens = find_next_value tokens, true
     to, tokens = find_next_value tokens, true unless tokens.empty?
     raise 'Too much arguments' unless tokens.empty?
@@ -205,9 +211,48 @@ class Tokenizer
 
   def string?(tokens)
     tokens = tokens[2..tokens.size - 2]
-    str, tokens = find_next_value tokens, false
+    str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     check_for_string str ? '#t' : '#f'
+  end
+  
+  def strlen(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    str, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    str[1..str.size - 2].length
+  end
+  
+  def strupcase(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    str, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    str.upcase
+  end
+  
+  def strcontains(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    string, tokens = string_getter tokens, true
+    to_check, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    string.include? to_check[1..to_check.size - 2]
+  end
+  
+  def remove_carriage(str)
+    str = str[1..str.size - 2]
+    str.gsub('\n', '').
+        gsub('\r', '').
+        gsub('\t', '').
+        strip.
+        squeeze(' ')
+  end
+  
+  def strsplit(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    str, tokens = string_getter tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    str = remove_carriage str
+    '\'(' + str.split(' ').map { |s| '"'+ s + '"' }.join(' ') + ')'
   end
 
   def define(tokens)
