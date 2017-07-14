@@ -15,6 +15,10 @@ class Object
   def symbol?
     (start_with? '#\\') && (('a'..'z').to_a.include? self[2]) && size == 3
   end
+  
+  def string?
+    (start_with? '"') && (end_with? '"')
+  end
 end
 
 # Check if variable is specific type
@@ -27,7 +31,7 @@ module SchemeChecker
   end
 
   def check_for_string(token)
-    return true if token.start_with?('"') && token.end_with?('"')
+    return true if token.string?
     is_instance_var = check_instance_var token
     return true if is_instance_var && (check_for_string get_var token)
     false
@@ -84,6 +88,10 @@ class Tokenizer
       puts calc_input_val @tokens
     rescue NameError
       puts 'Not valid name for variable'
+    rescue ArgumentError
+      puts 'Invalid argument'
+    rescue TypeError
+      puts 'Invalid argument'
     rescue RuntimeError
       puts 'No variable or function with this name'
     end
@@ -154,11 +162,9 @@ class Tokenizer
   def find_next_value(tokens, is_num)
     if tokens[0] == '('
       value, tokens = find_next_function_value tokens
-      raise 'Unbound symbol' unless valid_var value
       [is_num ? value.to_num : value, tokens]
     else
       value = get_var tokens[0]
-      raise 'Unbound symbol' unless valid_var value
       [is_num ? value.to_num : value, tokens[1..tokens.size]]
     end
   end
@@ -219,9 +225,10 @@ class Tokenizer
 
   def string?(tokens)
     tokens = tokens[2..tokens.size - 2]
-    str, tokens = string_getter tokens, true
+    str, tokens = find_next_value tokens, false
     raise 'Too much arguments' unless tokens.empty?
-    check_for_string str ? '#t' : '#f'
+    result = check_for_string str
+    result ? '#t' : '#f'
   end
   
   def strlen(tokens)
@@ -243,7 +250,8 @@ class Tokenizer
     string, tokens = string_getter tokens, true
     to_check, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    string.include? to_check[1..to_check.size - 2]
+    result = string.include? to_check[1..to_check.size - 2]
+    result ? '#t' : '#f'
   end
   
   def remove_carriage(str)
@@ -260,7 +268,8 @@ class Tokenizer
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
-    '\'(' + str.split(' ').map { |s| '"'+ s + '"' }.join(' ') + ')'
+    '\'(' + str.split(' ').
+    map { |s| '"'+ s + '"' }.join(' ') + ')'
   end
   
   def strlist(tokens)
