@@ -46,10 +46,11 @@ module SchemeChecker
   end
   
   def check_for_symbol(var)
-    return true if var[0] == '#\space'
-    return true if var[0].symbol?
-    is_instance_var = check_instance_var var[0]
-    return true if is_instance_var && (check_for_symbol get_var var[0])
+    var = var.join('') if var.is_a? Array
+    return true if var == '#\space'
+    return true if var.symbol?
+    is_instance_var = check_instance_var var
+    return true if is_instance_var && (check_for_symbol get_var var)
     false
   end
   
