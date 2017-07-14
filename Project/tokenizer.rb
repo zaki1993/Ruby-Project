@@ -11,6 +11,10 @@ class Object
     return to_f if to_f.to_s == to_s
     return to_i if to_i.to_s == to_s
   end
+  
+  def symbol?
+    start_with '#\\' && ['a'..'z'] == [2]
+  end
 end
 
 # Check if variable is specific type
@@ -40,7 +44,16 @@ module SchemeChecker
     return false unless valid_var_name var
     instance_variable_defined?("@#{var}")
   end
-
+  
+  #TODO
+  def check_for_symbol(var)
+    return true if var == '#//space'
+    return true if var.symbol?
+    is_instance_var = check_instance_var var
+    return true if is_instance_var && (check_for_symbol get_var var)
+    false
+  end
+  
   def divide_number(a, b)
     return a / b if (a / b).to_i.to_f == a / b.to_f
     a / b.to_f
