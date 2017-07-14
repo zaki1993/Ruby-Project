@@ -13,7 +13,7 @@ class Object
   end
   
   def symbol?
-    start_with '#\\' && ['a'..'z'] == [2]
+    (start_with? '#\\') && (('a'..'z').to_a.include? self[2]) && size == 3
   end
 end
 
@@ -45,12 +45,11 @@ module SchemeChecker
     instance_variable_defined?("@#{var}")
   end
   
-  #TODO
   def check_for_symbol(var)
-    return true if var == '#//space'
-    return true if var.symbol?
-    is_instance_var = check_instance_var var
-    return true if is_instance_var && (check_for_symbol get_var var)
+    return true if var[0] == '#\space'
+    return true if var[0].symbol?
+    is_instance_var = check_instance_var var[0]
+    return true if is_instance_var && (check_for_symbol get_var var[0])
     false
   end
   
@@ -125,14 +124,7 @@ class Tokenizer
 
   def get_raw_value(token)
     token = token.join('') if token.is_a? Array
-    result =
-      if check_instance_var token
-        get_var token.to_s
-      else
-        valid = valid_var token
-        valid ? token : (raise 'No variable or function with this name')
-      end
-    result
+    get_var token.to_s
   end
 
   def equal?(other)
@@ -298,14 +290,11 @@ class Tokenizer
   end
 
   def define_var(tokens)
-    value =
-      if tokens.size == 2
-        get_var tokens[1]
-      else
-        calc_input_val tokens[1..tokens.size - 1]
-      end
-    valid = valid_var_name tokens[0]
-    valid ? (set_var tokens[0], value) : (raise 'Incorrect parameter')
+    var_name = tokens[0]
+    value, tokens = find_next_value tokens[1..tokens.size - 1], false
+    raise 'Too much arguments' unless tokens.empty?
+    valid = valid_var_name var_name
+    valid ? (set_var var_name, value) : (raise 'Incorrect parameter')
   end
 
   def define_function(tokens)
@@ -318,6 +307,8 @@ class Tokenizer
 
   def get_var(var)
     check = check_instance_var var
-    check ? instance_variable_get("@#{var}") : var
+    return instance_variable_get("@#{var}") if check
+    return var if valid_var var
+    raise 'Invalid variable'
   end
 end
