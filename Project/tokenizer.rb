@@ -55,6 +55,8 @@ class Tokenizer
   
   def initialize
     @tokens = []
+    @predefined = []
+    File.readlines('functions.txt').each { |l| @predefined << l.chomp }
     @functions = { 'string-length' => 'strlen', 'string-upcase' => 'strupcase',
                    'string-contains?' => 'strcontains', 'string->list' => 'strlist',
                    'string-split' => 'strsplit' }
@@ -89,14 +91,21 @@ class Tokenizer
 
   def calc_input_val(arr)
     return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
-    token_caller = ''
-    arr.each do |token|
-      next if token == '('
-      result = !File.readlines('functions.txt').grep(/[#{token}]/).empty?
-      token_caller = token if result
-      break if result
+    token_caller = predefined_method_caller arr
+    if token_caller != arr
+      send token_caller.to_s, arr
+    else
+      custom_method_caller arr
     end
-    send(token_caller.to_s, arr)
+  end
+  
+  def predefined_method_caller(arr)
+    arr.each { |t| return t if @predefined.include? t }
+    arr.each { |t| return t if @functions.key? t }
+  end
+  
+  def custom_method_caller(arr)
+    puts 'trying custom methods'
   end
 
   def get_raw_value(token)
