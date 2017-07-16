@@ -93,8 +93,7 @@ class Tokenizer
         'string-replace' => 'strreplace',
         'string-prefix?' => 'strprefix',
         'string-sufix?' => 'strsufix',
-        'string-join' => 'strjoin',
-        '=' => 'equal?'
+        'string-join' => 'strjoin'
       }
   end
 

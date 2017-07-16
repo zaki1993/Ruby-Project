@@ -56,6 +56,13 @@ module SchemeNumbersHelper
     raise 'Too many arguments' unless tokens.empty?
     primary_func_parser(oper, x, y)
   end
+
+  def compare_value_arithmetic(tokens, oper)
+    x, y, tokens = get_k_arguments tokens, true, 2, true
+    raise 'Too many arguments' unless tokens.empty?
+    result = x.public_send oper, y
+    result ? '#t' : '#f'
+  end
 end
 
 # Scheme numbers module
@@ -63,19 +70,19 @@ module SchemeNumbers
   include SchemeNumbersHelper
 
   def <(other)
-
+    compare_value_arithmetic other, '<'
   end
 
   def >(other)
-
+    compare_value_arithmetic other, '>'
   end
 
   def <=(other)
-
+    compare_value_arithmetic other, '<='
   end
 
   def >=(other)
-
+    compare_value_arithmetic other, '>='
   end
 
   def +(other)
