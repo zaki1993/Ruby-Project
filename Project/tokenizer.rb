@@ -14,7 +14,7 @@ class Object
     return to_i if to_i.to_s == to_s
   end
 
-  def symbol?
+  def character?
     (start_with? '#\\') && (('a'..'z').to_a.include? self[2]) && size == 3
   end
 
@@ -58,7 +58,7 @@ module SchemeChecker
   def check_for_symbol(var)
     var = var.join('') if var.is_a? Array
     return true if var == '#\space'
-    return true if var.symbol?
+    return true if var.character?
     is_instance_var = check_instance_var var
     return true if is_instance_var && (check_for_symbol get_var var)
     false
@@ -93,7 +93,8 @@ class Tokenizer
         'string-replace' => 'strreplace',
         'string-prefix?' => 'strprefix',
         'string-sufix?' => 'strsufix',
-        'string-join' => 'strjoin'
+        'string-join' => 'strjoin',
+        '=' => 'equal?'
       }
   end
 
@@ -132,16 +133,17 @@ class Tokenizer
     return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
     token_caller = predefined_method_caller arr
     if token_caller != arr
-      send token_caller.to_s, arr
+      send token_caller.to_s, arr[2..-2]
     else
       custom_method_caller arr
     end
   end
 
   def predefined_method_caller(arr)
+    operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
     m_name =
       arr.find { |t| !t.match(/[[:alpha:]]/).nil? } ||
-      arr.each { |t| return t if ['+', '-', '/', '*'].include? t }
+      arr.each { |t| return t if operations.include? t }
     return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
   end

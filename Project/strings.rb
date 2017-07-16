@@ -22,7 +22,7 @@ module SchemeStringsHelper
     end
   end
 
-  def build_symbol(char)
+  def build_character(char)
     '#\\' + (char == ' ' ? 'space' : char)
   end
 
@@ -42,7 +42,6 @@ end
 module SchemeStrings
   include SchemeStringsHelper
   def substring(tokens)
-    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     from, tokens = find_next_value tokens, true
     to, tokens = find_next_value tokens, true unless tokens.empty?
@@ -51,7 +50,6 @@ module SchemeStrings
   end
 
   def string?(tokens)
-    tokens = tokens[2..-2]
     str, tokens = find_next_value tokens, false
     raise 'Too much arguments' unless tokens.empty?
     result = check_for_string str
@@ -59,28 +57,24 @@ module SchemeStrings
   end
 
   def strlen(tokens)
-    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str[1..-2].length
   end
 
   def strupcase(tokens)
-    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str.upcase
   end
 
   def strdowncase(tokens)
-    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str.downcase
   end
 
   def strcontains(tokens)
-    tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
     to_check, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
@@ -89,7 +83,6 @@ module SchemeStrings
   end
 
   def strsplit(tokens)
-    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
@@ -97,14 +90,12 @@ module SchemeStrings
   end
 
   def strlist(tokens)
-    tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    '\'(' + str[1..-2].chars.map { |c| build_symbol c }.join(' ') + ')'
+    '\'(' + str[1..-2].chars.map { |c| build_character c }.join(' ') + ')'
   end
 
   def strreplace(tokens)
-    tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
     to_replace, tokens = string_getter tokens, true
     replace_with, tokens = string_getter tokens, true
@@ -113,7 +104,6 @@ module SchemeStrings
   end
 
   def strprefix(tokens)
-    tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
     to_check, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
@@ -122,7 +112,6 @@ module SchemeStrings
   end
 
   def strsufix(tokens)
-    tokens = tokens[2..-2]
     string, tokens = string_getter tokens, true
     to_check, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
@@ -131,7 +120,6 @@ module SchemeStrings
   end
 
   def strjoin(tokens)
-    tokens = tokens[2..-2]
     idx = find_idx_for_list tokens
     raise 'List expected' unless tokens[0..idx].list?
     values = find_to_evaluate_or_not tokens[0..idx]

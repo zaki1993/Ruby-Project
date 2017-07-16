@@ -14,7 +14,6 @@ module SchemeNumbersHelper
   end
 
   def get_one_arg_function(tokens)
-    tokens = tokens[2..tokens.size - 2]
     x, tokens = find_next_value tokens, true
     raise 'Too much arguments' unless tokens.empty?
     x
@@ -53,7 +52,6 @@ module SchemeNumbersHelper
   end
 
   def primary_func_tokenizer(tokens, oper)
-    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     raise 'Too many arguments' unless tokens.empty?
     primary_func_parser(oper, x, y)
@@ -63,21 +61,35 @@ end
 # Scheme numbers module
 module SchemeNumbers
   include SchemeNumbersHelper
+
+  def <(other)
+
+  end
+
+  def >(other)
+
+  end
+
+  def <=(other)
+
+  end
+
+  def >=(other)
+
+  end
+
   def +(other)
-    other = other[2..other.size - 2]
     return 0 if other.size.zero?
     result, other = find_next_value other, true
     calculate_value_arithmetic other, result, '+'
   end
 
   def -(other)
-    other = other[2..other.size - 2]
     result, other = find_next_value other, true
     calculate_value_arithmetic other, result, '-'
   end
 
   def *(other)
-    other = other[2..other.size - 2]
     return 1 if other.empty?
     result, other = find_next_value other, true
     calculate_value_arithmetic other, result, '*'
@@ -85,7 +97,6 @@ module SchemeNumbers
 
   # TODO: Division by zero
   def /(other)
-    other = other[2..other.size - 2]
     result = 1 if other.size == 1
     result, other = find_next_value other, true if other.size > 1
     calculate_value_arithmetic other, result, '/'
@@ -104,13 +115,11 @@ module SchemeNumbers
   end
 
   def numerator(tokens)
-    tokens = tokens[2..tokens.size - 2]
     tokens = num_denom_helper tokens
     (get_num_denom tokens)[0].to_num
   end
 
   def denominator(tokens)
-    tokens = tokens[2..tokens.size - 2]
     tokens = num_denom_helper tokens
     (get_num_denom tokens)[1].to_num
   end
@@ -131,7 +140,6 @@ module SchemeNumbers
   end
 
   def min(tokens)
-    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x < y ? x : y
     until tokens.empty?
@@ -142,7 +150,6 @@ module SchemeNumbers
   end
 
   def max(tokens)
-    tokens = tokens[2..tokens.size - 2]
     x, y, tokens = get_k_arguments tokens, true, 2, true
     result = x > y ? x : y
     until tokens.empty?

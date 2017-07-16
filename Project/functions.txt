@@ -1,10 +1,6 @@
 define
 not
 equal?
-+
--
-*
-/
 quotient
 remainder
 modulo
