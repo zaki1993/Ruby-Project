@@ -21,7 +21,7 @@ class Object
   end
 
   def list?
-    ((self[0..1].join == '\'(') || (self[0..1].join == '(list')) && self[-1] == ')'
+    (self[0..1].join == '\'(' || self[0..1].join == '(list') && self[-1] == ')'
   end
 end
 
@@ -135,9 +135,11 @@ class Tokenizer
   end
 
   def predefined_method_caller(arr)
-    method_name = arr.find { |t| !t.match(/[[:alpha:]]/).nil? }
-    return method_name if @predefined.include? method_name
-    return @functions[method_name] if @functions.key? method_name
+    m_name =
+      arr.find { |t| !t.match(/[[:alpha:]]/).nil? } ||
+      arr.each { |t| return t if ['+', '-', '/', '*'].include? t }
+    return m_name if @predefined.include? m_name
+    return @functions[m_name] if @functions.key? m_name
   end
 
   def custom_method_caller(arr)
@@ -325,24 +327,73 @@ class Tokenizer
     result ? '#t' : '#f'
   end
 
-=begin
-  def find_list_delimeter_for_join(tokens, idx)
-    delimeter_arr = tokens[idx + 1..-1]
-    tokens = tokens[1..idx]
-    result = []
-    until tokens.empty?
-      temp, tokens = string_
+  def build_next_value_as_string(tokens)
+    if tokens[0] == '('
+      idx = find_matching_bracket_idx tokens, 0
+      result = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
+      [result, tokens[idx + 1..-1]]
+    else
+      [tokens[0], tokens[1..-1]]
     end
   end
-=end
 
-  def find_to_evaluate_or_not(tokens) end
+  def evaluate_list(tokens)
+    find_all_values tokens
+  end
+
+  def do_not_evaluate_list(tokens)
+    result = []
+    puts tokens.to_s
+    until tokens.empty?
+      puts tokens.to_s
+      value, tokens = build_next_value_as_string tokens
+      value = value[1..-2] if check_for_string value
+      result << value
+    end
+    result
+  end
+
+  def find_to_evaluate_or_not(tokens)
+    if tokens[0..1].join == '(list'
+      evaluate_list tokens[2..-2]
+    else
+      puts tokens.to_s
+      do_not_evaluate_list tokens[2..-2]
+    end
+  end
+
+  def find_idx_for_list(tokens)
+    if tokens[0] == '('
+      find_matching_bracket_idx tokens, 0
+    elsif tokens[1] == '('
+      find_matching_bracket_idx tokens, 1
+    end
+  end
+
+  def find_delimeter(tokens)
+    return ' ' if tokens.empty?
+    result = (find_next_value tokens, false)[0]
+    valid = check_for_string result
+    valid ? result : (raise 'String needed')
+  end
 
   def strjoin(tokens)
     tokens = tokens[2..-2]
-    raise 'List expected' unless tokens.list?
-    find_to_evaluate_or_not tokens
-    puts "asdsad"
+    idx = find_idx_for_list tokens
+    raise 'List expected' unless tokens[0..idx].list?
+    values = find_to_evaluate_or_not tokens[0..idx]
+    delimeter = find_delimeter tokens[idx + 1..-1]
+    values.join delimeter[1..-2]
+  end
+
+  def find_all_values(tokens)
+    result = []
+    until tokens.empty?
+      x, tokens = find_next_value tokens, false
+      x = x[1..-2] if check_for_string x
+      result << x
+    end
+    result
   end
 
   def define(tokens)
