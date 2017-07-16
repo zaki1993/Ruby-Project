@@ -1,5 +1,5 @@
-# Scheme numbers functions module
-module SchemeNumbers
+# Helper functions for SchemeNumbers
+module SchemeNumbersHelper
   def calculate_value_arithmetic(tokens, result, sign)
     until tokens.empty?
       x, tokens = find_next_value tokens, true
@@ -13,6 +13,56 @@ module SchemeNumbers
     result
   end
 
+  def get_one_arg_function(tokens)
+    tokens = tokens[2..tokens.size - 2]
+    x, tokens = find_next_value tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    x
+  end
+
+  def find_idx_numerators(tokens)
+    tokens[0] == '(' ? (find_matching_bracket_idx tokens, 0) + 1 : 1
+  end
+
+  def num_denom_helper(tokens)
+    if tokens.size == 1
+      tokens = tokens[0].split('/')
+    else
+      _, temp = find_next_value tokens, true
+      raise 'Too much arguments' unless temp[0] == '/' || temp.empty?
+      i = find_idx_numerators tokens
+      tokens.delete_at(i)
+    end
+    tokens
+  end
+
+  def get_num_denom(tokens)
+    num, tokens = find_next_value tokens, true
+    return [num, 1] if tokens.empty?
+    denom, tokens = find_next_value tokens, true
+    raise 'Too much arguments' unless tokens.empty?
+    [num, denom]
+  end
+
+  def primary_func_parser(oper, x, y)
+    case oper
+    when 'remainder' then (x.abs % y.abs) * (x / x.abs)
+    when 'modulo' then x.modulo(y)
+    when 'quotient' then (x / y).floor
+    end
+  end
+
+  def primary_func_tokenizer(tokens, oper)
+    tokens = tokens[2..tokens.size - 2]
+    x, y, tokens = get_k_arguments tokens, true, 2, true
+    raise 'Too many arguments' unless tokens.empty?
+    primary_func_parser(oper, x, y)
+  end
+end
+
+# Scheme numbers module
+module SchemeNumbers
+  include SchemeNumbersHelper
   def +(other)
     other = other[2..other.size - 2]
     return 0 if other.size.zero?
@@ -41,21 +91,6 @@ module SchemeNumbers
     calculate_value_arithmetic other, result, '/'
   end
 
-  def primary_func_parser(oper, x, y)
-    case oper
-    when 'remainder' then (x.abs % y.abs) * (x / x.abs)
-    when 'modulo' then x.modulo(y)
-    when 'quotient' then (x / y).floor
-    end
-  end
-
-  def primary_func_tokenizer(tokens, oper)
-    tokens = tokens[2..tokens.size - 2]
-    x, y, tokens = get_k_arguments tokens, true, 2, true
-    raise 'Too many arguments' unless tokens.empty?
-    primary_func_parser(oper, x, y)
-  end
-
   def quotient(tokens)
     primary_func_tokenizer(tokens, 'quotient')
   end
@@ -68,30 +103,6 @@ module SchemeNumbers
     primary_func_tokenizer(tokens, 'modulo')
   end
 
-  def get_num_denom(tokens)
-    num, tokens = find_next_value tokens, true
-    return [num, 1] if tokens.empty?
-    denom, tokens = find_next_value tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    [num, denom]
-  end
-
-  def find_idx_numerators(tokens)
-    tokens[0] == '(' ? (find_matching_bracket_idx tokens, 0) + 1 : 1
-  end
-
-  def num_denom_helper(tokens)
-    if tokens.size == 1
-      tokens = tokens[0].split('/')
-    else
-      _, temp = find_next_value tokens, true
-      raise 'Too much arguments' unless temp[0] == '/' || temp.empty?
-      i = find_idx_numerators tokens
-      tokens.delete_at(i)
-    end
-    tokens
-  end
-
   def numerator(tokens)
     tokens = tokens[2..tokens.size - 2]
     tokens = num_denom_helper tokens
@@ -102,13 +113,6 @@ module SchemeNumbers
     tokens = tokens[2..tokens.size - 2]
     tokens = num_denom_helper tokens
     (get_num_denom tokens)[1].to_num
-  end
-
-  def get_one_arg_function(tokens)
-    tokens = tokens[2..tokens.size - 2]
-    x, tokens = find_next_value tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    x
   end
 
   def abs(tokens)

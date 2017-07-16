@@ -1,6 +1,7 @@
 load 'validator.rb'
 load 'numbers.rb'
 load 'strings.rb'
+load 'boolean.rb'
 
 # redefine method in Object class
 class Object
@@ -75,6 +76,7 @@ class Tokenizer
   include Validator
   include SchemeNumbers
   include SchemeStrings
+  include SchemeBooleans
 
   def initialize
     @tokens = []
@@ -153,13 +155,6 @@ class Tokenizer
     get_var token.to_s
   end
 
-  def equal?(other)
-    other = other[2..other.size - 2]
-    first, second, other = (get_k_arguments other, true, 2, false)
-    raise 'Too many arguments' unless other.empty?
-    first.to_s == second.to_s ? '#t' : '#f'
-  end
-
   def find_matching_bracket_idx(tokens, first_bracket)
     open_br = 0
     tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
@@ -194,31 +189,6 @@ class Tokenizer
     end
     result << tokens if return_tokens
     result
-  end
-
-  def not(tokens)
-    open_br = 0
-    tokens.each do |token|
-      open_br += 1 if token == '('
-      break if token == 'not'
-    end
-    raise 'Incorrect function' if open_br != 1
-    arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
-    fetch_not arr_param
-  end
-
-  def fetch_not(tokens)
-    if tokens[0] == '('
-      res = calc_input_val tokens[0..tokens.size - 1]
-      not_var res
-    else
-      tokens.size == 1 ? (not_var tokens[0]) : (raise 'Incorrect parameter')
-    end
-  end
-
-  def not_var(var)
-    raise 'Incorrect boolean' unless check_for_bool var
-    (get_var var) == '#t' ? '#f' : '#t'
   end
 
   def evaluate_list(tokens)

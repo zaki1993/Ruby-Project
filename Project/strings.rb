@@ -1,15 +1,46 @@
-# Scheme numbers module
-module SchemeStrings
+# Helper functions for SchemeStrings
+module SchemeStringsHelper
+  def substring_builder(str, from, to)
+    '"' + (str[1..-2])[from..(to.nil? ? -1 : to - 1)] + '"'
+  end
+
+  def find_delimeter(tokens)
+    return ' ' if tokens.empty?
+    result, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    valid = check_for_string result
+    valid ? result : (raise 'String needed')
+  end
+
+  def build_next_value_as_string(tokens)
+    if tokens[0] == '('
+      idx = find_matching_bracket_idx tokens, 0
+      result = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
+      [result, tokens[idx + 1..-1]]
+    else
+      [tokens[0], tokens[1..-1]]
+    end
+  end
+
+  def build_symbol(char)
+    '#\\' + (char == ' ' ? 'space' : char)
+  end
+
+  def remove_carriage(str)
+    str = str[1..-2]
+    str.gsub('\n', '').gsub('\r', '').gsub('\t', '').strip.squeeze(' ')
+  end
+
   def string_getter(tokens, get_tokens)
     str, tokens = find_next_value tokens, false
     raise 'String needed' unless check_for_string str
     [str, get_tokens ? tokens : _]
   end
+end
 
-  def substring_builder(str, from, to)
-    '"' + (str[1..-2])[from..(to.nil? ? -1 : to - 1)] + '"'
-  end
-
+# Scheme numbers module
+module SchemeStrings
+  include SchemeStringsHelper
   def substring(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
@@ -57,21 +88,12 @@ module SchemeStrings
     result ? '#t' : '#f'
   end
 
-  def remove_carriage(str)
-    str = str[1..-2]
-    str.gsub('\n', '').gsub('\r', '').gsub('\t', '').strip.squeeze(' ')
-  end
-
   def strsplit(tokens)
     tokens = tokens[2..-2]
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
     '\'(' + str.split(' ').map { |s| '"' + s + '"' }.join(' ') + ')'
-  end
-
-  def build_symbol(char)
-    '#\\' + (char == ' ' ? 'space' : char)
   end
 
   def strlist(tokens)
@@ -108,16 +130,6 @@ module SchemeStrings
     result ? '#t' : '#f'
   end
 
-  def build_next_value_as_string(tokens)
-    if tokens[0] == '('
-      idx = find_matching_bracket_idx tokens, 0
-      result = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
-      [result, tokens[idx + 1..-1]]
-    else
-      [tokens[0], tokens[1..-1]]
-    end
-  end
-
   def strjoin(tokens)
     tokens = tokens[2..-2]
     idx = find_idx_for_list tokens
@@ -125,13 +137,5 @@ module SchemeStrings
     values = find_to_evaluate_or_not tokens[0..idx]
     delimeter = find_delimeter tokens[idx + 1..-1]
     values.join delimeter[1..-2]
-  end
-
-  def find_delimeter(tokens)
-    return ' ' if tokens.empty?
-    result, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    valid = check_for_string result
-    valid ? result : (raise 'String needed')
   end
 end
