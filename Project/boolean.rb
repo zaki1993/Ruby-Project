@@ -19,7 +19,6 @@ end
 module SchemeBooleans
   include SchemeBooleansHelper
   def equal?(other)
-    other = other[2..other.size - 2]
     first, second, other = (get_k_arguments other, true, 2, false)
     raise 'Too many arguments' unless other.empty?
     first.to_s == second.to_s ? '#t' : '#f'

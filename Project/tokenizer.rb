@@ -2,6 +2,7 @@ load 'validator.rb'
 load 'numbers.rb'
 load 'strings.rb'
 load 'boolean.rb'
+load 'list.rb'
 
 # redefine method in Object class
 class Object
@@ -77,6 +78,7 @@ class Tokenizer
   include SchemeNumbers
   include SchemeStrings
   include SchemeBooleans
+  include SchemeLists
 
   def initialize
     @tokens = []
@@ -189,46 +191,6 @@ class Tokenizer
       result << x
     end
     result << tokens if return_tokens
-    result
-  end
-
-  def evaluate_list(tokens)
-    find_all_values tokens
-  end
-
-  def do_not_evaluate_list(tokens)
-    result = []
-    until tokens.empty?
-      value, tokens = build_next_value_as_string tokens
-      value = value[1..-2] if check_for_string value
-      result << value
-    end
-    result
-  end
-
-  def find_to_evaluate_or_not(tokens)
-    if tokens[0..1].join == '(list'
-      evaluate_list tokens[2..-2]
-    else
-      do_not_evaluate_list tokens[2..-2]
-    end
-  end
-
-  def find_idx_for_list(tokens)
-    if tokens[0] == '('
-      find_matching_bracket_idx tokens, 0
-    elsif tokens[1] == '('
-      find_matching_bracket_idx tokens, 1
-    end
-  end
-
-  def find_all_values(tokens)
-    result = []
-    until tokens.empty?
-      x, tokens = find_next_value tokens, false
-      x = x[1..-2] if check_for_string x
-      result << x
-    end
     result
   end
 
