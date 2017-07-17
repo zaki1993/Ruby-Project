@@ -25,13 +25,6 @@ module SchemeBooleans
   end
 
   def not(tokens)
-    open_br = 0
-    tokens.each do |token|
-      open_br += 1 if token == '('
-      break if token == 'not'
-    end
-    raise 'Incorrect function' if open_br != 1
-    arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
-    fetch_not arr_param
+    fetch_not tokens
   end
 end
