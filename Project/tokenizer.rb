@@ -20,6 +20,7 @@ class Object
   end
 
   def string?
+    return false unless self.class == String
     (start_with? '"') && (end_with? '"') && (size != 1)
   end
 
@@ -49,6 +50,12 @@ module SchemeChecker
     is_instance_var = check_instance_var token
     return true if is_instance_var && (check_for_number get_var token)
     false
+  end
+  
+  def check_for_list(token)
+    return true if token[0..1].join == '\'(' && token[-1] == ')'
+    result, _ = find_next_value token, false
+    result
   end
 
   def check_instance_var(var)
@@ -131,7 +138,8 @@ class Tokenizer
   end
 
   def calc_input_val(arr)
-    return get_raw_value arr unless (arr.is_a? Array) && arr.size > 1
+    get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
+    return get_raw_value arr unless get_raw
     token_caller = predefined_method_caller arr
     if token_caller != arr
       send token_caller.to_s, arr[2..-2]
@@ -154,11 +162,16 @@ class Tokenizer
   end
 
   def get_raw_value(token)
-    token = token.join('') if token.is_a? Array
-    get_var token.to_s
+    if token.list?
+      result = do_not_evaluate_list token[2..-2], false
+      build_list result
+    else
+      token = token.join('') if token.is_a? Array
+      get_var token.to_s
+    end
   end
 
-  def find_matching_bracket_idx(tokens, first_bracket)
+  def find_bracket_idx(tokens, first_bracket)
     open_br = 0
     tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
       open_br += 1 if token == '('
@@ -168,19 +181,34 @@ class Tokenizer
   end
 
   def find_next_function_value(tokens)
-    idx = (find_matching_bracket_idx tokens, 0)
+    idx = (find_bracket_idx tokens, 0)
     value = calc_input_val tokens[0..idx]
     tokens = tokens[idx + 1..tokens.size]
     [value, tokens]
+  end
+  
+  def size_for_list_elem(values)
+    result = []
+    values.each do |v|
+      if v.include?('(') || v.include?(')')
+        v.split(/(\(|\))|\ /).each { |t| result << t unless t == ''}
+      else
+        result << v
+      end
+    end
+    result.size
   end
 
   def find_next_value(tokens, is_num)
     if tokens[0] == '('
       value, tokens = find_next_function_value tokens
       [is_num ? value.to_num : value, tokens]
+    elsif tokens[0..1].join == '\'('
+      value = do_not_evaluate_list tokens[2..(find_bracket_idx tokens, 1) - 1], false
+      [(build_list value), tokens[3 + (size_for_list_elem value)..-1]]
     else
-      value = get_var tokens[0]
-      [is_num ? value.to_num : value, tokens[1..tokens.size]]
+      value = calc_input_val tokens[0..0]
+      [is_num ? value.to_num : value, tokens[1..-1]]
     end
   end
 
@@ -195,14 +223,7 @@ class Tokenizer
   end
 
   def define(tokens)
-    open_br = 0
-    tokens.each do |token|
-      open_br += 1 if token == '('
-      break if token == 'define'
-    end
-    raise 'Incorrect function' if open_br != 1
-    arr_param = tokens[open_br + 1..tokens.length - open_br - 1]
-    fetch_define arr_param
+    fetch_define tokens
   end
 
   def fetch_define(tokens)
