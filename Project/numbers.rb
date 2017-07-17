@@ -20,7 +20,7 @@ module SchemeNumbersHelper
   end
 
   def find_idx_numerators(tokens)
-    tokens[0] == '(' ? (find_matching_bracket_idx tokens, 0) + 1 : 1
+    tokens[0] == '(' ? (find_bracket_idx tokens, 0) + 1 : 1
   end
 
   def num_denom_helper(tokens)
@@ -92,11 +92,13 @@ module SchemeNumbers
   end
 
   def -(other)
+    return 0 if other.size.zero?
     result, other = find_next_value other, true
     calculate_value_arithmetic other, result, '-'
   end
 
   def *(other)
+    raise 'Too few arguments' if other.empty?
     return 1 if other.empty?
     result, other = find_next_value other, true
     calculate_value_arithmetic other, result, '*'
@@ -104,6 +106,7 @@ module SchemeNumbers
 
   # TODO: Division by zero
   def /(other)
+    raise 'Too few arguments' if other.empty?
     result = 1 if other.size == 1
     result, other = find_next_value other, true if other.size > 1
     calculate_value_arithmetic other, result, '/'
@@ -133,7 +136,7 @@ module SchemeNumbers
 
   def abs(tokens)
     x = get_one_arg_function tokens
-    x.abs
+    x.abs.to_s
   end
 
   def add1(tokens)
