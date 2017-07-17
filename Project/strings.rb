@@ -14,7 +14,7 @@ module SchemeStringsHelper
 
   def build_next_value_as_string(tokens)
     if tokens[0] == '('
-      idx = find_matching_bracket_idx tokens, 0
+      idx = find_bracket_idx tokens, 0
       result = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
       [result, tokens[idx + 1..-1]]
     else
@@ -86,13 +86,13 @@ module SchemeStrings
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
     str = remove_carriage str
-    '\'(' + str.split(' ').map { |s| '"' + s + '"' }.join(' ') + ')'
+    build_list str.split(' ').map { |s| '"' + s + '"' }
   end
 
   def strlist(tokens)
     str, tokens = string_getter tokens, true
     raise 'Too much arguments' unless tokens.empty?
-    '\'(' + str[1..-2].chars.map { |c| build_character c }.join(' ') + ')'
+    build_list str[1..-2].chars.map { |c| build_character c }
   end
 
   def strreplace(tokens)
@@ -122,8 +122,8 @@ module SchemeStrings
   def strjoin(tokens)
     idx = find_idx_for_list tokens
     raise 'List expected' unless tokens[0..idx].list?
-    values = find_to_evaluate_or_not tokens[0..idx]
+    values = find_to_evaluate_or_not tokens[0..idx], true
     delimeter = find_delimeter tokens[idx + 1..-1]
-    values.join delimeter[1..-2]
+    '"' + (values.join delimeter[1..-2]) + '"'
   end
 end
