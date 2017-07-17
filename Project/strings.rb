@@ -9,14 +9,20 @@ module SchemeStringsHelper
     result, tokens = find_next_value tokens, false
     raise 'Too much arguments' unless tokens.empty?
     valid = check_for_string result
-    valid ? result : (raise 'String needed')
+    valid ? result[1..-2] : (raise 'String needed')
+  end
+  
+  def build_as_string_helper(tokens, idx)
+    tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
   end
 
   def build_next_value_as_string(tokens)
     if tokens[0] == '('
       idx = find_bracket_idx tokens, 0
-      result = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
-      [result, tokens[idx + 1..-1]]
+      [(build_as_string_helper tokens, idx), tokens[idx + 1..-1]]
+    elsif tokens[0..1].join == '\'('
+      idx = find_bracket_idx tokens, 1
+      [(get_raw_value tokens[0..idx]), tokens[idx + 1..-1]]
     else
       [tokens[0], tokens[1..-1]]
     end
@@ -124,6 +130,6 @@ module SchemeStrings
     raise 'List expected' unless tokens[0..idx].list?
     values = find_to_evaluate_or_not tokens[0..idx], true
     delimeter = find_delimeter tokens[idx + 1..-1]
-    '"' + (values.join delimeter[1..-2]) + '"'
+    '"' + (values.join delimeter) + '"'
   end
 end
