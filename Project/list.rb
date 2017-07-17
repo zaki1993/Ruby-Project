@@ -7,7 +7,7 @@ module SchemeListsHelper
   def do_not_evaluate_list(tokens, no_quotes)
     result = []
     until tokens.empty?
-      value, tokens = find_next_value tokens, false
+      value, tokens = build_next_value_as_string tokens
       value = value[1..-2] if check_for_string value if no_quotes
       result << value
     end
