@@ -205,8 +205,6 @@ class Tokenizer
       [is_num ? value.to_num : value, tokens]
     elsif tokens[0..1].join == '\'('
       value = do_not_evaluate_list tokens[2..(find_bracket_idx tokens, 1) - 1], false
-      puts value
-      puts tokens[3 + (size_for_list_elem value)..-1]
       [(build_list value), tokens[3 + (size_for_list_elem value)..-1]]
     else
       value = calc_input_val tokens[0..0]
