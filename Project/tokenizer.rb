@@ -25,7 +25,13 @@ class Object
   end
 
   def list?
-    (self[0..1].join == '\'(' || self[0..1].join == '(list') && self[-1] == ')'
+    return false if size < 3
+    self[0..1].join == '\'(' && self[-1] == ')'
+  end
+
+  def pair?
+    contans_dot = (include? '.') && (count('.') == 1)
+    list? || (self[0..1].join == '\'(' && self[-1] == ')' && contans_dot)
   end
 end
 
@@ -51,11 +57,17 @@ module SchemeChecker
     return true if is_instance_var && (check_for_number get_var token)
     false
   end
-  
-  def check_for_list(token)
-    return true if token[0..1].join == '\'(' && token[-1] == ')'
-    result, _ = find_next_value token, false
-    result
+
+  def check_for_list(tokens)
+    if tokens[0..1].join == '\'('
+      tokens.list?
+    else
+      result, = find_next_function_value tokens
+      return result.split('').list? if result.class == Array
+      temp = result.split('')
+      temp.delete(' ')
+      temp.list?
+    end
   end
 
   def check_instance_var(var)
@@ -162,8 +174,8 @@ class Tokenizer
   end
 
   def get_raw_value(token)
-    if token.list?
-      result = do_not_evaluate_list token[2..-2], false
+    if token.pair?
+      result = find_to_evaluate_or_not token, false
       build_list result
     else
       token = token.join('') if token.is_a? Array
@@ -186,12 +198,12 @@ class Tokenizer
     tokens = tokens[idx + 1..tokens.size]
     [value, tokens]
   end
-  
+
   def size_for_list_elem(values)
     result = []
     values.each do |v|
       if v.include?('(') || v.include?(')')
-        v.split(/(\(|\))|\ /).each { |t| result << t unless t == ''}
+        v.split(/(\(|\))|\ /).each { |t| result << t unless t == '' }
       else
         result << v
       end
@@ -199,13 +211,17 @@ class Tokenizer
     result.size
   end
 
+  def find_next_value_helper(tokens)
+    value = no_eval_list tokens[2..(find_bracket_idx tokens, 1) - 1]
+    [(build_list value), tokens[3 + (size_for_list_elem value)..-1]]
+  end
+
   def find_next_value(tokens, is_num)
     if tokens[0] == '('
       value, tokens = find_next_function_value tokens
       [is_num ? value.to_num : value, tokens]
     elsif tokens[0..1].join == '\'('
-      value = do_not_evaluate_list tokens[2..(find_bracket_idx tokens, 1) - 1], false
-      [(build_list value), tokens[3 + (size_for_list_elem value)..-1]]
+      find_next_value_helper tokens
     else
       value = calc_input_val tokens[0..0]
       [is_num ? value.to_num : value, tokens[1..-1]]

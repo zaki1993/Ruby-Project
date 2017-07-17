@@ -11,15 +11,16 @@ module SchemeStringsHelper
     valid = check_for_string result
     valid ? result[1..-2] : (raise 'String needed')
   end
-  
+
   def build_as_string_helper(tokens, idx)
-    tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
+    value = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
+    [value, tokens[idx + 1..-1]]
   end
 
   def build_next_value_as_string(tokens)
     if tokens[0] == '('
       idx = find_bracket_idx tokens, 0
-      [(build_as_string_helper tokens, idx), tokens[idx + 1..-1]]
+      build_as_string_helper tokens, idx
     elsif tokens[0..1].join == '\'('
       idx = find_bracket_idx tokens, 1
       [(get_raw_value tokens[0..idx]), tokens[idx + 1..-1]]
@@ -127,7 +128,7 @@ module SchemeStrings
 
   def strjoin(tokens)
     idx = find_idx_for_list tokens
-    raise 'List expected' unless tokens[0..idx].list?
+    raise 'List expected' unless check_for_list tokens[0..idx]
     values = find_to_evaluate_or_not tokens[0..idx], true
     delimeter = find_delimeter tokens[idx + 1..-1]
     '"' + (values.join delimeter) + '"'
