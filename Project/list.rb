@@ -14,7 +14,7 @@ module SchemeListsHelper
     result
   end
 
-  def find_to_evaluate_or_not(tokens, no_quotes)
+  def find_to_evaluate_or_not(tokens, no_quotes = false)
     if tokens[0..1].join == '(list'
       evaluate_list tokens[2..-2], no_quotes
     elsif tokens[0..1].join == '(cons'
@@ -33,7 +33,7 @@ module SchemeListsHelper
     end
   end
 
-  def find_all_values_list_evaluate(tokens, no_quotes)
+  def find_all_values_list_evaluate(tokens, no_quotes = false)
     result = []
     until tokens.empty?
       x, tokens = find_next_value tokens, false
@@ -67,6 +67,12 @@ module SchemeListsHelper
     raise 'Too little arguments' if result.size != 2
     result
   end
+  
+  def split_list_string(list)
+    result = list.split(/(\(|\))|\ /)
+    result.delete('')
+    result
+  end
 end
 
 # Scheme lists module
@@ -87,11 +93,17 @@ module SchemeLists
   end
 
   def list(tokens)
-    result = find_all_values_list_evaluate tokens, false
+    result = find_all_values_list_evaluate tokens
     build_list result
   end
 
-  def car(tokens) end
+  def car(tokens)
+    idx = find_idx_for_list tokens
+    raise 'Too much arguments' if idx != tokens.size - 1
+    value, tokens = find_next_value tokens, false
+    values = no_eval_list (split_list_string value)[2..-2]
+    values.shift
+  end
 
   def cdr(tokens) end
 end
