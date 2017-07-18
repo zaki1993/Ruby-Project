@@ -73,6 +73,13 @@ module SchemeListsHelper
     result.delete('')
     result
   end
+  
+  def find_car_cdr_values(tokens)
+    idx = find_idx_for_list tokens
+    raise 'Too much arguments' if idx != tokens.size - 1
+    value, tokens = find_next_value tokens, false
+    values = no_eval_list (split_list_string value)[2..-2]
+  end
 end
 
 # Scheme lists module
@@ -98,12 +105,12 @@ module SchemeLists
   end
 
   def car(tokens)
-    idx = find_idx_for_list tokens
-    raise 'Too much arguments' if idx != tokens.size - 1
-    value, tokens = find_next_value tokens, false
-    values = no_eval_list (split_list_string value)[2..-2]
+    values = find_car_cdr_values tokens
     values.shift
   end
 
-  def cdr(tokens) end
+  def cdr(tokens)
+    values = find_car_cdr_values tokens
+    build_list values[1..-1]
+  end
 end
