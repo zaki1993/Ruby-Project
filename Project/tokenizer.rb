@@ -63,10 +63,8 @@ module SchemeChecker
       tokens.list?
     else
       result, = find_next_function_value tokens
-      return result.split('').list? if result.class == Array
-      temp = result.split('')
-      temp.delete(' ')
-      temp.list?
+      split_result = split_list_string result
+      return split_result.list?
     end
   end
 
