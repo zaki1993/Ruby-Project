@@ -63,11 +63,7 @@ module SchemeListsHelper
   end
 
   def get_cons_values(tokens)
-    result = []
-    until tokens.empty?
-      value, tokens = find_next_value tokens, false
-      result << value.to_s
-    end
+    result = get_k_arguments tokens, false, 2, false
     raise 'Too little arguments' if result.size != 2
     result
   end
