@@ -77,10 +77,9 @@ end
 module SchemeLists
   include SchemeListsHelper
   def null?(tokens)
-    idx = find_idx_for_list tokens
-    raise 'List expected' unless check_for_list tokens[0..idx]
-    raise 'Too much arguments' unless idx == tokens.size - 1
-    tokens.size == 3 ? '#t' : '#f'
+    value, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    value == '\'()' ? '#t' : '#f'
   end
 
   def cons(tokens)
