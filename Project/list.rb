@@ -105,13 +105,13 @@ module SchemeLists
   end
 
   def car(other)
-    value = find_car_cdr_values other
+    value = find_list_function_value other
     raise 'Cannot apply operation on nil' if value.empty?
     value.shift
   end
 
   def cdr(other)
-    value = find_car_cdr_values other
+    value = find_list_function_value other
     raise 'Cannot apply operation on nil' if value.empty?
     build_list value[1..-1]
   end
@@ -128,5 +128,13 @@ module SchemeLists
   def reverse(other)
     value = find_list_function_value other
     build_list value.reverse
+  end
+
+  def listref(other)
+
+  end
+
+  def listtail(other)
+
   end
 end
