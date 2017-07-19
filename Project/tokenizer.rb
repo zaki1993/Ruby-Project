@@ -1,133 +1,301 @@
-# Helper functions for SchemeLists
-module SchemeListsHelper
-  def evaluate_list(tokens, no_quotes)
-    find_all_values_list_evaluate tokens, no_quotes
+load 'validator.rb'
+load 'numbers.rb'
+load 'strings.rb'
+load 'boolean.rb'
+load 'list.rb'
+
+# redefine method in Object class
+class Object
+  def number?
+    to_f.to_s == to_s || to_i.to_s == to_s
   end
 
-  def no_eval_list(tokens, no_quotes = false)
-    result = []
-    until tokens.empty?
-      value, tokens = build_next_value_as_string tokens
-      value = value[1..-2] if no_quotes && (check_for_string value.to_s)
-      result << value
-    end
-    result
+  def to_num
+    return to_f if to_f.to_s == to_s
+    return to_i if to_i.to_s == to_s
   end
 
-  def find_to_evaluate_or_not(tokens, no_quotes = false)
-    if tokens[0..1].join == '(list'
-      evaluate_list tokens[2..-2], no_quotes
-    elsif tokens[0..1].join == '(cons'
-      result = cons tokens[2..-2]
-      result[2..-2].split(' ')
+  def character?
+    (start_with? '#\\') && (('a'..'z').to_a.include? self[2]) && size == 3
+  end
+
+  def string?
+    return false unless self.class == String
+    (start_with? '"') && (end_with? '"') && (size != 1)
+  end
+
+  def list?
+    return false if size < 3
+    self[0..1].join == '\'(' && self[-1] == ')'
+  end
+
+  def pair?
+    return false if (include? '.') && (count('.') > 1)
+    list?
+  end
+end
+
+# Check if variable is specific type
+module SchemeChecker
+  def check_for_bool(token)
+    return true if ['#t', '#f'].include? token
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_bool get_var token)
+    false
+  end
+
+  def check_for_string(token)
+    return true if token.string?
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_string get_var token)
+    false
+  end
+
+  def check_for_number(token)
+    return true if token.number?
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_number get_var token)
+    false
+  end
+
+  def check_for_list(tokens)
+    if tokens[0..1].join == '\'('
+      tokens.list?
     else
-      no_eval_list tokens[2..-2], no_quotes
+      result, = find_next_function_value tokens
+      split_result = split_list_string result
+      split_result.list?
     end
   end
 
-  def find_idx_for_list(tokens)
-    if tokens[0] == '('
-      find_bracket_idx tokens, 0
-    elsif tokens[1] == '('
-      find_bracket_idx tokens, 1
+  def check_instance_var(var)
+    return false unless valid_var_name var
+    instance_variable_defined?("@#{var}")
+  end
+
+  def check_for_symbol(var)
+    var = var.join('') if var.is_a? Array
+    return true if var == '#\space'
+    return true if var.character?
+    is_instance_var = check_instance_var var
+    return true if is_instance_var && (check_for_symbol get_var var)
+    false
+  end
+
+  def divide_number(a, b)
+    return a / b if (a / b).to_i.to_f == a / b.to_f
+    a / b.to_f
+  end
+end
+
+# Tokenizer class
+class Tokenizer
+  include SchemeChecker
+  include Validator
+  include SchemeNumbers
+  include SchemeStrings
+  include SchemeBooleans
+  include SchemeLists
+
+  def initialize
+    @tokens = []
+    @predefined = []
+    @reserved = 
+      {
+        'null' => '\'()'
+      }
+    set_reserved_keywords
+    File.readlines('functions.txt').each { |l| @predefined << l.chomp }
+    @functions =
+      {
+        'string-length' => 'strlen',
+        'string-upcase' => 'strupcase',
+        'string-downcase' => 'strdowncase',
+        'string-contains?' => 'strcontains',
+        'string->list' => 'strlist',
+        'string-split' => 'strsplit',
+        'string-replace' => 'strreplace',
+        'string-prefix?' => 'strprefix',
+        'string-sufix?' => 'strsufix',
+        'string-join' => 'strjoin',
+        'list-ref' => 'listref',
+        'listtail' => 'listtail'
+      }
+  end
+  
+  def set_reserved_keywords
+    @reserved.each do |key, value|
+      instance_variable_set("@#{key}", value)
     end
   end
 
-  def find_all_values_list_evaluate(tokens, no_quotes = false)
+  def tokenize(token)
+    reset
+    split_token token
+    begin
+      puts calc_input_val @tokens
+    rescue NameError
+      puts 'Not valid name for variable'
+    rescue ArgumentError
+      puts 'Invalid argument'
+    rescue TypeError
+      puts 'Invalid argument'
+    rescue RuntimeError
+      puts 'No variable or function with this name'
+    end
+  end
+
+  def reset
+    @tokens = []
+  end
+
+  def split_token(token)
+    token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
+      if t.include?('(') || t.include?(')')
+        t.to_s.split(%r{(\(|\)|\/)}).each { |p| @tokens << p }
+      else
+        @tokens << t
+      end
+    end
+    @tokens.delete('')
+  end
+
+  def calc_input_val(arr)
+    get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
+    return get_raw_value arr unless get_raw
+    token_caller = predefined_method_caller arr
+    if token_caller != arr
+      call_predefined_method token_caller, arr[2..-2]
+    else
+      custom_method_caller arr
+    end
+  end
+  
+  def find_all_values(tokens)
     result = []
     until tokens.empty?
       x, tokens = find_next_value tokens, false
-      x = x[1..-2] if no_quotes && (check_for_string x.to_s)
       result << x
     end
     result
   end
-
-  def build_list(values)
-    '\'(' + values.join(' ') + ')'
+  
+  def call_predefined_method(token_caller, arr)
+    values = find_all_values arr
+    send token_caller.to_s, values
   end
 
-  def build_cons_from_list(values)
-    spacer = values[1].size == 3 ? '' : ' '
-    values[0] + spacer + values[1][2..-2]
+  def predefined_method_caller(arr)
+    operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
+    m_name =
+      arr.find { |t| !t.match(/[[:alpha:]]/).nil? } ||
+      arr.each { |t| return t if operations.include? t }
+    return m_name if @predefined.include? m_name
+    return @functions[m_name] if @functions.key? m_name
   end
 
-  def cons_helper(values)
-    result =
-      if values[1].to_s.split('').pair?
-        build_cons_from_list values
+  def custom_method_caller(arr)
+    puts 'trying custom methods: ' + arr.to_s
+  end
+
+  def get_raw_value(token)
+    if token.pair?
+      result = find_to_evaluate_or_not token
+      build_list result
+    else
+      token = token.join('') if token.is_a? Array
+      get_var token.to_s
+    end
+  end
+
+  def find_bracket_idx(tokens, first_bracket)
+    open_br = 0
+    tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
+      open_br += 1 if token == '('
+      open_br -= 1 if token == ')'
+      return idx + first_bracket if open_br.zero?
+    end
+  end
+
+  def find_next_function_value(tokens)
+    idx = (find_bracket_idx tokens, 0)
+    value = calc_input_val tokens[0..idx]
+    tokens = tokens[idx + 1..tokens.size]
+    [value, tokens]
+  end
+
+  def size_for_list_elem(values)
+    result = []
+    values.each do |v|
+      if v.include?('(') || v.include?(')')
+        v.split(/(\(|\))|\ /).each { |t| result << t unless t == '' }
       else
-        values[0].to_s + ' . ' + values[1].to_s
+        result << v
       end
-    '\'(' + result + ')'
+    end
+    result.size
   end
 
-  def get_cons_values(tokens)
-    result = get_k_arguments tokens, false, 2, false
-    raise 'Too little arguments' if result.size != 2
+  def find_next_value_helper(tokens)
+    value = no_eval_list tokens[2..(find_bracket_idx tokens, 1) - 1]
+    [(build_list value), tokens[3 + (size_for_list_elem value)..-1]]
+  end
+
+  def find_next_value(tokens, is_num)
+    if tokens[0] == '('
+      value, tokens = find_next_function_value tokens
+      [is_num ? value.to_num : value, tokens]
+    elsif tokens[0..1].join == '\'('
+      find_next_value_helper tokens
+    else
+      value = calc_input_val tokens[0..0]
+      [is_num ? value.to_num : value, tokens[1..-1]]
+    end
+  end
+
+  def get_k_arguments(tokens, return_tokens, k, to_number)
+    result = []
+    while (k -= 1) >= 0
+      x, tokens = find_next_value tokens, to_number
+      result << x
+    end
+    result << tokens if return_tokens
     result
   end
-  
-  def split_list_string(list)
-    result = list.split(/(\(|\))|\ /)
-    result.delete('')
-    result
-  end
-  
-  def find_car_cdr_values(tokens)
-    idx = find_idx_for_list tokens
-    raise 'Too much arguments' if idx != tokens.size - 1
-    value, tokens = find_next_value tokens, false
-    values = no_eval_list (split_list_string value)[2..-2]
-  end
-  
-  def get_value_list_one_param(tokens)
-    is_list = (list? tokens) == '#t'
-    value, tokens = find_next_value tokens, false
-    raise 'List needed' unless is_list && tokens.empty?
-    split_value = split_list_string value.to_s
-    no_eval_list split_value[2..-2]
-  end
-end
 
-# Scheme lists module
-module SchemeLists
-  include SchemeListsHelper
-  def null?(tokens)
-    values = get_value_list_one_param tokens
-    values.size == 0 ? '#t' : '#f'
+  def define(tokens)
+    fetch_define tokens
   end
 
-  def cons(tokens)
-    result = get_cons_values tokens
-    cons_helper result
+  def fetch_define(tokens)
+    if tokens[0] == '('
+      define_function tokens
+    else
+      define_var tokens
+    end
   end
 
-  def list(tokens)
-    result = find_all_values_list_evaluate tokens
-    build_list result
+  def define_var(tokens)
+    var_name = tokens[0]
+    value, tokens = find_next_value tokens[1..-1], false
+    raise 'Too much arguments' unless tokens.empty?
+    valid = valid_var_name var_name
+    valid ? (set_var var_name, value) : (raise 'Incorrect parameter')
   end
 
-  def car(tokens)
-    values = find_car_cdr_values tokens
-    values.shift
+  def define_function(tokens)
+    puts 'function: ' + tokens.to_s
   end
 
-  def cdr(tokens)
-    values = find_car_cdr_values tokens
-    build_list values[1..-1]
+  def set_var(var, value)
+    raise 'Cannot predefine reserved keyword' if @reserved.key? var
+    instance_variable_set("@#{var}", value)
   end
-  
-  def list?(tokens)
-    (check_for_list tokens) ? '#t' : '#f'
-  end
-  
-  def length(tokens)
-    (get_value_list_one_param tokens).size
-  end
-  
-  def reverse(tokens)
-    value = (get_value_list_one_param tokens)
-    build_list value.reverse
+
+  def get_var(var)
+    check = check_instance_var var
+    return instance_variable_get("@#{var}") if check
+    return var if valid_var var
+    raise 'Invalid variable'
   end
 end
