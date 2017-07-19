@@ -30,8 +30,8 @@ class Object
   end
 
   def pair?
-    contans_dot = (include? '.') && (count('.') == 1)
-    list? || (self[0..1].join == '\'(' && self[-1] == ')' && contans_dot)
+    return false if (include? '.') && (count('.') > 1)
+    list?
   end
 end
 
