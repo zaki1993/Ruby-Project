@@ -18,11 +18,10 @@ module SchemeStringsHelper
   end
 
   def build_next_value_as_string(tokens)
+    idx = find_idx_for_list tokens
     if tokens[0] == '('
-      idx = find_bracket_idx tokens, 0
       build_as_string_helper tokens, idx
     elsif tokens[0..1].join == '\'('
-      idx = find_bracket_idx tokens, 1
       [(get_raw_value tokens[0..idx]), tokens[idx + 1..-1]]
     else
       [tokens[0], tokens[1..-1]]
@@ -127,10 +126,10 @@ module SchemeStrings
   end
 
   def strjoin(tokens)
-    idx = find_idx_for_list tokens
-    raise 'List expected' unless check_for_list tokens[0..idx]
-    values = find_to_evaluate_or_not tokens[0..idx], true
-    delimeter = find_delimeter tokens[idx + 1..-1]
-    '"' + (values.join delimeter) + '"'
+    value, tokens = find_next_value tokens, false
+    split_value = split_list_string value
+    raise 'List expected' unless check_for_list split_value
+    delimeter = find_delimeter tokens
+    '"' + (split_value[2..-2].join delimeter) + '"'
   end
 end
