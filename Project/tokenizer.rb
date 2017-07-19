@@ -64,7 +64,7 @@ module SchemeChecker
     else
       result, = find_next_function_value tokens
       split_result = split_list_string result
-      return split_result.list?
+      split_result.list?
     end
   end
 
@@ -100,6 +100,11 @@ class Tokenizer
   def initialize
     @tokens = []
     @predefined = []
+    @reserved = 
+      {
+        'null' => '\'()'
+      }
+    set_reserved_keywords
     File.readlines('functions.txt').each { |l| @predefined << l.chomp }
     @functions =
       {
@@ -114,6 +119,12 @@ class Tokenizer
         'string-sufix?' => 'strsufix',
         'string-join' => 'strjoin'
       }
+  end
+  
+  def set_reserved_keywords
+    @reserved.each do |key, value|
+      instance_variable_set("@#{key}", value)
+    end
   end
 
   def tokenize(token)
@@ -261,6 +272,7 @@ class Tokenizer
   end
 
   def set_var(var, value)
+    raise 'Cannot predefine reserved keyword' if @reserved.key? var
     instance_variable_set("@#{var}", value)
   end
 
