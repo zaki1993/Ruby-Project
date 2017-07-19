@@ -59,11 +59,11 @@ module SchemeChecker
     false
   end
 
-  def check_for_list(tokens)
-    if tokens[0..1].join == '\'('
-      tokens.list?
+  def check_for_list(other)
+    if other[0..1].join == '\'('
+      other.list?
     else
-      result, = find_next_function_value tokens
+      result, = find_next_function_value other
       split_result = split_list_string result
       split_result.list?
     end
@@ -99,9 +99,9 @@ class Tokenizer
   include SchemeLists
 
   def initialize
-    @tokens = []
+    @other = []
     @predefined = []
-    @reserved = 
+    @reserved =
       {
         'null' => '\'()'
       }
@@ -123,7 +123,7 @@ class Tokenizer
         'listtail' => 'listtail'
       }
   end
-  
+
   def set_reserved_keywords
     @reserved.each do |key, value|
       instance_variable_set("@#{key}", value)
@@ -134,7 +134,7 @@ class Tokenizer
     reset
     split_token token
     begin
-      puts calc_input_val @tokens
+      puts calc_input_val @other
     rescue NameError
       puts 'Not valid name for variable'
     rescue ArgumentError
@@ -147,18 +147,18 @@ class Tokenizer
   end
 
   def reset
-    @tokens = []
+    @other = []
   end
 
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
       if t.include?('(') || t.include?(')')
-        t.to_s.split(%r{(\(|\)|\/)}).each { |p| @tokens << p }
+        t.to_s.split(%r{(\(|\)|\/)}).each { |p| @other << p }
       else
-        @tokens << t
+        @other << t
       end
     end
-    @tokens.delete('')
+    @other.delete('')
   end
 
   def calc_input_val(arr)
@@ -171,16 +171,16 @@ class Tokenizer
       custom_method_caller arr
     end
   end
-  
-  def find_all_values(tokens)
+
+  def find_all_values(other)
     result = []
-    until tokens.empty?
-      x, tokens = find_next_value tokens, false
+    until other.empty?
+      x, other = find_next_value other, false
       result << x
     end
     result
   end
-  
+
   def call_predefined_method(token_caller, arr)
     values = find_all_values arr
     send token_caller.to_s, values
@@ -209,20 +209,20 @@ class Tokenizer
     end
   end
 
-  def find_bracket_idx(tokens, first_bracket)
+  def find_bracket_idx(other, first_bracket)
     open_br = 0
-    tokens[first_bracket..tokens.size - 1].each_with_index do |token, idx|
+    other[first_bracket..other.size - 1].each_with_index do |token, idx|
       open_br += 1 if token == '('
       open_br -= 1 if token == ')'
       return idx + first_bracket if open_br.zero?
     end
   end
 
-  def find_next_function_value(tokens)
-    idx = (find_bracket_idx tokens, 0)
-    value = calc_input_val tokens[0..idx]
-    tokens = tokens[idx + 1..tokens.size]
-    [value, tokens]
+  def find_next_function_value(other)
+    idx = (find_bracket_idx other, 0)
+    value = calc_input_val other[0..idx]
+    other = other[idx + 1..other.size]
+    [value, other]
   end
 
   def size_for_list_elem(values)
@@ -237,55 +237,55 @@ class Tokenizer
     result.size
   end
 
-  def find_next_value_helper(tokens)
-    value = no_eval_list tokens[2..(find_bracket_idx tokens, 1) - 1]
-    [(build_list value), tokens[3 + (size_for_list_elem value)..-1]]
+  def find_next_value_helper(other)
+    value = no_eval_list other[2..(find_bracket_idx other, 1) - 1]
+    [(build_list value), other[3 + (size_for_list_elem value)..-1]]
   end
 
-  def find_next_value(tokens, is_num)
-    if tokens[0] == '('
-      value, tokens = find_next_function_value tokens
-      [is_num ? value.to_num : value, tokens]
-    elsif tokens[0..1].join == '\'('
-      find_next_value_helper tokens
+  def find_next_value(other, is_num)
+    if other[0] == '('
+      value, other = find_next_function_value other
+      [is_num ? value.to_num : value, other]
+    elsif other[0..1].join == '\'('
+      find_next_value_helper other
     else
-      value = calc_input_val tokens[0..0]
-      [is_num ? value.to_num : value, tokens[1..-1]]
+      value = calc_input_val other[0..0]
+      [is_num ? value.to_num : value, other[1..-1]]
     end
   end
 
-  def get_k_arguments(tokens, return_tokens, k, to_number)
+  def get_k_arguments(other, return_other, k, to_number)
     result = []
     while (k -= 1) >= 0
-      x, tokens = find_next_value tokens, to_number
+      x, other = find_next_value other, to_number
       result << x
     end
-    result << tokens if return_tokens
+    result << other if return_other
     result
   end
 
-  def define(tokens)
-    fetch_define tokens
+  def define(other)
+    fetch_define other
   end
 
-  def fetch_define(tokens)
-    if tokens[0] == '('
-      define_function tokens
+  def fetch_define(other)
+    if other[0] == '('
+      define_function other
     else
-      define_var tokens
+      define_var other
     end
   end
 
-  def define_var(tokens)
-    var_name = tokens[0]
-    value, tokens = find_next_value tokens[1..-1], false
-    raise 'Too much arguments' unless tokens.empty?
+  def define_var(other)
+    var_name = other[0]
+    value, other = find_next_value other[1..-1], false
+    raise 'Too much arguments' unless other.empty?
     valid = valid_var_name var_name
     valid ? (set_var var_name, value) : (raise 'Incorrect parameter')
   end
 
-  def define_function(tokens)
-    puts 'function: ' + tokens.to_s
+  def define_function(other)
+    puts 'function: ' + other.to_s
   end
 
   def set_var(var, value)

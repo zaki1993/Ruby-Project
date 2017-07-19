@@ -9,19 +9,19 @@ module SchemeStringsHelper
     other[1..-2]
   end
 
-  def build_as_string_helper(tokens, idx)
-    value = tokens[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
-    [value, tokens[idx + 1..-1]]
+  def build_as_string_helper(other, idx)
+    value = other[0..idx].join(' ').gsub('( ', '(').gsub(' )', ')')
+    [value, other[idx + 1..-1]]
   end
 
-  def build_next_value_as_string(tokens)
-    idx = find_idx_for_list tokens
-    if tokens[0] == '('
-      build_as_string_helper tokens, idx
-    elsif tokens[0..1].join == '\'('
-      [(get_raw_value tokens[0..idx]), tokens[idx + 1..-1]]
+  def build_next_value_as_string(other)
+    idx = find_idx_for_list other
+    if other[0] == '('
+      build_as_string_helper other, idx
+    elsif other[0..1].join == '\'('
+      [(get_raw_value other[0..idx]), other[idx + 1..-1]]
     else
-      [tokens[0], tokens[1..-1]]
+      [other[0], other[1..-1]]
     end
   end
 
@@ -34,25 +34,30 @@ module SchemeStringsHelper
     str.gsub('\n', '').gsub('\r', '').gsub('\t', '').strip.squeeze(' ')
   end
 
-  def string_getter(tokens, get_tokens)
-    str, tokens = find_next_value tokens, false
+  def string_getter(other, get_other)
+    str, other = find_next_value other, false
     raise 'String needed' unless check_for_string str
-    [str, get_tokens ? tokens : _]
+    [str, get_other ? other : _]
   end
-  
+
   def arg_function_validator(other, vars = 1)
     raise 'Incorrect number of arguments' if other.size != vars
-    result = other[0..vars - 1].all? { |v| check_for_string v } 
+    result = other[0..vars - 1].all? { |v| check_for_string v }
     raise 'String needed' unless result
     result
+  end
+
+  def string_join_helper(other, dilimeter)
+    values = split_list_as_string other.to_s
+    delim_result = find_delimeter dilimeter
+    '"' + (values.join delim_result) + '"'
   end
 end
 
 # Scheme numbers module
 module SchemeStrings
   include SchemeStringsHelper
-  
-  #TODO Handle incorrect argument type
+  # TODO Handle incorrect argument type
   def substring(other)
     raise 'Incorrect number of arguments' unless other.size.between? 2, 3
     str, from, to = other
@@ -89,12 +94,14 @@ module SchemeStrings
   def strsplit(other)
     one_arg_function_validator other
     str = remove_carriage other[0]
-    build_list str.split(' ').map { |s| '"' + s + '"' }
+    result = str.split(' ').map { |s| '"' + s + '"' }
+    build_list result
   end
 
   def strlist(other)
     one_arg_function_validator other
-    build_list other[0][1..-2].chars.map { |c| build_character c }
+    result = other[0][1..-2].chars.map { |c| build_character c }
+    build_list result
   end
 
   def strreplace(other)
@@ -121,8 +128,6 @@ module SchemeStrings
     raise 'Incorrect number of arguments' unless other.size.between? 1, 2
     raise 'List needed' unless other[0].to_s.list?
     arg_function_validator [other[1]] if other.size == 2
-    values = split_list_as_string other[0].to_s
-    delimeter = find_delimeter other[1]
-    '"' + (values.join delimeter) + '"'
+    string_join_helper other[0], other[1]
   end
 end

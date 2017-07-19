@@ -67,19 +67,19 @@ module SchemeListsHelper
     raise 'Too little arguments' if result.size != 2
     result
   end
-  
+
   def split_list_string(list)
     result = list.split(/(\(|\))|\ /)
     result.delete('')
     result
   end
-  
+
   def find_list_function_value(other)
     raise 'Incorrect number of arguments' if other.size != 1
     raise 'List needed' unless other[0].list?
     split_list_as_string other[0].to_s
   end
-  
+
   def split_list_as_string(list_as_string)
     split_value = split_list_string list_as_string.to_s
     no_eval_list split_value[2..-2]
@@ -115,16 +115,16 @@ module SchemeLists
     raise 'Cannot apply operation on nil' if value.empty?
     build_list value[1..-1]
   end
-  
+
   def list?(other)
     raise 'Incorrect number of arguments' if other.size != 1
     other[0].to_s.list? ? '#t' : '#f'
   end
-  
+
   def length(other)
     (find_list_function_value other).size
   end
-  
+
   def reverse(other)
     value = find_list_function_value other
     build_list value.reverse

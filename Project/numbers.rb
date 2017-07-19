@@ -1,37 +1,37 @@
 # Helper functions for SchemeNumbers
 module SchemeNumbersHelper
-  def get_one_arg_function(tokens)
-    raise 'Incorect number of arguments' if tokens.size != 1
-    tokens[0].to_num
+  def get_one_arg_function(other)
+    raise 'Incorect number of arguments' if other.size != 1
+    other[0].to_num
   end
 
-  def find_idx_numerators(tokens)
-    tokens[0] == '(' ? (find_bracket_idx tokens, 0) + 1 : 1
+  def find_idx_numerators(other)
+    other[0] == '(' ? (find_bracket_idx other, 0) + 1 : 1
   end
 
-  def num_denom_helper(tokens)
-    if tokens.size == 1
-      tokens = tokens[0].split('/')
+  def num_denom_helper(other)
+    if other.size == 1
+      other = other[0].split('/')
     else
-      _, temp = find_next_value tokens, true
+      _, temp = find_next_value other, true
       raise 'Too much arguments' unless temp[0] == '/' || temp.empty?
-      i = find_idx_numerators tokens
-      tokens.delete_at(i)
+      i = find_idx_numerators other
+      other.delete_at(i)
     end
-    tokens
+    other
   end
 
-  def get_num_denom(tokens)
-    num, tokens = find_next_value tokens, true
-    return [num, 1] if tokens.empty?
-    denom, tokens = find_next_value tokens, true
-    raise 'Too much arguments' unless tokens.empty?
+  def get_num_denom(other)
+    num, other = find_next_value other, true
+    return [num, 1] if other.empty?
+    denom, other = find_next_value other, true
+    raise 'Too much arguments' unless other.empty?
     [num, denom]
   end
 
-  def primary_func_tokenizer(tokens, oper)
-    x, y, tokens = get_k_arguments tokens, true, 2, true
-    raise 'Too many arguments' unless tokens.empty?
+  def primary_func_tokenizer(other, oper)
+    x, y, other = get_k_arguments other, true, 2, true
+    raise 'Too many arguments' unless other.empty?
     primary_func_parser(oper, x, y)
   end
 
@@ -63,18 +63,18 @@ module SchemeNumbers
   end
 
   def +(other)
-    other = other.map { |t| t.to_num }
+    other = other.map(&:to_num)
     other.reduce(0, :+)
   end
 
   def -(other)
     return 0 if other.empty?
-    other = other.map { |t| t.to_num }
+    other = other.map(&:to_num)
     other[0] + other[1..-1].reduce(0, :-)
   end
 
   def *(other)
-    other = other.map { |t| t.to_num }
+    other = other.map(&:to_num)
     other.reduce(1, :*)
   end
 
@@ -82,59 +82,60 @@ module SchemeNumbers
   def /(other)
     raise 'Too few arguments' if other.empty?
     return (divide_number 1, other[0].to_num) if other.size == 1
-    other = other.map { |t| t.to_num }
+    other = other.map(&:to_num)
     other[1..-1].inject(other[0], :/)
   end
 
-  def quotient(tokens)
-     raise 'Incorect number of arguments' if tokens.size != 2
-     x, y = tokens.map { |t| t.to_num }
-     result = divide_number x, y
-     result < 0 ? result.ceil : result.floor
+  def quotient(other)
+    raise 'Incorect number of arguments' if other.size != 2
+    x, y = other.map(&:to_num)
+    result = divide_number x, y
+    result < 0 ? result.ceil : result.floor
   end
 
-  def remainder(tokens)
-    raise 'Incorect number of arguments' if tokens.size != 2
-    x, y = tokens.map { |t| t.to_num }
+  def remainder(other)
+    raise 'Incorect number of arguments' if other.size != 2
+    x, y = other.map(&:to_num)
     (x.abs % y.abs) * (x / x.abs)
   end
 
-  def modulo(tokens)
-    raise 'Incorect number of arguments' if tokens.size != 2
-    x, y = tokens.map { |t| t.to_num }
+  def modulo(other)
+    raise 'Incorect number of arguments' if other.size != 2
+    x, y = other.map(&:to_num)
     x.modulo y
   end
 
-#TODO
-  def numerator(tokens)
-    tokens = num_denom_helper tokens
-    (get_num_denom tokens)[0].to_num
-  end
-#TODO
-  def denominator(tokens)
-    tokens = num_denom_helper tokens
-    (get_num_denom tokens)[1].to_num
+  # TODO
+  def numerator(other)
+    other = num_denom_helper other
+    (get_num_denom other)[0].to_num
   end
 
-  def abs(tokens)
-    (get_one_arg_function tokens).abs.to_s
+  # TODO
+  def denominator(other)
+    other = num_denom_helper other
+    (get_num_denom other)[1].to_num
   end
 
-  def add1(tokens)
-    (get_one_arg_function tokens) + 1
+  def abs(other)
+    (get_one_arg_function other).abs.to_s
   end
 
-  def sub1(tokens)
-    (get_one_arg_function tokens) - 1
+  def add1(other)
+    (get_one_arg_function other) + 1
   end
 
-  def min(tokens)
-    tokens = tokens.map { |t| t.to_num }
-    tokens.min
+  def sub1(other)
+    (get_one_arg_function other) - 1
   end
 
-  def max(tokens)
-    tokens = tokens.map { |t| t.to_num }
-    tokens.max
+  def min(other)
+    other = other.map(&:to_num)
+    other.min
+  end
+
+  def max(other)
+    other = other.map(&:to_num)
+    other.max
   end
 end
