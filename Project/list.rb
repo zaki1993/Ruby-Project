@@ -117,4 +117,21 @@ module SchemeLists
     result = (split_list_string value.to_s).list? 
     result ? '#t' : '#f'
   end
+  
+  def length(tokens)
+    value, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    split_value = split_list_string value
+    raise 'List needed' unless check_for_list split_value
+    (no_eval_list split_value[2..-2]).size
+  end
+  
+  def reverse(tokens)
+    value, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    split_value = split_list_string value
+    raise 'List needed' unless check_for_list split_value
+    list_result = no_eval_list split_value[2..-2]
+    build_list list_result.reverse
+  end
 end
