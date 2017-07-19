@@ -1,22 +1,8 @@
 # Helper functions for SchemeNumbers
 module SchemeNumbersHelper
-  def calculate_value_arithmetic(tokens, result, sign)
-    until tokens.empty?
-      x, tokens = find_next_value tokens, true
-      case sign
-      when '+' then result += x
-      when '-' then result -= x
-      when '*' then result *= x
-      when '/' then result = divide_number(result, x)
-      end
-    end
-    result
-  end
-
   def get_one_arg_function(tokens)
-    x, tokens = find_next_value tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    x
+    raise 'Incorect number of arguments' if tokens.size != 1
+    tokens[0].to_num
   end
 
   def find_idx_numerators(tokens)
@@ -43,24 +29,15 @@ module SchemeNumbersHelper
     [num, denom]
   end
 
-  def primary_func_parser(oper, x, y)
-    case oper
-    when 'remainder' then (x.abs % y.abs) * (x / x.abs)
-    when 'modulo' then x.modulo(y)
-    when 'quotient' then (x / y).floor
-    end
-  end
-
   def primary_func_tokenizer(tokens, oper)
     x, y, tokens = get_k_arguments tokens, true, 2, true
     raise 'Too many arguments' unless tokens.empty?
     primary_func_parser(oper, x, y)
   end
 
-  def compare_value_arithmetic(tokens, oper)
-    x, y, tokens = get_k_arguments tokens, true, 2, true
-    raise 'Too many arguments' unless tokens.empty?
-    result = x.public_send oper, y
+  def compare_value_arithmetic(other, oper)
+    raise 'Very few arguments' if other.size < 2
+    result = other.each_cons(2).all? { |x, y| x.public_send oper, y }
     result ? '#t' : '#f'
   end
 end
@@ -86,86 +63,78 @@ module SchemeNumbers
   end
 
   def +(other)
-    return 0 if other.size.zero?
-    result, other = find_next_value other, true
-    calculate_value_arithmetic other, result, '+'
+    other = other.map { |t| t.to_num }
+    other.reduce(0, :+)
   end
 
   def -(other)
-    return 0 if other.size.zero?
-    result, other = find_next_value other, true
-    calculate_value_arithmetic other, result, '-'
+    return 0 if other.empty?
+    other = other.map { |t| t.to_num }
+    other[0] + other[1..-1].reduce(0, :-)
   end
 
   def *(other)
-    raise 'Too few arguments' if other.empty?
-    return 1 if other.empty?
-    result, other = find_next_value other, true
-    calculate_value_arithmetic other, result, '*'
+    other = other.map { |t| t.to_num }
+    other.reduce(1, :*)
   end
 
   # TODO: Division by zero
   def /(other)
     raise 'Too few arguments' if other.empty?
-    result = 1 if other.size == 1
-    result, other = find_next_value other, true if other.size > 1
-    calculate_value_arithmetic other, result, '/'
+    return (divide_number 1, other[0].to_num) if other.size == 1
+    other = other.map { |t| t.to_num }
+    other[1..-1].inject(other[0], :/)
   end
 
   def quotient(tokens)
-    primary_func_tokenizer(tokens, 'quotient')
+     raise 'Incorect number of arguments' if tokens.size != 2
+     x, y = tokens.map { |t| t.to_num }
+     result = divide_number x, y
+     result < 0 ? result.ceil : result.floor
   end
 
   def remainder(tokens)
-    primary_func_tokenizer(tokens, 'remainder')
+    raise 'Incorect number of arguments' if tokens.size != 2
+    x, y = tokens.map { |t| t.to_num }
+    (x.abs % y.abs) * (x / x.abs)
   end
 
   def modulo(tokens)
-    primary_func_tokenizer(tokens, 'modulo')
+    raise 'Incorect number of arguments' if tokens.size != 2
+    x, y = tokens.map { |t| t.to_num }
+    x.modulo y
   end
 
+#TODO
   def numerator(tokens)
     tokens = num_denom_helper tokens
     (get_num_denom tokens)[0].to_num
   end
-
+#TODO
   def denominator(tokens)
     tokens = num_denom_helper tokens
     (get_num_denom tokens)[1].to_num
   end
 
   def abs(tokens)
-    x = get_one_arg_function tokens
-    x.abs.to_s
+    (get_one_arg_function tokens).abs.to_s
   end
 
   def add1(tokens)
-    x = get_one_arg_function tokens
-    x + 1
+    (get_one_arg_function tokens) + 1
   end
 
   def sub1(tokens)
-    x = get_one_arg_function tokens
-    x - 1
+    (get_one_arg_function tokens) - 1
   end
 
   def min(tokens)
-    x, y, tokens = get_k_arguments tokens, true, 2, true
-    result = x < y ? x : y
-    until tokens.empty?
-      next_val, tokens = find_next_value tokens, true
-      result = next_val if result > next_val
-    end
-    result
+    tokens = tokens.map { |t| t.to_num }
+    tokens.min
   end
 
   def max(tokens)
-    x, y, tokens = get_k_arguments tokens, true, 2, true
-    result = x > y ? x : y
-    until tokens.empty?
-      next_val, tokens = find_next_value tokens, true
-      result = next_val if result < next_val
-    end
-    result
+    tokens = tokens.map { |t| t.to_num }
+    tokens.max
   end
 end
