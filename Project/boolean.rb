@@ -1,6 +1,5 @@
 # Scheme booleans module
 module SchemeBooleans
-  include SchemeBooleansHelper
   def equal?(other)
     raise 'Incorect number of arguments' if other.size != 2
     other[0].to_s == other[1].to_s ? '#t' : '#f'
