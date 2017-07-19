@@ -47,85 +47,87 @@ end
 # Scheme numbers module
 module SchemeStrings
   include SchemeStringsHelper
-  def substring(tokens)
-    str, tokens = string_getter tokens, true
-    from, tokens = find_next_value tokens, true
-    to, tokens = find_next_value tokens, true unless tokens.empty?
-    raise 'Too much arguments' unless tokens.empty?
-    substring_builder str, from, to
+  
+  #TODO Handle incorrect argument type
+  def substring(other)
+    raise 'Incorrect number of arguments' unless other.size.between? 2, 3
+    str, from, to = other
+    raise 'Integer needed' unless to.nil? || (check_for_number to.to_s)
+    substring_builder str, from.to_num, to.to_num
   end
 
-  def string?(tokens)
-    str, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    result = check_for_string str
+  def string?(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    result = check_for_string other[0]
     result ? '#t' : '#f'
   end
 
-  def strlen(tokens)
-    str, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    str[1..-2].length
+  def strlen(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'String needed' unless check_for_string other[0]
+    other[0][1..-2].length
   end
 
-  def strupcase(tokens)
-    str, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    str.upcase
+  def strupcase(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'String needed' unless check_for_string other[0]
+    other[0].upcase
   end
 
-  def strdowncase(tokens)
-    str, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    str.downcase
+  def strdowncase(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'String needed' unless check_for_string other[0]
+    other[0].downcase
   end
 
-  def strcontains(tokens)
-    string, tokens = string_getter tokens, true
-    to_check, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    result = string.include? to_check[1..-2]
+  def strcontains(other)
+    raise 'Incorrect number of arguments' if other.size != 2
+    valid = valid = other.all? { |t| check_for_string t }
+    raise 'String needed' unless valid
+    result = other[0][1..-2].include? other[1][1..-2]
     result ? '#t' : '#f'
   end
 
-  def strsplit(tokens)
-    str, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    str = remove_carriage str
+  def strsplit(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'String needed' unless check_for_string other[0]
+    str = remove_carriage other[0]
     build_list str.split(' ').map { |s| '"' + s + '"' }
   end
 
-  def strlist(tokens)
-    str, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    build_list str[1..-2].chars.map { |c| build_character c }
+  def strlist(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'String needed' unless check_for_string other[0]
+    build_list other[0][1..-2].chars.map { |c| build_character c }
   end
 
-  def strreplace(tokens)
-    string, tokens = string_getter tokens, true
-    to_replace, tokens = string_getter tokens, true
-    replace_with, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    string.gsub(to_replace[1..-2], replace_with[1..-2])
+  def strreplace(other)
+    raise 'Incorrect number of arguments' if other.size != 3
+    valid = other.all? { |t| check_for_string t }
+    raise 'String needed' unless valid
+    str, to_replace, replace_with = other.map { |t| t[1..-2] }
+    '"' + (str.gsub to_replace, replace_with) + '"'
   end
 
-  def strprefix(tokens)
-    string, tokens = string_getter tokens, true
-    to_check, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    result = string[1..-1].start_with? to_check[1..-2]
+  def strprefix(other)
+    raise 'Incorrect number of arguments' if other.size != 2
+    valid = other.all? { |t| check_for_string t }
+    raise 'String needed' unless valid
+    result = other[0][1..-1].start_with? other[1][1..-2]
     result ? '#t' : '#f'
   end
 
   def strsufix(tokens)
-    string, tokens = string_getter tokens, true
-    to_check, tokens = string_getter tokens, true
-    raise 'Too much arguments' unless tokens.empty?
-    result = string[1..-1].end_with? to_check[1..-2]
+    raise 'Incorrect number of arguments' if other.size != 2
+    valid = other.all? { |t| check_for_string t }
+    raise 'String needed' unless valid
+    result = other[0][1..-1].end_with? other[1][1..-2]
     result ? '#t' : '#f'
   end
 
+#TODO
   def strjoin(tokens)
+    puts tokens.to_s
     value, tokens = find_next_value tokens, false
     split_value = split_list_string value
     raise 'List expected' unless check_for_list split_value
