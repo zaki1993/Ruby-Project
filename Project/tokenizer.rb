@@ -117,7 +117,9 @@ class Tokenizer
         'string-replace' => 'strreplace',
         'string-prefix?' => 'strprefix',
         'string-sufix?' => 'strsufix',
-        'string-join' => 'strjoin'
+        'string-join' => 'strjoin',
+        'list-ref' => 'listref',
+        'listtail' => 'listtail'
       }
   end
   
