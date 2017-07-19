@@ -15,10 +15,12 @@ string?
 substring
 null?
 cons
-null
 list
 car
 cdr
+list?
+length
+reverse
 map
 foldl
 filter
