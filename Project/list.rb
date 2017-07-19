@@ -110,4 +110,11 @@ module SchemeLists
     values = find_car_cdr_values tokens
     build_list values[1..-1]
   end
+  
+  def list?(tokens)
+    value, tokens = find_next_value tokens, false
+    raise 'Too much arguments' unless tokens.empty?
+    result = (split_list_string value.to_s).list? 
+    result ? '#t' : '#f'
+  end
 end
