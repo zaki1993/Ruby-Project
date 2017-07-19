@@ -54,10 +54,10 @@ module SchemeListsHelper
 
   def cons_helper(values)
     result =
-      if values[1].split('').pair?
+      if values[1].to_s.split('').pair?
         build_cons_from_list values
       else
-        values[0] + ' . ' + values[1]
+        values[0].to_s + ' . ' + values[1].to_s
       end
     '\'(' + result + ')'
   end
@@ -94,9 +94,6 @@ module SchemeLists
   def cons(tokens)
     result = get_cons_values tokens
     cons_helper result
-  end
-
-  def null
   end
 
   def list(tokens)
