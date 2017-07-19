@@ -4,12 +4,9 @@ module SchemeStringsHelper
     '"' + (str[1..-2])[from..(to.nil? ? -1 : to - 1)] + '"'
   end
 
-  def find_delimeter(tokens)
-    return ' ' if tokens.empty?
-    result, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    valid = check_for_string result
-    valid ? result[1..-2] : (raise 'String needed')
+  def find_delimeter(other)
+    return ' ' if other.nil?
+    other[1..-2]
   end
 
   def build_as_string_helper(tokens, idx)
@@ -42,6 +39,13 @@ module SchemeStringsHelper
     raise 'String needed' unless check_for_string str
     [str, get_tokens ? tokens : _]
   end
+  
+  def arg_function_validator(other, vars = 1)
+    raise 'Incorrect number of arguments' if other.size != vars
+    result = other[0..vars - 1].all? { |v| check_for_string v } 
+    raise 'String needed' unless result
+    result
+  end
 end
 
 # Scheme numbers module
@@ -57,83 +61,68 @@ module SchemeStrings
   end
 
   def string?(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    result = check_for_string other[0]
+    result = arg_function_validator other
     result ? '#t' : '#f'
   end
 
   def strlen(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    raise 'String needed' unless check_for_string other[0]
+    arg_function_validator other
     other[0][1..-2].length
   end
 
   def strupcase(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    raise 'String needed' unless check_for_string other[0]
+    arg_function_validator other
     other[0].upcase
   end
 
   def strdowncase(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    raise 'String needed' unless check_for_string other[0]
+    one_arg_function_validator other
     other[0].downcase
   end
 
   def strcontains(other)
-    raise 'Incorrect number of arguments' if other.size != 2
-    valid = valid = other.all? { |t| check_for_string t }
-    raise 'String needed' unless valid
+    arg_function_validator other, 2
     result = other[0][1..-2].include? other[1][1..-2]
     result ? '#t' : '#f'
   end
 
   def strsplit(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    raise 'String needed' unless check_for_string other[0]
+    one_arg_function_validator other
     str = remove_carriage other[0]
     build_list str.split(' ').map { |s| '"' + s + '"' }
   end
 
   def strlist(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    raise 'String needed' unless check_for_string other[0]
+    one_arg_function_validator other
     build_list other[0][1..-2].chars.map { |c| build_character c }
   end
 
   def strreplace(other)
-    raise 'Incorrect number of arguments' if other.size != 3
-    valid = other.all? { |t| check_for_string t }
-    raise 'String needed' unless valid
+    arg_function_validator other, 3
     str, to_replace, replace_with = other.map { |t| t[1..-2] }
     '"' + (str.gsub to_replace, replace_with) + '"'
   end
 
   def strprefix(other)
-    raise 'Incorrect number of arguments' if other.size != 2
-    valid = other.all? { |t| check_for_string t }
-    raise 'String needed' unless valid
+    arg_function_validator other, 2
     str, to_check = other.map { |t| t[1..-2] }
     result = str.start_with? to_check
     result ? '#t' : '#f'
   end
 
-  def strsufix(tokens)
-    raise 'Incorrect number of arguments' if other.size != 2
-    valid = other.all? { |t| check_for_string t }
-    raise 'String needed' unless valid
+  def strsufix(other)
+    arg_function_validator other, 2
     str, to_check = other.map { |t| t[1..-2] }
     result = str.end_with? to_check
     result ? '#t' : '#f'
   end
 
-#TODO
-  def strjoin(tokens)
-    puts tokens.to_s
-    value, tokens = find_next_value tokens, false
-    split_value = split_list_string value
-    raise 'List expected' unless check_for_list split_value
-    delimeter = find_delimeter tokens
-    '"' + (split_value[2..-2].join delimeter) + '"'
+  def strjoin(other)
+    raise 'Incorrect number of arguments' unless other.size.between? 1, 2
+    raise 'List needed' unless other[0].to_s.list?
+    arg_function_validator [other[1]] if other.size == 2
+    values = split_list_as_string other[0].to_s
+    delimeter = find_delimeter other[1]
+    '"' + (values.join delimeter) + '"'
   end
 end
