@@ -74,18 +74,14 @@ module SchemeListsHelper
     result
   end
   
-  def find_car_cdr_values(tokens)
-    idx = find_idx_for_list tokens
-    raise 'Too much arguments' if idx != tokens.size - 1
-    value, tokens = find_next_value tokens, false
-    values = no_eval_list (split_list_string value)[2..-2]
+  def find_list_function_value(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'List needed' unless other[0].list?
+    split_list_as_string other[0].to_s
   end
   
-  def get_value_list_one_param(tokens)
-    is_list = (list? tokens) == '#t'
-    value, tokens = find_next_value tokens, false
-    raise 'List needed' unless is_list && tokens.empty?
-    split_value = split_list_string value.to_s
+  def split_list_as_string(list_as_string)
+    split_value = split_list_string list_as_string.to_s
     no_eval_list split_value[2..-2]
   end
 end
@@ -93,43 +89,44 @@ end
 # Scheme lists module
 module SchemeLists
   include SchemeListsHelper
-  def null?(tokens)
-    values = get_value_list_one_param tokens
-    values.size == 0 ? '#t' : '#f'
+  def null?(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'List needed' unless other[0].to_s.list?
+    other[0].to_s.size == 3 ? '#t' : '#f'
   end
 
-  def cons(tokens)
-    result = get_cons_values tokens
-    cons_helper result
+  def cons(other)
+    raise 'Incorrect number of arguments' if other.size != 2
+    cons_helper other
   end
 
-  def list(tokens)
-    result = find_all_values_list_evaluate tokens
-    build_list result
+  def list(other)
+    build_list other
   end
 
-  def car(tokens)
-    values = get_value_list_one_param tokens
-    raise 'Cannot apply car on nil' if values.empty?
-    values.shift
+  def car(other)
+    value = find_car_cdr_values other
+    raise 'Cannot apply operation on nil' if value.empty?
+    value.shift
   end
 
-  def cdr(tokens)
-    values = get_value_list_one_param tokens
-    raise 'Cannot apply car on nil' if values.empty?
-    build_list values[1..-1]
+  def cdr(other)
+    value = find_car_cdr_values other
+    raise 'Cannot apply operation on nil' if value.empty?
+    build_list value[1..-1]
   end
   
-  def list?(tokens)
-    (check_for_list tokens) ? '#t' : '#f'
+  def list?(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    other[0].to_s.list? ? '#t' : '#f'
   end
   
-  def length(tokens)
-    (get_value_list_one_param tokens).size
+  def length(other)
+    (find_list_function_value other).size
   end
   
-  def reverse(tokens)
-    value = (get_value_list_one_param tokens)
+  def reverse(other)
+    value = find_list_function_value other
     build_list value.reverse
   end
 end
