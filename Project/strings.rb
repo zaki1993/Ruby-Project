@@ -113,7 +113,8 @@ module SchemeStrings
     raise 'Incorrect number of arguments' if other.size != 2
     valid = other.all? { |t| check_for_string t }
     raise 'String needed' unless valid
-    result = other[0][1..-1].start_with? other[1][1..-2]
+    str, to_check = other.map { |t| t[1..-2] }
+    result = str.start_with? to_check
     result ? '#t' : '#f'
   end
 
@@ -121,7 +122,8 @@ module SchemeStrings
     raise 'Incorrect number of arguments' if other.size != 2
     valid = other.all? { |t| check_for_string t }
     raise 'String needed' unless valid
-    result = other[0][1..-1].end_with? other[1][1..-2]
+    str, to_check = other.map { |t| t[1..-2] }
+    result = str.end_with? to_check
     result ? '#t' : '#f'
   end
 
