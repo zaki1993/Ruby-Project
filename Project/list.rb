@@ -80,15 +80,22 @@ module SchemeListsHelper
     value, tokens = find_next_value tokens, false
     values = no_eval_list (split_list_string value)[2..-2]
   end
+  
+  def get_value_list_one_param(tokens)
+    is_list = (list? tokens) == '#t'
+    value, tokens = find_next_value tokens, false
+    raise 'List needed' unless is_list && tokens.empty?
+    split_value = split_list_string value.to_s
+    no_eval_list split_value[2..-2]
+  end
 end
 
 # Scheme lists module
 module SchemeLists
   include SchemeListsHelper
   def null?(tokens)
-    value, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    value == '\'()' ? '#t' : '#f'
+    values = get_value_list_one_param tokens
+    values.size == 0 ? '#t' : '#f'
   end
 
   def cons(tokens)
@@ -102,36 +109,27 @@ module SchemeLists
   end
 
   def car(tokens)
-    values = find_car_cdr_values tokens
+    values = get_value_list_one_param tokens
+    raise 'Cannot apply car on nil' if values.empty?
     values.shift
   end
 
   def cdr(tokens)
-    values = find_car_cdr_values tokens
+    values = get_value_list_one_param tokens
+    raise 'Cannot apply car on nil' if values.empty?
     build_list values[1..-1]
   end
   
   def list?(tokens)
-    value, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    result = (split_list_string value.to_s).list? 
-    result ? '#t' : '#f'
+    (check_for_list tokens) ? '#t' : '#f'
   end
   
   def length(tokens)
-    value, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    split_value = split_list_string value
-    raise 'List needed' unless check_for_list split_value
-    (no_eval_list split_value[2..-2]).size
+    (get_value_list_one_param tokens).size
   end
   
   def reverse(tokens)
-    value, tokens = find_next_value tokens, false
-    raise 'Too much arguments' unless tokens.empty?
-    split_value = split_list_string value
-    raise 'List needed' unless check_for_list split_value
-    list_result = no_eval_list split_value[2..-2]
-    build_list list_result.reverse
+    value = (get_value_list_one_param tokens)
+    build_list value.reverse
   end
 end
