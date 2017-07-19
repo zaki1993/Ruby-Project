@@ -26,7 +26,8 @@ class Object
 
   def list?
     return false if size < 3
-    self[0..1].join == '\'(' && self[-1] == ')'
+    return self[0..1].join == '\'(' && self[-1] == ')' if is_a? Array
+    self[0..1] == '\'(' && self[-1] == ')' if is_a? String
   end
 
   def pair?
