@@ -131,10 +131,14 @@ module SchemeLists
   end
 
   def listref(other)
+    raise 'Incorrect number of arguments' if other.size != 2
+    raise 'Number needed' unless check_for_number other[1]
 
   end
 
   def listtail(other)
+    raise 'Incorrect number of arguments' if other.size != 2
+    raise 'Number needed' unless check_for_number other[1]
 
   end
 end
