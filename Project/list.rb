@@ -49,12 +49,12 @@ module SchemeListsHelper
 
   def build_cons_from_list(values)
     spacer = values[1].size == 3 ? '' : ' '
-    values[0] + spacer + values[1][2..-2]
+    values[0].to_s + spacer + values[1][2..-2].to_s
   end
 
   def cons_helper(values)
     result =
-      if values[1].to_s.split('').pair?
+      if values[1].to_s.pair?
         build_cons_from_list values
       else
         values[0].to_s + ' . ' + values[1].to_s
