@@ -35,7 +35,7 @@ module SchemeStringsHelper
   end
 
   def string_getter(other, get_other)
-    str, other = find_next_value other, false
+    str, other = find_next_value other
     raise 'String needed' unless check_for_string str
     [str, get_other ? other : _]
   end

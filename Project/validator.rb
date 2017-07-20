@@ -27,8 +27,8 @@ module Validator
     symbol = (check_for_symbol var)
     list = var.to_s.list?
     number || string || boolean || symbol || list
-  end  
-  
+  end
+
   def valid_function(name)
     res = (predefined_method_caller [name]) || (custom_method_caller [name])
     raise 'No such procedure' if res.nil?

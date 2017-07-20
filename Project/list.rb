@@ -36,7 +36,7 @@ module SchemeListsHelper
   def find_all_values_list_evaluate(tokens, no_quotes = false)
     result = []
     until tokens.empty?
-      x, tokens = find_next_value tokens, false
+      x, tokens = find_next_value tokens
       x = x[1..-2] if no_quotes && (check_for_string x.to_s)
       result << x
     end
@@ -63,7 +63,7 @@ module SchemeListsHelper
   end
 
   def get_cons_values(tokens)
-    result = get_k_arguments tokens, false, 2, false
+    result = get_k_arguments tokens, false, 2
     raise 'Too little arguments' if result.size != 2
     result
   end
@@ -112,7 +112,7 @@ module SchemeListsHelper
   end
 
   def equalize_lists(other)
-    min = other.map{ |t| t.size }.min
+    min = other.map(&:size).min
     other.map { |t| t[0..min - 1] }
   end
 end
@@ -166,7 +166,8 @@ module SchemeLists
   def map(other)
     valid_function other[0]
     lists = find_all_values other[1..-1]
-    lists = equalize_lists lists.map{ |t| split_list_as_string t.to_s }
+    lists = lists.map { |t| split_list_as_string t.to_s }
+    lists = equalize_lists lists
     lists = lists.transpose
     result = lists.map { |t| send other[0], t }
     build_list result

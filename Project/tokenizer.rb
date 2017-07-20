@@ -35,6 +35,7 @@ class Object
   end
 
   private
+
   def object_split
     result = to_s.split(/(\(|\))|\ /)
     result.delete('')
@@ -47,7 +48,7 @@ class Object
       splited = self[-3] != '.'
       self[0..1].join == '\'(' && self[-1] == ')' && splited
     elsif is_a? String
-      splited = (object_split)[-3] != '.'
+      splited = object_split[-3] != '.'
       self[0..1] == '\'(' && self[-1] == ')' && splited
     end
   end
@@ -190,13 +191,13 @@ class Tokenizer
   def find_all_values(other)
     result = []
     until other.empty?
-      x, other = find_next_value other, false
+      x, other = find_next_value other
       result << x
     end
     result
   end
 
-def call_predefined_method(name, arr)
+  def call_predefined_method(name, arr)
     if @do_not_calculate.include? name
       send name.to_s, arr
     else
@@ -209,7 +210,7 @@ def call_predefined_method(name, arr)
     operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
     m_name =
       arr.each do |t|
-        break t if (!t.match(/[[:alpha:]]/).nil?) || (operations.include? t)
+        break t if !t.match(/[[:alpha:]]/).nil? || (operations.include? t)
       end
     return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
@@ -217,7 +218,7 @@ def call_predefined_method(name, arr)
   end
 
   def custom_method_caller(arr)
-    #puts 'trying custom methods: ' + arr.to_s
+    # puts 'trying custom methods: ' + arr.to_s
     arr
   end
 
@@ -226,7 +227,7 @@ def call_predefined_method(name, arr)
       result = find_to_evaluate_or_not token
       build_list result
     else
-      return if token.size == 0
+      return if token.size.empty?
       token = token.join('') if token.is_a? Array
       get_var token.to_s
     end
@@ -241,11 +242,11 @@ def call_predefined_method(name, arr)
     end
   end
 
-  def find_next_function_value(other, is_num = false)
+  def find_next_function_value(other)
     idx = (find_bracket_idx other, 0)
     value = calc_input_val other[0..idx]
     other = other[idx + 1..other.size]
-    [value.number? ? value.to_num : value, other]
+    [value, other]
   end
 
   def size_for_list_elem(values)
@@ -265,21 +266,21 @@ def call_predefined_method(name, arr)
     [(build_list value), other[3 + (size_for_list_elem value)..-1]]
   end
 
-  def find_next_value(other, is_num)
+  def find_next_value(other)
     if other[0] == '('
-      find_next_function_value other, is_num
+      find_next_function_value other
     elsif other[0..1].join == '\'('
       find_next_value_helper other
     else
       value = get_var other[0].to_s
-      [value.number? ? value.to_num : value, other[1..-1]]
+      [value, other[1..-1]]
     end
   end
 
-  def get_k_arguments(other, return_other, k, to_number)
+  def get_k_arguments(other, return_other, k)
     result = []
     while (k -= 1) >= 0
-      x, other = find_next_value other, to_number
+      x, other = find_next_value other
       result << x
     end
     result << other if return_other
