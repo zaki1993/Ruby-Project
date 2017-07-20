@@ -133,7 +133,8 @@ module SchemeLists
   def cdr(other)
     value = find_list_function_value other
     raise 'Cannot apply operation on nil' if value.empty?
-    build_list value[1..-1]
+    idx = value[1] == '.' ? 2 : 1
+    build_list value[idx..-1]
   end
 
   def list?(other)
@@ -164,5 +165,9 @@ module SchemeLists
     valid_function other[0]
     val_one, val_two = get_fold_values other[1..-1]
     foldr_helper other[0], val_one, val_two
+  end
+  
+  def car_cdr_infinite(other)
+    
   end
 end
