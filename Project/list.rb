@@ -84,6 +84,14 @@ module SchemeListsHelper
     split_value = split_list_string list_as_string.to_s
     no_eval_list split_value[2..-2]
   end
+  
+  def get_fold_values(other)
+    values = find_all_values other
+    raise 'Incorrect number of arguments' if values.size != 2
+    x, y = values
+    y = split_list_as_string y.to_s if y.to_s.list?
+    [x, y]
+  end
 end
 
 # Scheme lists module
@@ -129,16 +137,18 @@ module SchemeLists
     value = find_list_function_value other
     build_list value.reverse
   end
-
-  def listref(other)
-    raise 'Incorrect number of arguments' if other.size != 2
-    raise 'Number needed' unless check_for_number other[1]
-
+  
+  def map(other)
+    
   end
-
-  def listtail(other)
-    raise 'Incorrect number of arguments' if other.size != 2
-    raise 'Number needed' unless check_for_number other[1]
-
+  
+  def foldl(other)
+    proc = (predefined_method_caller [other[0]]) || (custom_method_caller [other[0]])
+    raise 'No such procedure' if proc.nil?
+    val_one, val_two = get_fold_values other[1..-1]
+    val_two.each do |v|
+      val_one = send proc, [v, val_one]
+    end
+    val_one.to_s
   end
 end
