@@ -89,8 +89,20 @@ module SchemeListsHelper
     values = find_all_values other
     raise 'Incorrect number of arguments' if values.size != 2
     x, y = values
-    y = split_list_as_string y.to_s if y.to_s.list?
+    y = split_list_as_string y.to_s
     [x, y]
+  end
+  
+  def foldl_helper(func, accum, lst)
+    return accum if lst.empty?
+    value = send func, [lst[0], accum]
+    foldl_helper func, value, lst[1..-1]
+  end
+  
+  def foldr_helper(func, accum, lst)
+    return accum if lst.empty?
+    value = foldr_helper func, accum, lst[1..-1]
+    send func, [lst[0], value]
   end
 end
 
@@ -143,12 +155,14 @@ module SchemeLists
   end
   
   def foldl(other)
-    proc = (predefined_method_caller [other[0]]) || (custom_method_caller [other[0]])
-    raise 'No such procedure' if proc.nil?
+    valid_function other[0]
     val_one, val_two = get_fold_values other[1..-1]
-    val_two.each do |v|
-      val_one = send proc, [v, val_one]
-    end
-    val_one.to_s
+    foldl_helper other[0], val_one, val_two
+  end
+  
+  def foldr(other)
+    valid_function other[0]
+    val_one, val_two = get_fold_values other[1..-1]
+    foldr_helper other[0], val_one, val_two
   end
 end
