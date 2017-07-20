@@ -54,7 +54,7 @@ module SchemeListsHelper
 
   def cons_helper(values)
     result =
-      if values[1].to_s.pair?
+      if values[1].to_s[0..1] == '\'('
         build_cons_from_list values
       else
         values[0].to_s + ' . ' + values[1].to_s
@@ -104,6 +104,12 @@ module SchemeListsHelper
     value = foldr_helper func, accum, lst[1..-1]
     send func, [lst[0], value]
   end
+  
+  def car_cdr_values(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    return find_list_function_value other if other[0].list?
+    (split_list_string other[0].to_s)[2..-2]
+  end
 end
 
 # Scheme lists module
@@ -125,16 +131,17 @@ module SchemeLists
   end
 
   def car(other)
-    value = find_list_function_value other
+    value = car_cdr_values other
     raise 'Cannot apply operation on nil' if value.empty?
     value.shift
   end
 
   def cdr(other)
-    value = find_list_function_value other
+    value = car_cdr_values other
     raise 'Cannot apply operation on nil' if value.empty?
     idx = value[1] == '.' ? 2 : 1
-    build_list value[idx..-1]
+    return build_list value[idx..-1] if idx != value.size - 1
+    value[idx]
   end
 
   def list?(other)
