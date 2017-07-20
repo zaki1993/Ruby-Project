@@ -23,6 +23,7 @@ length
 reverse
 map
 foldl
+foldr
 filter
 member
 lambda
