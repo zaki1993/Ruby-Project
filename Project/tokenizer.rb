@@ -120,7 +120,7 @@ class Tokenizer
         'string-sufix?' => 'strsufix',
         'string-join' => 'strjoin',
         'list-ref' => 'listref',
-        'listtail' => 'listtail'
+        'list-tail' => 'listtail'
       }
   end
 
@@ -175,15 +175,21 @@ class Tokenizer
   def find_all_values(other)
     result = []
     until other.empty?
+    puts other.to_s
       x, other = find_next_value other, false
       result << x
     end
     result
   end
 
-  def call_predefined_method(token_caller, arr)
-    values = find_all_values arr
-    send token_caller.to_s, values
+def call_predefined_method(name, arr)
+    do_not_calculate = ['define']
+    if do_not_calculate.include? name
+      send name.to_s, arr if do_not_calculate.include? name
+    else
+      values = find_all_values arr
+      send name.to_s, values
+    end
   end
 
   def predefined_method_caller(arr)
@@ -245,12 +251,12 @@ class Tokenizer
   def find_next_value(other, is_num)
     if other[0] == '('
       value, other = find_next_function_value other
-      [is_num ? value.to_num : value, other]
+      [value.number? ? value.to_num : value, other]
     elsif other[0..1].join == '\'('
       find_next_value_helper other
     else
       value = calc_input_val other[0..0]
-      [is_num ? value.to_num : value, other[1..-1]]
+      [value.number? ? value.to_num : value, other[1..-1]]
     end
   end
 
@@ -272,16 +278,15 @@ class Tokenizer
     if other[0] == '('
       define_function other
     else
-      define_var other
+      define_var find_all_values other
     end
   end
 
   def define_var(other)
-    var_name = other[0]
-    value, other = find_next_value other[1..-1], false
-    raise 'Too much arguments' unless other.empty?
-    valid = valid_var_name var_name
-    valid ? (set_var var_name, value) : (raise 'Incorrect parameter')
+    raise 'Incorrect number of arguments' if other.size != 2
+    raise 'Invalid variable name' unless valid_var_name other[0].to_s
+    raise 'Invalid parameter' unless valid_var other[1].to_s
+    set_var other[0].to_s, other[1].to_s
   end
 
   def define_function(other)
@@ -296,7 +301,6 @@ class Tokenizer
   def get_var(var)
     check = check_instance_var var
     return instance_variable_get("@#{var}") if check
-    return var if valid_var var
-    raise 'Invalid variable'
+    var
   end
 end
