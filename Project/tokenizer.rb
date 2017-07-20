@@ -166,7 +166,7 @@ class Tokenizer
     return get_raw_value arr unless get_raw
     token_caller = predefined_method_caller arr
     if token_caller != arr
-      call_predefined_method token_caller, arr[2..-2]
+      call_predefined_method token_caller.to_s, arr[2..-2]
     else
       custom_method_caller arr
     end
@@ -175,7 +175,6 @@ class Tokenizer
   def find_all_values(other)
     result = []
     until other.empty?
-    puts other.to_s
       x, other = find_next_value other, false
       result << x
     end
@@ -194,9 +193,11 @@ def call_predefined_method(name, arr)
 
   def predefined_method_caller(arr)
     operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
-    m_name =
-      arr.find { |t| !t.match(/[[:alpha:]]/).nil? } ||
-      arr.each { |t| return t if operations.include? t }
+    m_name = 
+      arr.each do |t|
+        break t if (!t.match(/[[:alpha:]]/).nil?) || (operations.include? t)
+      end
+    return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
   end
@@ -210,6 +211,7 @@ def call_predefined_method(name, arr)
       result = find_to_evaluate_or_not token
       build_list result
     else
+      return if token.size == 0
       token = token.join('') if token.is_a? Array
       get_var token.to_s
     end
@@ -224,11 +226,11 @@ def call_predefined_method(name, arr)
     end
   end
 
-  def find_next_function_value(other)
+  def find_next_function_value(other, is_num = false)
     idx = (find_bracket_idx other, 0)
     value = calc_input_val other[0..idx]
     other = other[idx + 1..other.size]
-    [value, other]
+    [value.number? ? value.to_num : value, other]
   end
 
   def size_for_list_elem(values)
@@ -250,12 +252,11 @@ def call_predefined_method(name, arr)
 
   def find_next_value(other, is_num)
     if other[0] == '('
-      value, other = find_next_function_value other
-      [value.number? ? value.to_num : value, other]
+      find_next_function_value other, is_num
     elsif other[0..1].join == '\'('
       find_next_value_helper other
     else
-      value = calc_input_val other[0..0]
+      value = get_var other[0].to_s
       [value.number? ? value.to_num : value, other[1..-1]]
     end
   end
@@ -278,15 +279,15 @@ def call_predefined_method(name, arr)
     if other[0] == '('
       define_function other
     else
-      define_var find_all_values other
+      define_var other[0].to_s, (find_all_values other[1..-1])
     end
   end
 
-  def define_var(other)
-    raise 'Incorrect number of arguments' if other.size != 2
-    raise 'Invalid variable name' unless valid_var_name other[0].to_s
-    raise 'Invalid parameter' unless valid_var other[1].to_s
-    set_var other[0].to_s, other[1].to_s
+  def define_var(var, values)
+    raise 'Incorrect number of arguments' if values.size != 1
+    raise 'Invalid variable name' unless valid_var_name var
+    raise 'Invalid parameter' unless valid_var values[0].to_s
+    set_var var, values[0]
   end
 
   def define_function(other)
@@ -301,6 +302,7 @@ def call_predefined_method(name, arr)
   def get_var(var)
     check = check_instance_var var
     return instance_variable_get("@#{var}") if check
-    var
+    valid = valid_var var
+    valid ? var : (raise 'Invalid variable')
   end
 end
