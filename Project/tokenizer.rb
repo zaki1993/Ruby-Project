@@ -43,14 +43,8 @@ class Object
   end
 
   def check_for_list
-    if is_a? Array
-      puts 'Check in Array: list?'
-      splited = self[-3] != '.'
-      self[0..1].join == '\'(' && self[-1] == ')' && splited
-    elsif is_a? String
-      splited = object_split[-3] != '.'
-      self[0..1] == '\'(' && self[-1] == ')' && splited
-    end
+    res = object_split if is_a? String
+    res[0..1].join == '\'(' && res[-1] == ')' && res[-3] != '.'
   end
 end
 
