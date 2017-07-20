@@ -25,6 +25,7 @@ module Validator
     string = (check_for_string var)
     boolean = (check_for_bool var)
     symbol = (check_for_symbol var)
-    number || string || boolean || symbol
+    list = var.to_s.list?
+    number || string || boolean || symbol || list
   end
 end
