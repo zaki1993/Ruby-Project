@@ -166,7 +166,7 @@ module SchemeLists
   def map(other)
     valid_function other[0]
     lists = find_all_values other[1..-1]
-    lists = lists.map { |t| split_list_as_string t.to_s }
+    lists = lists.map { |t| find_list_function_value [t] }
     lists = equalize_lists lists
     lists = lists.transpose
     result = lists.map { |t| send other[0], t }
@@ -183,6 +183,15 @@ module SchemeLists
     valid_function other[0]
     val_one, val_two = get_fold_values other[1..-1]
     foldr_helper other[0], val_one, val_two
+  end
+
+  def filter(other)
+    valid_function other[0]
+    values = find_all_values other[1..-1]
+    raise 'Incorrect number of arguments' unless values.size == 1
+    values = find_list_function_value [values[0]]
+    result = values.select { |t| (send other[0], [t]) == '#t' }
+    build_list result
   end
 
   def car_cdr_infinite(other)

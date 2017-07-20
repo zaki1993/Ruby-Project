@@ -43,6 +43,7 @@ class Object
   end
 
   def check_for_list
+    res = to_a if is_a? Array
     res = object_split if is_a? String
     res[0..1].join == '\'(' && res[-1] == ')' && res[-3] != '.'
   end
