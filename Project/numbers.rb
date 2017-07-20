@@ -83,7 +83,7 @@ module SchemeNumbers
     raise 'Too few arguments' if other.empty?
     return (divide_number 1, other[0].to_num) if other.size == 1
     other = other.map(&:to_num)
-    other[1..-1].inject(other[0], :/)
+    other[1..-1].inject(other[0]) { |res, t| divide_number res, t }
   end
 
   def quotient(other)
