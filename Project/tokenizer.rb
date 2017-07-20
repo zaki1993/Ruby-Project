@@ -23,16 +23,33 @@ class Object
     return false unless self.class == String
     (start_with? '"') && (end_with? '"') && (size != 1)
   end
-
+    
   def list?
     return false if size < 3
-    return self[0..1].join == '\'(' && self[-1] == ')' if is_a? Array
-    self[0..1] == '\'(' && self[-1] == ')' if is_a? String
+    check_for_list
   end
 
   def pair?
     return false if (include? '.') && (count('.') > 1)
     list?
+  end
+  
+  private
+  def object_split
+    result = to_s.split(/(\(|\))|\ /)
+    result.delete('')
+    result  
+  end
+  
+  def check_for_list
+    if is_a? Array
+      puts 'Check in Array: list?'
+      splited = self[-3] != '.'
+      self[0..1].join == '\'(' && self[-1] == ')' && splited
+    elsif is_a? String
+      splited = (object_split)[-3] != '.'
+      self[0..1] == '\'(' && self[-1] == ')' && splited
+    end
   end
 end
 
@@ -101,6 +118,7 @@ class Tokenizer
   def initialize
     @other = []
     @predefined = []
+    @do_not_calculate = ['define', 'foldl', 'foldr', 'map', 'filter']
     @reserved =
       {
         'null' => '\'()'
@@ -179,8 +197,7 @@ class Tokenizer
   end
 
 def call_predefined_method(name, arr)
-    do_not_calculate = ['define', 'foldl', 'foldr', 'map', 'filter']
-    if do_not_calculate.include? name
+    if @do_not_calculate.include? name
       send name.to_s, arr
     else
       values = find_all_values arr
@@ -200,7 +217,7 @@ def call_predefined_method(name, arr)
   end
 
   def custom_method_caller(arr)
-    puts 'trying custom methods: ' + arr.to_s
+    #puts 'trying custom methods: ' + arr.to_s
     arr
   end
 
