@@ -23,7 +23,7 @@ class Object
     return false unless self.class == String
     (start_with? '"') && (end_with? '"') && (size != 1)
   end
-    
+
   def list?
     return false if size < 3
     check_for_list
@@ -33,14 +33,14 @@ class Object
     return false if (include? '.') && (count('.') > 1)
     list?
   end
-  
+
   private
   def object_split
     result = to_s.split(/(\(|\))|\ /)
     result.delete('')
-    result  
+    result
   end
-  
+
   def check_for_list
     if is_a? Array
       puts 'Check in Array: list?'
@@ -207,7 +207,7 @@ def call_predefined_method(name, arr)
 
   def predefined_method_caller(arr)
     operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
-    m_name = 
+    m_name =
       arr.each do |t|
         break t if (!t.match(/[[:alpha:]]/).nil?) || (operations.include? t)
       end

@@ -84,7 +84,7 @@ module SchemeListsHelper
     split_value = split_list_string list_as_string.to_s
     no_eval_list split_value[2..-2]
   end
-  
+
   def get_fold_values(other)
     values = find_all_values other
     raise 'Incorrect number of arguments' if values.size != 2
@@ -92,23 +92,28 @@ module SchemeListsHelper
     y = split_list_as_string y.to_s
     [x, y]
   end
-  
+
   def foldl_helper(func, accum, lst)
     return accum if lst.empty?
     value = send func, [lst[0], accum]
     foldl_helper func, value, lst[1..-1]
   end
-  
+
   def foldr_helper(func, accum, lst)
     return accum if lst.empty?
     value = foldr_helper func, accum, lst[1..-1]
     send func, [lst[0], value]
   end
-  
+
   def car_cdr_values(other)
     raise 'Incorrect number of arguments' if other.size != 1
     return find_list_function_value other if other[0].list?
     (split_list_string other[0].to_s)[2..-2]
+  end
+
+  def equalize_lists(other)
+    min = other.map{ |t| t.size }.min
+    other.map { |t| t[0..min - 1] }
   end
 end
 
@@ -157,24 +162,29 @@ module SchemeLists
     value = find_list_function_value other
     build_list value.reverse
   end
-  
+
   def map(other)
-    
+    valid_function other[0]
+    lists = find_all_values other[1..-1]
+    lists = equalize_lists lists.map{ |t| split_list_as_string t.to_s }
+    lists = lists.transpose
+    result = lists.map { |t| send other[0], t }
+    build_list result
   end
-  
+
   def foldl(other)
     valid_function other[0]
     val_one, val_two = get_fold_values other[1..-1]
     foldl_helper other[0], val_one, val_two
   end
-  
+
   def foldr(other)
     valid_function other[0]
     val_one, val_two = get_fold_values other[1..-1]
     foldr_helper other[0], val_one, val_two
   end
-  
+
   def car_cdr_infinite(other)
-    
+
   end
 end
