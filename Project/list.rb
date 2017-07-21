@@ -145,8 +145,7 @@ module SchemeLists
     value = car_cdr_values other
     raise 'Cannot apply operation on nil' if value.empty?
     idx = value[1] == '.' ? 2 : 1
-    return build_list value[idx..-1] if idx != value.size - 1
-    value[idx]
+    build_list value[idx..-1]
   end
 
   def list?(other)
