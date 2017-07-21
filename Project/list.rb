@@ -122,7 +122,7 @@ module SchemeLists
   include SchemeListsHelper
   def null?(other)
     raise 'Incorrect number of arguments' if other.size != 1
-    raise 'List needed' unless other[0].to_s.list?
+    return '#f' unless other[0].to_s.list?
     other[0].to_s.size == 3 ? '#t' : '#f'
   end
 
@@ -188,10 +188,13 @@ module SchemeLists
   def filter(other)
     valid_function other[0]
     values = find_all_values other[1..-1]
-    raise 'Incorrect number of arguments' unless values.size == 1
     values = find_list_function_value [values[0]]
     result = values.select { |t| (send other[0], [t]) == '#t' }
     build_list result
+  end
+  
+  def member(other)
+    
   end
 
   def car_cdr_infinite(other)
