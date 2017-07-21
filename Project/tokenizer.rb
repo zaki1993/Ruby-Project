@@ -31,6 +31,7 @@ class Object
 
   def pair?
     return false if (include? '.') && (count('.') > 1)
+    return true if self[2..-2].size == 3
     list?
   end
 
@@ -219,7 +220,7 @@ class Tokenizer
 
   def get_raw_value(token)
     if token.pair?
-      result = find_to_evaluate_or_not token
+      result = no_eval_list token[2..-2]
       build_list result
     else
       return if token.size.empty?
