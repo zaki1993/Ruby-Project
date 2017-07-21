@@ -30,8 +30,10 @@ class Object
   end
 
   def pair?
-    return true if self[-3] == '.'
-    list? && self[2..-2].size != 0
+    res = object_split if is_a? String
+    res = to_a if is_a? Array
+    return true if res[-3] == '.'
+    list? && res[2..-2].size != 0
   end
 
   private
@@ -222,7 +224,7 @@ class Tokenizer
       result = no_eval_list token[2..-2]
       build_list result
     else
-      return if token.size.empty?
+      return if token.empty?
       token = token.join('') if token.is_a? Array
       get_var token.to_s
     end
