@@ -25,8 +25,9 @@ module Validator
     string = (check_for_string var)
     boolean = (check_for_bool var)
     symbol = (check_for_symbol var)
-    list = var.to_s.list?
-    number || string || boolean || symbol || list
+    pair = var.pair?
+    list = var.list?
+    number || string || boolean || symbol || list || pair
   end
 
   def valid_function(name)
