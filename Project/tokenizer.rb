@@ -30,9 +30,8 @@ class Object
   end
 
   def pair?
-    return false if (include? '.') && (count('.') > 1)
-    return true if self[2..-2].size == 3
-    list?
+    return true if self[-3] == '.'
+    list? && self[2..-2].size != 0
   end
 
   private
