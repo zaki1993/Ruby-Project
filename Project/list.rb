@@ -215,7 +215,7 @@ module SchemeLists
     raise 'Incorrect number of arguments' unless other.size == 2
     to_remove = other[0]
     values = find_list_function_value [other[1]]
-    values.delete to_remove
+    values.delete_at(values.index(to_remove) || values.length)
     build_list values
   end
 
