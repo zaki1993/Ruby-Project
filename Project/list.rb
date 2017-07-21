@@ -218,6 +218,11 @@ module SchemeLists
     values.delete_at(values.index(to_remove) || values.length)
     build_list values
   end
+  
+  def shuffle(other)
+    values = find_list_function_value other
+    build_list values.shuffle
+  end
 
   def car_cdr_infinite(other)
 
