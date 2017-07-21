@@ -169,8 +169,10 @@ module SchemeLists
   end
 
   def reverse(other)
-    value = find_list_function_value other
-    build_list value.reverse
+    raise 'Incorrect number of arguments' unless other.size == 1
+    value = split_list_string other[0]
+    raise 'Invalid argument' unless value.pair? || value.list?
+    build_list value[2..-2].reverse
   end
 
   def map(other)
