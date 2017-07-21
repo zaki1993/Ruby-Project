@@ -1,6 +1,7 @@
 define
 not
 equal?
+if
 quotient
 remainder
 modulo
@@ -24,6 +25,7 @@ pair?
 length
 reverse
 remove
+shuffle
 map
 foldl
 foldr
