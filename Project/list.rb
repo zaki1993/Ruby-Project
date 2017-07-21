@@ -126,12 +126,6 @@ end
 # Scheme lists module
 module SchemeLists
   include SchemeListsHelper
-  def null?(other)
-    raise 'Incorrect number of arguments' if other.size != 1
-    return '#f' unless other[0].to_s.list?
-    other[0].to_s.size == 3 ? '#t' : '#f'
-  end
-
   def cons(other)
     raise 'Incorrect number of arguments' if other.size != 2
     cons_helper other
@@ -158,6 +152,17 @@ module SchemeLists
   def list?(other)
     raise 'Incorrect number of arguments' if other.size != 1
     other[0].to_s.list? ? '#t' : '#f'
+  end
+  
+  def pair?(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    other[0].to_s.pair? ? '#t' : '#f'
+  end
+  
+  def null?(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    return '#f' unless other[0].to_s.list?
+    other[0].to_s.size == 3 ? '#t' : '#f'
   end
 
   def length(other)
