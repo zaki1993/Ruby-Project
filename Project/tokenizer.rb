@@ -116,7 +116,7 @@ class Tokenizer
   def initialize
     @other = []
     @predefined = []
-    @do_not_calculate = ['define', 'foldl', 'foldr', 'map', 'filter']
+    @do_not_calculate = ['define', 'foldl', 'foldr', 'map', 'filter', 'if']
     @reserved =
       {
         'null' => '\'()'
@@ -139,6 +139,8 @@ class Tokenizer
         'list-tail' => 'listtail'
       }
   end
+  
+  # /c[ad]{2,}r/
 
   def set_reserved_keywords
     @reserved.each do |key, value|
@@ -169,7 +171,7 @@ class Tokenizer
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
       if t.include?('(') || t.include?(')')
-        t.to_s.split(%r{(\(|\)|\/)}).each { |p| @other << p }
+        t.to_s.split(%r{(\(|\)|\.|\/)}).each { |p| @other << p }
       else
         @other << t
       end
@@ -197,9 +199,10 @@ class Tokenizer
   def call_predefined_method(name, arr)
     if @do_not_calculate.include? name
       send name.to_s, arr
-    else
+    elsif !name.nil?
       values = find_all_values arr
       send name.to_s, values
+    else
     end
   end
 
