@@ -68,7 +68,7 @@ module SchemeNumbers
   end
 
   def -(other)
-    return 0 if other.empty?
+    raise 'Too few arguments' if other.empty?
     other = other.map(&:to_num)
     return -other[0] if other.size == 1
     other[0] + other[1..-1].reduce(0, :-)

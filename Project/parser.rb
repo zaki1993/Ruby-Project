@@ -14,12 +14,12 @@ class Parser
   def run
     loop do
       token = gets.chomp
-      result = parse_token token
+      result = parse token
       print_result result
     end
   end
 
-  def parse_token(token)
+  def parse(token)
     token_error = validate_token token
     result =
       if token_error.nil?
