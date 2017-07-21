@@ -5,8 +5,15 @@ RSpec.describe 'Parser' do
     @parser = Parser.new
   end
 
-  describe '#numbers' do
-    context 'sum' do
+  describe '#scheme_numbers' do
+    context 'arithmetic_function' do
+      it 'calculates with no arguments' do
+        expect(@parser.parse_token('(+)')).to eq 1
+        expect(@parser.parse_token('(-)')).to eq 1
+        expect(@parser.parse_token('(*)')).to eq 1
+        expect(@parser.parse_token('(/)')).to eq 1
+      end
+
       it 'sums with one number' do
         expect(@parser.parse_token('(+ 1)')).to eq 1
         expect(@parser.parse_token('(+ 0)')).to eq 0

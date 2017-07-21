@@ -152,7 +152,7 @@ class Tokenizer
     reset
     split_token token
     begin
-      puts calc_input_val @other
+      calc_input_val @other
     rescue NameError
       puts 'Not valid name for variable'
     rescue ArgumentError

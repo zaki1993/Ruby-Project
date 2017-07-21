@@ -14,17 +14,20 @@ class Parser
   def run
     loop do
       token = gets.chomp
-      parse_token token
+      result = parse_token token
+      print_result result
     end
   end
 
   def parse_token(token)
     token_error = validate_token token
-    if token_error.nil?
-      @tokenizer.tokenize token
-    else
-      error_printer token_error
-    end
+    result =
+      if token_error.nil?
+        @tokenizer.tokenize token
+      else
+        token_error
+      end
+    result
   end
 
   def validate_token(token)
@@ -35,7 +38,8 @@ class Parser
     end
   end
 
-  def error_printer(error)
-    puts error
+  def print_result(result)
+    puts result
+    result
   end
 end
