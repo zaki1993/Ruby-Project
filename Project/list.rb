@@ -115,7 +115,7 @@ module SchemeListsHelper
     min = other.map(&:size).min
     other.map { |t| t[0..min - 1] }
   end
-  
+
   def member_helper(to_check, values)
     return '#f' unless values.include? to_check
     idx = values.index(to_check)
@@ -202,8 +202,9 @@ module SchemeLists
   def member(other)
     raise 'Incorrect number of arguments' unless other.size == 2
     to_check = other[0]
-    values = find_list_function_value other[1..-1]
-    member_helper to_check, values
+    split_val = split_list_string other[1]
+    raise 'Invalid argument' unless split_val.pair? || split_val.list?
+    member_helper to_check, split_val[2..-2]
   end
 
   def car_cdr_infinite(other)
