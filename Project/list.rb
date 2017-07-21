@@ -210,6 +210,14 @@ module SchemeLists
     raise 'Invalid argument' unless split_val.pair? || split_val.list?
     member_helper to_check, split_val[2..-2]
   end
+  
+  def remove(other)
+    raise 'Incorrect number of arguments' unless other.size == 2
+    to_remove = other[0]
+    values = find_list_function_value [other[1]]
+    values.delete to_remove
+    build_list values
+  end
 
   def car_cdr_infinite(other)
 
