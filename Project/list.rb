@@ -69,7 +69,7 @@ module SchemeListsHelper
   end
 
   def split_list_string(list)
-    result = list.split(/(\(|\))|\ /)
+    result = list.split(/(\(|\)|\.)|\ /)
     result.delete('')
     result
   end

@@ -39,7 +39,7 @@ class Object
   private
 
   def object_split
-    result = to_s.split(/(\(|\))|\ /)
+    result = to_s.split(/(\(|\)|\.)|\ /)
     result.delete('')
     result
   end
@@ -171,7 +171,7 @@ class Tokenizer
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
       if t.include?('(') || t.include?(')')
-        t.to_s.split(%r{(\(|\)|\.|\/)}).each { |p| @other << p }
+        t.to_s.split(%r{(\(|\)|\/)}).each { |p| @other << p }
       else
         @other << t
       end
@@ -222,9 +222,8 @@ class Tokenizer
   end
 
   def get_raw_value(token)
-    if token.pair?
-      result = no_eval_list token[2..-2]
-      build_list result
+    if token.pair? || token.list?
+      build_list (no_eval_list token[2..-2])
     else
       return if token.empty?
       token = token.join('') if token.is_a? Array

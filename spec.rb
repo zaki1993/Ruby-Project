@@ -1,3 +1,4 @@
+load 'parser.rb'
 RSpec.describe 'Parser' do
   before do
     @parser = Parser.new
