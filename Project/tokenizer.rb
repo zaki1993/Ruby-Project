@@ -33,7 +33,7 @@ class Object
     res = object_split if is_a? String
     res = to_a if is_a? Array
     return true if res[-3] == '.'
-    list? && res[2..-2].size != 0
+    list? && !res[2..-2].empty?
   end
 
   private
@@ -139,7 +139,7 @@ class Tokenizer
         'list-tail' => 'listtail'
       }
   end
-  
+
   # /c[ad]{2,}r/
 
   def set_reserved_keywords
@@ -202,7 +202,6 @@ class Tokenizer
     elsif !name.nil?
       values = find_all_values arr
       send name.to_s, values
-    else
     end
   end
 

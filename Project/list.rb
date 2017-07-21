@@ -152,12 +152,12 @@ module SchemeLists
     raise 'Incorrect number of arguments' if other.size != 1
     other[0].to_s.list? ? '#t' : '#f'
   end
-  
+
   def pair?(other)
     raise 'Incorrect number of arguments' if other.size != 1
     other[0].to_s.pair? ? '#t' : '#f'
   end
-  
+
   def null?(other)
     raise 'Incorrect number of arguments' if other.size != 1
     return '#f' unless other[0].to_s.list?
@@ -202,7 +202,7 @@ module SchemeLists
     result = values.select { |t| (send other[0], [t]) == '#t' }
     build_list result
   end
-  
+
   def member(other)
     raise 'Incorrect number of arguments' unless other.size == 2
     to_check = other[0]
@@ -210,7 +210,7 @@ module SchemeLists
     raise 'Invalid argument' unless split_val.pair? || split_val.list?
     member_helper to_check, split_val[2..-2]
   end
-  
+
   def remove(other)
     raise 'Incorrect number of arguments' unless other.size == 2
     to_remove = other[0]
@@ -218,7 +218,7 @@ module SchemeLists
     values.delete_at(values.index(to_remove) || values.length)
     build_list values
   end
-  
+
   def shuffle(other)
     values = find_list_function_value other
     build_list values.shuffle

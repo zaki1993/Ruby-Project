@@ -5,7 +5,7 @@ module SchemeBooleansHelper
     values = find_all_values other[1..-1]
     send other[0], values
   end
-  
+
   def if_result_helper(other)
     values = find_all_values other
     raise 'Incorect number of arguments' unless values.size == 2
@@ -26,7 +26,7 @@ module SchemeBooleans
     raise 'Boolean needed' unless check_for_bool other[0]
     other[0] == '#t' ? '#f' : '#t'
   end
-  
+
   def if(other)
     idx = find_bracket_idx other, 0
     expr = if_proc_helper other[1..idx - 1]
