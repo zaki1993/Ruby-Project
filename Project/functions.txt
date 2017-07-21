@@ -15,12 +15,15 @@ string?
 substring
 null?
 cons
+null
 list
 car
 cdr
 list?
+pair?
 length
 reverse
+remove
 map
 foldl
 foldr
