@@ -5,6 +5,38 @@ RSpec.describe 'LispInterpreter' do
     @parser = Parser.new
   end
 
+  describe 'Literals' do
+    it 'can parse integers' do
+      expect(@parser.parse('1')).to eq '1'
+      expect(@parser.parse('5')).to eq '5'
+    end
+
+    it 'can parse floats' do
+      expect(@parser.parse('1.5')).to eq '1.5'
+      expect(@parser.parse('0.99')).to eq '0.99'
+    end
+
+    it 'can parse strings' do
+      expect(@parser.parse('"Sample"')).to eq '"Sample"'
+      expect(@parser.parse('"Hello world"')).to eq '"Hello world"'
+    end
+
+    it 'can parse booleans' do
+      expect(@parser.parse('#t')).to eq '#t'
+      expect(@parser.parse('#f')).to eq '#f'
+    end
+
+    it 'can parse characters' do
+      expect(@parser.parse('#\t')).to eq '#\t'
+      expect(@parser.parse('#\space')).to eq '#\space'
+    end
+
+    it 'can parse quotes' do
+      expect(@parser.parse('\'(1 2)')).to eq '\'(1 2)'
+      expect(@parser.parse('\'QUOTE')).to eq '\'QUOTE'
+    end
+  end
+
   describe '+' do
     it 'sums with no arguments' do
       expect(@parser.parse('(+)')).to eq 0

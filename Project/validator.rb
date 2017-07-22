@@ -21,18 +21,27 @@ module Validator
   end
 
   def valid_var(var)
-    number = (check_for_number var)
-    string = (check_for_string var)
-    boolean = (check_for_bool var)
-    symbol = (check_for_symbol var)
-    pair = var.pair?
-    list = var.list?
-    number || string || boolean || symbol || list || pair
+    (valid_literals var) || (valid_objects var)
   end
 
   def valid_function(name)
     res = (predefined_method_caller [name]) || (custom_method_caller [name])
     raise 'No such procedure' if res.nil?
     true
+  end
+
+  private
+
+  def valid_literals(var)
+    number = check_for_number var
+    string = check_for_string var
+    boolean = check_for_bool var
+    symbol = check_for_symbol var
+    quote = check_for_quote var
+    number || string || boolean || symbol || quote
+  end
+
+  def valid_objects(var)
+    var.list? || var.pair?
   end
 end

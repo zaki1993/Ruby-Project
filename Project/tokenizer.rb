@@ -74,6 +74,13 @@ module SchemeChecker
     false
   end
 
+  def check_for_quote(token)
+    return true if token[0] == '\''
+    is_instance_var = check_instance_var token
+    return true if is_instance_var && (check_for_number get_var token)
+    false
+  end
+
   def check_for_list(other)
     if other[0..1].join == '\'('
       other.list?
