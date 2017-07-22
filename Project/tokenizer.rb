@@ -124,7 +124,17 @@ class Tokenizer
   def initialize
     @other = []
     @predefined = []
-    @do_not_calculate = ['define', 'foldl', 'foldr', 'map', 'filter', 'if']
+    @do_not_calculate =
+      [
+        'define',
+        'foldl',
+        'foldr',
+        'map',
+        'filter',
+        'if',
+        'numerator',
+        'denominator'
+      ]
     @reserved =
       {
         'null' => '\'()'

@@ -293,20 +293,42 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'min' do
-    it 'can subtract 1 with integers' do
-      expect(@parser.parse('(sub1 1)')).to eq 0
-      expect(@parser.parse('(sub1 -1)')).to eq '-2'.to_i
-      expect(@parser.parse('(sub1 -2)')).to eq '-3'.to_i
+    it 'throws argument exception if no arguments provided' do
+      expect(@parser.parse('(min)')).to eq 'min takes at least 1 argument'
     end
 
-    it 'can subtract 1 with floats' do
-      expect(@parser.parse('(sub1 1.0)')).to eq 0.0
-      expect(@parser.parse('(sub1 -1.0)')).to eq '-2'.to_f
-      expect(@parser.parse('(sub1 -2.5)')).to eq '-3.5'.to_f
+    it 'can find the minumum value of single argument' do
+      expect(@parser.parse('(min -5)')).to eq '-5'.to_i
+      expect(@parser.parse('(min 1.5)')).to eq 1.5
+      expect(@parser.parse('(min 1)')).to eq 1
+    end
+
+    it 'can find the minumum value of multiple arguments' do
+      expect(@parser.parse('(min 0 0)')).to eq 0
+      expect(@parser.parse('(min 1 2 3)')).to eq 1
+      expect(@parser.parse('(min 4 2.1 9.5)')).to eq 2.1
+      expect(@parser.parse('(min 5 3 1 2 4)')).to eq 1
+      expect(@parser.parse('(min 1.99 1.98002 1.98001 2)')).to eq 1.98001
     end
   end
 
   describe 'max' do
+    it 'throws argument exception if no arguments provided' do
+      expect(@parser.parse('(max)')).to eq 'max takes at least 1 argument'
+    end
 
+    it 'can find the maximum value of single argument' do
+      expect(@parser.parse('(max -5)')).to eq '-5'.to_i
+      expect(@parser.parse('(max 1.5)')).to eq 1.5
+      expect(@parser.parse('(max 1)')).to eq 1
+    end
+
+    it 'can find the maximum value of multiple arguments' do
+      expect(@parser.parse('(max 0 0)')).to eq 0
+      expect(@parser.parse('(max 1 2 3)')).to eq 3
+      expect(@parser.parse('(max 4 2.1 9.5)')).to eq 9.5
+      expect(@parser.parse('(max 5 3 1 2 4)')).to eq 5
+      expect(@parser.parse('(max 1.9999999 2.000001 2)')).to eq 2.000001
+    end
   end
 end
