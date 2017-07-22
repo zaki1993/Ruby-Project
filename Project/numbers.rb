@@ -119,7 +119,7 @@ module SchemeNumbers
   end
 
   def abs(other)
-    (get_one_arg_function other).abs.to_s
+    (get_one_arg_function other).abs
   end
 
   def add1(other)
@@ -131,11 +131,13 @@ module SchemeNumbers
   end
 
   def min(other)
+    raise 'min takes at least 1 argument' if other.empty?
     other = other.map(&:to_num)
     other.min
   end
 
   def max(other)
+    raise 'max takes at least 1 argument' if other.empty?
     other = other.map(&:to_num)
     other.max
   end

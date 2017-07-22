@@ -76,12 +76,12 @@ RSpec.describe 'LispInterpreter' do
 
     it 'subtracts with single argument' do
       expect(@parser.parse('(- 1)')).to be '-1'.to_i
-      expect(@parser.parse('(- 5.0)')).to eq '-5.0'.to_f
+      expect(@parser.parse('(- 5.0)')).to eq '-5'.to_f
     end
 
     it 'subtracts with multiple arguments' do
       expect(@parser.parse('(- 1 2)')).to eq '-1'.to_i
-      expect(@parser.parse('(- 1 2 0.0)')).to eq '-1.0'.to_f
+      expect(@parser.parse('(- 1 2 0.0)')).to eq '-1'.to_f
       expect(@parser.parse('(- 1 2 3 4 5)')).to eq '-13'.to_i
       expect(@parser.parse('(- -1 2 3 4 5)')).to eq '-15'.to_i
     end
@@ -192,5 +192,121 @@ RSpec.describe 'LispInterpreter' do
         expect(@parser.parse('(equal? (not #t) (not #f))')).to eq '#f'
       end
     end
+  end
+
+  describe 'quotient' do
+    it 'can calculate quotient with integers' do
+      expect(@parser.parse('(quotient 10 3)')).to eq 3
+      expect(@parser.parse('(quotient -10 3)')).to eq '-3'.to_i
+      expect(@parser.parse('(quotient 10 -3)')).to eq '-3'.to_i
+      expect(@parser.parse('(quotient -10 -3)')).to eq 3
+    end
+
+    it 'can calculate quotient with floats' do
+      expect(@parser.parse('(quotient 10 3.0)')).to eq 3.0
+      expect(@parser.parse('(quotient -10.0 3)')).to eq '-3'.to_f
+      expect(@parser.parse('(quotient -10 3.0)')).to eq '-3'.to_f
+      expect(@parser.parse('(quotient -10.0 -3.0)')).to eq 3.0
+    end
+  end
+
+  describe 'remainder' do
+    it 'can calculate remainder with integers' do
+      expect(@parser.parse('(remainder 10 3)')).to eq 1
+      expect(@parser.parse('(remainder -10 3)')).to eq '-1'.to_i
+      expect(@parser.parse('(remainder 10 -3)')).to eq 1
+      expect(@parser.parse('(remainder -10 -3)')).to eq '-1'.to_i
+    end
+
+    it 'can calculate remainder with floats' do
+      expect(@parser.parse('(remainder 10 3.0)')).to eq 1.0
+      expect(@parser.parse('(remainder -10.0 3)')).to eq '-1'.to_f
+      expect(@parser.parse('(remainder 10 -3.0)')).to eq 1.0
+      expect(@parser.parse('(remainder -10.0 -3.0)')).to eq '-1'.to_f
+    end
+  end
+
+  describe 'modulo' do
+    it 'can calculate modulo with integers' do
+      expect(@parser.parse('(modulo 10 3)')).to eq 1
+      expect(@parser.parse('(modulo -10 3)')).to eq 2
+      expect(@parser.parse('(modulo 10 -3)')).to eq '-2'.to_i
+      expect(@parser.parse('(modulo -10 -3)')).to eq '-1'.to_i
+    end
+
+    it 'can calculate modulo with floats' do
+      expect(@parser.parse('(modulo 10 3.0)')).to eq 1.0
+      expect(@parser.parse('(modulo -10.0 3)')).to eq 2.0
+      expect(@parser.parse('(modulo 10 -3.0)')).to eq '-2'.to_f
+      expect(@parser.parse('(modulo -10.0 -3.0)')).to eq '-1'.to_f
+    end
+  end
+
+  describe 'numerator' do
+
+  end
+
+  describe 'denominator' do
+
+  end
+
+  describe 'abs' do
+    it 'can find the absolute value of integer' do
+      expect(@parser.parse('(abs 1)')).to eq 1
+      expect(@parser.parse('(abs -10)')).to eq 10
+      expect(@parser.parse('(abs 0)')).to eq 0
+    end
+
+    it 'can find the absolute value of float' do
+      expect(@parser.parse('(abs 1.0)')).to eq 1.0
+      expect(@parser.parse('(abs -10.7)')).to eq 10.7
+      expect(@parser.parse('(abs 0.0)')).to eq 0.0
+    end
+  end
+
+  describe 'add1' do
+    it 'can add 1 to integers' do
+      expect(@parser.parse('(add1 1)')).to eq 2
+      expect(@parser.parse('(add1 -1)')).to eq 0
+      expect(@parser.parse('(add1 -2)')).to eq '-1'.to_i
+    end
+
+    it 'can add 1 to floats' do
+      expect(@parser.parse('(add1 1.0)')).to eq 2.0
+      expect(@parser.parse('(add1 -1.0)')).to eq 0.0
+      expect(@parser.parse('(add1 -2.5)')).to eq '-1.5'.to_f
+    end
+  end
+
+  describe 'sub1' do
+    it 'can subtract 1 with integers' do
+      expect(@parser.parse('(sub1 1)')).to eq 0
+      expect(@parser.parse('(sub1 -1)')).to eq '-2'.to_i
+      expect(@parser.parse('(sub1 -2)')).to eq '-3'.to_i
+    end
+
+    it 'can subtract 1 with floats' do
+      expect(@parser.parse('(sub1 1.0)')).to eq 0.0
+      expect(@parser.parse('(sub1 -1.0)')).to eq '-2'.to_f
+      expect(@parser.parse('(sub1 -2.5)')).to eq '-3.5'.to_f
+    end
+  end
+
+  describe 'min' do
+    it 'can subtract 1 with integers' do
+      expect(@parser.parse('(sub1 1)')).to eq 0
+      expect(@parser.parse('(sub1 -1)')).to eq '-2'.to_i
+      expect(@parser.parse('(sub1 -2)')).to eq '-3'.to_i
+    end
+
+    it 'can subtract 1 with floats' do
+      expect(@parser.parse('(sub1 1.0)')).to eq 0.0
+      expect(@parser.parse('(sub1 -1.0)')).to eq '-2'.to_f
+      expect(@parser.parse('(sub1 -2.5)')).to eq '-3.5'.to_f
+    end
+  end
+
+  describe 'max' do
+
   end
 end
