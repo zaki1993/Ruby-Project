@@ -162,4 +162,35 @@ RSpec.describe 'LispInterpreter' do
       expect(@parser.parse('(/ x y)')).to eq 5.005005005005005
     end
   end
+
+  describe 'booleans' do
+    context 'not' do
+      it 'can negate with literals' do
+        expect(@parser.parse('(not #t)')).to eq '#f'
+        expect(@parser.parse('(not #f)')).to eq '#t'
+      end
+
+      it 'can negate with functions' do
+        expect(@parser.parse('(not (not #t))')).to eq '#t'
+        expect(@parser.parse('(not (not #f))')).to eq '#f'
+      end
+    end
+
+    context 'equal?' do
+      it 'can compare with literals' do
+        expect(@parser.parse('(equal? 1 1.0)')).to eq '#f'
+        expect(@parser.parse('(equal? 1 1)')).to eq '#t'
+        expect(@parser.parse('(equal? "Sample" "Sample")')).to eq '#t'
+        expect(@parser.parse('(equal? #t #f)')).to eq '#f'
+        expect(@parser.parse('(equal? \'yes \'yes)')).to eq '#t'
+        expect(@parser.parse('(equal? #\a #\b)')).to eq '#f'
+      end
+
+      it 'can compare with functions' do
+        expect(@parser.parse('(equal? (cons 1 2) (cons 1 2))')).to eq '#t'
+        expect(@parser.parse('(equal? (cons 1 2) \'(1 . 2))')).to eq '#t'
+        expect(@parser.parse('(equal? (not #t) (not #f))')).to eq '#f'
+      end
+    end
+  end
 end
