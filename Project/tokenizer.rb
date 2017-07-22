@@ -1,3 +1,4 @@
+load 'errors.rb'
 load 'validator.rb'
 load 'numbers.rb'
 load 'strings.rb'
@@ -101,7 +102,7 @@ module SchemeChecker
     return true if var == '#\space'
     return true if var.character?
     is_instance_var = check_instance_var var
-    return true if is_instance_var && (check_for_symbol get_var var)
+    return true if is_instance_var && (check_for_character get_var var)
     false
   end
 
@@ -160,14 +161,8 @@ class Tokenizer
     split_token token
     begin
       calc_input_val @other
-    rescue NameError
-      puts 'Not valid name for variable'
-    rescue ArgumentError
-      puts 'Invalid argument'
-    rescue TypeError
-      puts 'Invalid argument'
-    rescue RuntimeError
-      puts 'No variable or function with this name'
+    rescue Exception => e
+      e.message
     end
   end
 

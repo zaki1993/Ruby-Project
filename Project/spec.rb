@@ -3,6 +3,8 @@ load 'parser.rb'
 RSpec.describe 'LispInterpreter' do
   before do
     @parser = Parser.new
+    @parser.parse('(define x 5)')
+    @parser.parse('(define y 0.999)')
   end
 
   describe 'Literals' do
@@ -61,8 +63,6 @@ RSpec.describe 'LispInterpreter' do
     end
 
     it 'sums with variables' do
-      @parser.parse('(define x 5)')
-      @parser.parse('(define y 0.999)')
       expect(@parser.parse('(+ 1 x)')).to eq 6
       expect(@parser.parse('(+ 1 y)')).to eq 1.999
       expect(@parser.parse('(+ x y)')).to eq 5.999
@@ -93,8 +93,6 @@ RSpec.describe 'LispInterpreter' do
     end
 
     it 'subtracts with variables' do
-      @parser.parse('(define x 5)')
-      @parser.parse('(define y 0.999)')
       expect(@parser.parse('(- 1 x)')).to eq '-4'.to_i
       expect(@parser.parse('(- 1 y)')).to eq 0.0010000000000000009
       expect(@parser.parse('(- x y)')).to eq 4.001
@@ -125,8 +123,6 @@ RSpec.describe 'LispInterpreter' do
     end
 
     it 'can multiply with variables' do
-      @parser.parse('(define x 5)')
-      @parser.parse('(define y 0.999)')
       expect(@parser.parse('(* 1 x)')).to eq 5
       expect(@parser.parse('(* 1 y)')).to eq 0.999
       expect(@parser.parse('(* x y)')).to eq 4.995
@@ -135,8 +131,7 @@ RSpec.describe 'LispInterpreter' do
 
   describe '/' do
     it 'throws ZeroDivisionError' do
-      # expect(@parser.parse('(/ 0)')).to eq 0
-      # expect(@parser.parse('(/ 1 0)')).to eq 0
+      expect(@parser.parse('(/ 0)')).to eq 'divided by 0'
     end
 
     it 'divides with no arguments' do
@@ -146,11 +141,12 @@ RSpec.describe 'LispInterpreter' do
     it 'divides with single argument' do
       expect(@parser.parse('(/ 1)')).to eq 1
       expect(@parser.parse('(/ 10.0)')).to eq 0.1
+      expect(@parser.parse('(/ 0.0)')).to eq 'Infinity'
+      expect(@parser.parse('(/ -0.0)')).to eq '-Infinity'
     end
 
     it 'divides with multiple arguments' do
       expect(@parser.parse('(/ 81 3.0)')).to eq 27.0
-      expect(@parser.parse('(/ 81 3 3 3)')).to eq 3
       expect(@parser.parse('(/ 1 2 3 4 5)')).to eq 0.008333333333333333
     end
 
@@ -161,8 +157,6 @@ RSpec.describe 'LispInterpreter' do
     end
 
     it 'can divide with variables' do
-      @parser.parse('(define x 5)')
-      @parser.parse('(define y 0.999)')
       expect(@parser.parse('(/ 1 x)')).to eq 0.2
       expect(@parser.parse('(/ 1 y)')).to eq 1.001001001001001
       expect(@parser.parse('(/ x y)')).to eq 5.005005005005005

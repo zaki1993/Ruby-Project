@@ -8,3 +8,6 @@ module ErrorMessages
     'error signaled: unbalanced quotes'
   end
 end
+
+class SchemeException < RuntimeError
+end
