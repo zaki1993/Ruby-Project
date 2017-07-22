@@ -1,0 +1,181 @@
+
+  describe '#strings' do
+    context 'can find the length of the string' do
+      it 'can find the length of the string' do
+        expect(@parser.parse('(string-length "sample-string")')).to eq 13
+        expect(@parser.parse('(string-length "ruby rlz")')).to eq 8
+      end
+    end
+
+    context 'can get substring' do
+      it 'can get substring' do
+        expect(@parser.parse('(substring "sample" 1 5)')).to eq 'ampl'
+        expect(@parser.parse('(substring "sample" 0)')).to eq 'sample'
+        expect(@parser.parse('(substring "sample" 0 4)')).to eq 'samp'
+        expect(@parser.parse('(substring "sample" 0 0)')).to eq ''
+      end
+    end
+
+    context 'can convert string to upcase' do
+      it 'can convert string to upcase' do
+        expect(@parser.parse('(string-upcase "sample")')).to eq 'SAMPLE'
+        expect(@parser.parse('(string-upcase "SaMpLe")')).to eq 'SAMPLE'
+      end
+    end
+
+    context 'can convert string to downcase' do
+      it 'can convert string to downcase' do
+        expect(@parser.parse('(string-downcase "SAMPLE")')).to eq 'sample'
+        expect(@parser.parse('(string-downcase "SaMpLe")')).to eq 'sample'
+      end
+    end
+
+    context 'can convert string to list' do
+      it 'can convert string to list' do
+        result = '\'(#\S #\A #\M #\P #\L #\E) '
+        expect(@parser.parse('(string->list "SAMPLE")')).to eq result
+      end
+    end
+
+    context 'can split string' do
+      it 'can split string' do
+        result = '\'("Hello" "world")'
+        expect(@parser.parse('(string-split "Hello world")')).to eq result
+      end
+    end
+
+    context 'checks if string contains substring' do
+      it 'checks if string contains substring' do
+        expect(@parser.parse('(string-contains? "Sample" "amp")')).to eq '#t'
+        expect(@parser.parse('(string-contains? "Sample" "lee")')).to eq '#f'
+        expect(@parser.parse('(string-contains? "Sam" "Sam")')).to eq '#t'
+        expect(@parser.parse('(string-contains? "Sam" "sam")')).to eq '#f'
+      end
+    end
+
+    context 'checks if literal is string' do
+      it 'checks with string' do
+        expect(@parser.parse('(string? "Sample")')).to eq '#t'
+        expect(@parser.parse('(string? "123")')).to eq '#t'
+      end
+
+      it 'checks with number' do
+        expect(@parser.parse('(string? 123)')).to eq '#f'
+      end
+
+      it 'checks with symbol' do
+        expect(@parser.parse('(string? \'Sample)')).to eq '#f'
+      end
+
+      it 'checks with list' do
+        expect(@parser.parse('(string? \'(1 2))')).to eq '#f'
+      end
+
+      it 'checks with boolean' do
+        expect(@parser.parse('(string? #t)')).to eq '#f'
+      end
+    end
+
+    context 'can compare strings' do
+      it 'can compare with =' do
+        expect(@parser.parse('(string=? "asd" "asd")')).to eq '#t'
+        expect(@parser.parse('(string=? "asd" "asdd")')).to eq '#f'
+      end
+
+      it 'can compare with <' do
+        expect(@parser.parse('(string<? "asd" "bsd")')).to eq '#t'
+        expect(@parser.parse('(string<? "asd" "asd")')).to eq '#f'
+      end
+
+      it 'can compare with >' do
+        expect(@parser.parse('(string>? "bsd" "asd")')).to eq '#t'
+        expect(@parser.parse('(string>? "asd" "asd")')).to eq '#f'
+      end
+
+      it 'can compare with >=' do
+        expect(@parser.parse('(string>=? "asd" "asd")')).to eq '#t'
+        expect(@parser.parse('(string>=? "asd" "bsd")')).to eq '#f'
+      end
+
+      it 'can compare with <=' do
+        expect(@parser.parse('(string<=? "asd" "asd")')).to eq '#t'
+        expect(@parser.parse('(string<=? "asd" "bsd")')).to eq '#t'
+      end
+    end
+  end
+
+  describe '#if_operator' do
+    it 'can use if with single value' do
+      expect(@parser.parse('(if #t #t #f)')).to eq '#t'
+      expect(@parser.parse('(if #f #t #f)')).to eq '#f'
+      expect(@parser.parse('(if #t "Pesho" "Gosho")')).to eq 'Pesho'
+      expect(@parser.parse('(if #f "Pesho" "Gosho")')).to eq 'Gosho'
+      expect(@parser.parse('(if #t 1 2)')).to eq 1
+      expect(@parser.parse('(if #f 1 2)')).to eq 2
+    end
+
+    it 'can use if with functions statement' do
+      expect(@parser.parse('(if (< 2 3) #t #f)')).to eq '#t'
+      expect(@parser.parse('(if (not #t) #t #f)')).to eq '#f'
+      expect(@parser.parse('(if (not (not #t)) "Pesho" "Gosho")')).to eq 'Pesho'
+      expect(@parser.parse('(if (not (< 2 3)) "Pesho" "Gosho")')).to eq 'Gosho'
+      expect(@parser.parse('(if (not #f) 1 2)')).to eq 1
+      expect(@parser.parse('(if (= 5 5) 1 2)')).to eq 1
+    end
+
+    it 'can use if with functions results' do
+      expect(@parser.parse('(if (< 2 3) (not #f) #f)')).to eq '#t'
+      expect(@parser.parse('(if (not #t) #t (not #t))')).to eq '#f'
+      expect(@parser.parse('(if #t (substring "Pesho" 0) 1)')).to eq 'Pesho'
+      expect(@parser.parse('(if #f 1 (substring "Gosho" 0))')).to eq 'Gosho'
+      expect(@parser.parse('(if (not #f) (+ 1 0) 2)')).to eq 1
+      expect(@parser.parse('(if (= 5 5) (+ 0.5 0.5) 2)')).to eq 1
+    end
+  end
+
+  describe '#display_values' do
+    it 'can display numbers' do
+      expect(@parser.parse('1')).to eq 1
+      expect(@parser.parse('1.5')).to eq 1.5
+    end
+
+    it 'can display booleans' do
+      expect(@parser.parse('#t')).to eq '#t'
+      expect(@parser.parse('#f')).to eq '#f'
+    end
+
+    it 'can display strings' do
+      expect(@parser.parse('"Sample"')).to eq 'Sample'
+      expect(@parser.parse('"Gosho"')).to eq 'Gosho'
+    end
+
+    it 'can display lists' do
+      expect(@parser.parse('(list 1 2)')).to eq '\'(1 2)'
+      expect(@parser.parse('\'()')).to eq '\'()'
+      expect(@parser.parse('\'(1 2)')).to eq '\'(1 2)'
+    end
+
+    it 'can display cons' do
+      expect(@parser.parse('(cons 1 2)')).to eq '(1 . 2)'
+      expect(@parser.parse('(cons 1 2 3)')).to eq '(1  2 . 3)'
+      expect(@parser.parse('(cons 1 \'())')).to eq '\'(1)'
+    end
+  end
+
+  describe '#variables' do
+    it 'can define variable' do
+      @parser.parse('(define x 5)')
+      @parser.parse('(define y x)')
+      expect(@parser.parse('x')).to eq '5'
+      expect(@parser.parse('y')).to eq '5'
+    end
+
+    it 'can use variables in functions' do
+      @parser.parse('(define x 5)')
+      @parser.parse('(define y x)')
+      expect(@parser.parse('(+ x y)')).to eq 10
+      expect(@parser.parse('(- x y)')).to eq 0
+      expect(@parser.parse('(* x y)')).to eq 25
+      expect(@parser.parse('(/ x y)')).to eq 1
+    end
+  end
