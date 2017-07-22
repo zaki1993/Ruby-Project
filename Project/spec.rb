@@ -139,7 +139,7 @@ RSpec.describe 'Parser' do
       end
     end
 
-        context '#*' do
+    context '#*' do
       it 'can multiply without arguments' do
         expect(@parser.parse('(*)')).to eq 1
       end
@@ -206,94 +206,71 @@ RSpec.describe 'Parser' do
       end
     end
 
-    context '#-' do
-      it 'subtracts with one number' do
-        expect(@parser.parse('(- 1)')).to eq 1
-        expect(@parser.parse('(- 0)')).to eq 0
-        expect(@parser.parse('(- 1.0)')).to eq 1
-        expect(@parser.parse('(- 0.0)')).to eq 0
-        expect(@parser.parse('(- 0.99)')).to eq 0.99
+    context '#/' do
+      it 'throws ZeroDivisionError' do
+        #expect(@parser.parse('(/ 0)')).to eq 0
+        #expect(@parser.parse('(/ 1 0)')).to eq 0
+        #expect(@parser.parse('(/ 0 0)')).to eq 0
+        #expect(@parser.parse('(/ 1.5 0.0)')).to eq 0.0
+        #expect(@parser.parse('(/ 0.0)')).to eq 0.0
+        #expect(@parser.parse('(/ 0 0 0 0 0.0)')).to eq 0.0
+        #expect(@parser.parse('(/ 1.2 (*) (+))')).to eq 0.0
       end
 
-      it 'subtacts with two numbers' do
-        expect(@parser.parse('(- 1 2)')).to eq -1
-        expect(@parser.parse('(- 1 0)')).to eq 1
-        expect(@parser.parse('(- 1 1.5)')).to eq -0.5
-        expect(@parser.parse('(- 1.5 1)')).to eq 0.5
-        expect(@parser.parse('(- 1.5 1.5)')).to eq 0
-      end
-
-      it 'subtracts with more than two numbers' do
-        expect(@parser.parse('(- 1 2 3)')).to eq -4
-        expect(@parser.parse('(- 1 2 3 4 5)')).to eq -13
-        expect(@parser.parse('(- 1 2 3 4.5 4.5)')).to eq -13
-      end
-
-      it 'can subtract with other functions' do
-        expect(@parser.parse('(- 1 (- 2 0) (- 2 1) (- 2 2) 5)')).to eq -7
-        expect(@parser.parse('(- (- (- 1 0) 1) (- 1 0))')).to eq -1
-        expect(@parser.parse('(- (- (- 1 0.0) 1) (- 1.0 0))')).to eq -1
-      end
-    end
-
-    context 'multiply' do
-      it 'multiplies with one number' do
-        expect(@parser.parse('(* 1)')).to eq 1
-        expect(@parser.parse('(* 0)')).to eq 0
-        expect(@parser.parse('(* 1.0)')).to eq 1
-        expect(@parser.parse('(* 0.0)')).to eq 0
-        expect(@parser.parse('(* 0.99)')).to eq 0.99
-      end
-
-      it 'multiplies with two numbers' do
-        expect(@parser.parse('(* 1 2)')).to eq 2
-        expect(@parser.parse('(* 1 0)')).to eq 0
-        expect(@parser.parse('(* 1 1.5)')).to eq 1.5
-        expect(@parser.parse('(* 1.5 1)')).to eq 1.5
-        expect(@parser.parse('(* 1.5 1.5)')).to eq 2.25
-      end
-
-      it 'multiplies with more than two numbers' do
-        expect(@parser.parse('(* 1 2 3)')).to eq 6
-        expect(@parser.parse('(* 1 2 3 4 5)')).to eq 120
-        expect(@parser.parse('(* 1 2 3 4.5 4.5)')).to eq 121.5
-        expect(@parser.parse('(* 1.0 1 3.1)')).to eq 3.1
-      end
-
-      it 'can multiply with other functions' do
-        expect(@parser.parse('(* 1 (* 2 1) (* 2 1) (* 2 2) 5)')).to eq 80
-        expect(@parser.parse('(* (* (* 1 0) 1) (* 1 0))')).to eq 0
-        expect(@parser.parse('(* (* (* 1 2) 1) (* 1 2.1))')).to eq 4.2
-      end
-    end
-
-    context 'devide' do
-      it 'devides with one number' do
+      it 'can divide with one arguments' do
         expect(@parser.parse('(/ 1)')).to eq 1
-        expect(@parser.parse('(/ 0)')).to eq 0
-        expect(@parser.parse('(/ 0.99)')).to eq 0.99
-        expect(@parser.parse('(/ 1.99)')).to eq 1.99
+        expect(@parser.parse('(/ 1.0)')).to eq 1.0
+        expect(@parser.parse('(/ 0.9999)')).to eq 1.000100010001
+        expect(@parser.parse('(/ 0.0001)')).to eq 10000
+        expect(@parser.parse('(/ 0.5)')).to eq 2
+        expect(@parser.parse('(/ 1234567)')).to eq 8.100005913004317e-7
       end
 
-      it 'devides with two numbers' do
+      it 'can divide with two arguments' do
         expect(@parser.parse('(/ 1 2)')).to eq 0.5
-        expect(@parser.parse('(/ 1 0)')).to eq '+inf.0'
+        expect(@parser.parse('(/ -1 2)')).to eq -0.5
+        expect(@parser.parse('(/ 0 1)')).to eq 0
+        expect(@parser.parse('(/ 81 3)')).to eq 27
+        expect(@parser.parse('(/ 81 3.0)')).to eq 27.0
         expect(@parser.parse('(/ 1 1.5)')).to eq 0.6666666666666666
         expect(@parser.parse('(/ 1.5 1)')).to eq 1.5
-        expect(@parser.parse('(/ 1.5 1.5)')).to eq 1
+        expect(@parser.parse('(/ 1.0 0.0001)')).to eq 10000.0
+        expect(@parser.parse('(/ 1.5 1.99)')).to eq 0.7537688442211056
       end
 
-      it 'devides with more than two numbers' do
-        expect(@parser.parse('(/ 1 2 3)')).to eq 0.16666666666666666
+      it 'can divide with more than two arguments' do
+        expect(@parser.parse('(/ 0.0 1 2)')).to eq 0.0
+        expect(@parser.parse('(/ 0 1 2)')).to eq 0
         expect(@parser.parse('(/ 1 2 3 4 5)')).to eq 0.008333333333333333
-        expect(@parser.parse('(/ 1 2 3 4.0 5.0)')).to eq 0.008333333333333333
-        expect(@parser.parse('(/ 1 2 3.0)')).to eq 0.16666666666666666
-        expect(@parser.parse('(/ 1.0 1 3.1)')).to eq 0.3225806451612903
+        expect(@parser.parse('(/ -1 2 3 4 5)')).to eq -0.008333333333333333
+        expect(@parser.parse('(/ -0.2 5)')).to eq -0.04
+        expect(@parser.parse('(/ 1 2 0.5 1)')).to eq 1.0
+        expect(@parser.parse('(/ 0.33 0.33 0.33 0.01)')).to eq 303.030303030303
+        expect(@parser.parse('(/ 1 2 0.001 0.009)')).to eq 55555.55555555556
+        expect(@parser.parse('(/ 1 0.0001 0.0009)')).to eq 11111111.111111112
       end
 
-      it 'can devide with other functions' do
-        expect(@parser.parse('(/ 1 (/ 2 1) (/ 2 1) (/ 2 2) 5)')).to eq 0.05
-        expect(@parser.parse('(/ (/ (/ 1 2) 1) (/ 1 2.1))')).to eq 1.05
+      it 'can divide with other functions' do
+        expect(@parser.parse('(/ 1 (+ 2) (+ 2 1))')).to eq 0.16666666666666666
+        expect(@parser.parse('(/ (+ (+ 1 0) 1) (+ 1 0))')).to eq 2
+        expect(@parser.parse('(/ (+ (+ 1 0.0) 1) (+ 1.0 0))')).to eq 2.0
+        expect(@parser.parse('(/ (* 2 3) (/ 81 3))')).to eq 0.2222222222222222
+        expect(@parser.parse('(/ 1.0 (+ (- 1)))')).to eq -1.0
+        expect(@parser.parse('(/ -1 2 (/ 5 2))')).to eq -0.2
+        expect(@parser.parse('(/ (* 0.33 6) (/ 22 7))')).to eq 0.63
+        expect(@parser.parse('(/ (string-length "John"))')).to eq 0.25
+        expect(@parser.parse('(/ (length (list 1 2)))')).to eq 0.5
+      end
+
+      it 'can divide with variables' do
+        @parser.parse('(define x 5)')
+        @parser.parse('(define y 0.999)')
+        expect(@parser.parse('(/ 1 x)')).to eq 0.2
+        expect(@parser.parse('(/ x y)')).to eq 5.005005005005005
+        expect(@parser.parse('(/ 5 (+ 0 0.5) y)')).to eq 10.01001001001001
+        expect(@parser.parse('(/ 0.001 x)')).to eq 0.0002
+        expect(@parser.parse('(/ x x x)')).to eq 0.2
+        expect(@parser.parse('(/ y x y x)')).to eq 0.04
       end
     end
   end
