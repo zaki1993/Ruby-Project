@@ -66,7 +66,8 @@ module SchemeStrings
   end
 
   def string?(other)
-    result = arg_function_validator other
+    raise 'Incorrect number of arguments' if other.size != 1
+    result = check_for_string other[0].to_s
     result ? '#t' : '#f'
   end
 
