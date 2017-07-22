@@ -81,7 +81,7 @@ module SchemeStrings
   end
 
   def strdowncase(other)
-    one_arg_function_validator other
+    arg_function_validator other
     other[0].downcase
   end
 
@@ -92,14 +92,14 @@ module SchemeStrings
   end
 
   def strsplit(other)
-    one_arg_function_validator other
+    arg_function_validator other
     str = remove_carriage other[0]
     result = str.split(' ').map { |s| '"' + s + '"' }
     build_list result
   end
 
   def strlist(other)
-    one_arg_function_validator other
+    arg_function_validator other
     result = other[0][1..-2].chars.map { |c| build_character c }
     build_list result
   end
