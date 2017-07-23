@@ -45,7 +45,7 @@ module SchemeStringsHelper
   def arg_function_validator(other, vars = 1)
     raise 'Incorrect number of arguments' if other.size != vars
     result = other[0..vars - 1].all? { |v| check_for_string v }
-    raise 'Incorrect parameter type' unless result
+    raise 'Invalid data type' unless result
     result
   end
 

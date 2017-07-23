@@ -576,6 +576,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-length' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(string-length 1)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(string-length)')).to eq @msg['inc_number']
       expect(@parser.parse('(string-length "a" "b")')).to eq @msg['inc_number']
@@ -593,6 +597,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'substring' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(substring #t 1 1)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(substring)')).to eq @msg['inc_number']
       expect(@parser.parse('(substring "a" 1 2 3)')).to eq @msg['inc_number']
