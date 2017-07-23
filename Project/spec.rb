@@ -207,6 +207,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'quotient' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(quotient 1 #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@parser.parse('(quotient 1 0)')).to eq @msg['zero_div']
     end
@@ -233,6 +237,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'remainder' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(remainder 1 #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@parser.parse('(remainder 1 0)')).to eq @msg['zero_div']
       expect(@parser.parse('(remainder 1 0.0)')).to eq @msg['zero_div']
@@ -260,6 +268,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'modulo' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(modulo 1 #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@parser.parse('(modulo 1 0)')).to eq @msg['zero_div']
       expect(@parser.parse('(modulo 1 0.0)')).to eq @msg['zero_div']
@@ -287,6 +299,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'numerator' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(numerator #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(numerator)')).to eq @msg['inc_number']
       expect(@parser.parse('(numerator 1 2)')).to eq @msg['inc_number']
@@ -312,6 +328,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'denominator' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(denominator #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(denominator)')).to eq @msg['inc_number']
       expect(@parser.parse('(denominator 1 2)')).to eq @msg['inc_number']
@@ -337,6 +357,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'abs' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(abs #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(abs)')).to eq @msg['inc_number']
       expect(@parser.parse('(abs 1 2)')).to eq @msg['inc_number']
@@ -356,6 +380,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'add1' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(add1 #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(add1)')).to eq @msg['inc_number']
       expect(@parser.parse('(add1 1 2)')).to eq @msg['inc_number']
@@ -375,6 +403,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'sub1' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(sub1 #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(sub1)')).to eq @msg['inc_number']
       expect(@parser.parse('(sub1 1 2)')).to eq @msg['inc_number']
@@ -394,6 +426,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'min' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(min #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(min)')).to eq @msg['inc_number']
     end
@@ -413,6 +449,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'max' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(min #t)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(max)')).to eq @msg['inc_number']
     end
@@ -432,6 +472,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#<' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(< #t #f)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(<)')).to eq @msg['inc_number']
       expect(@parser.parse('(< 1)')).to eq @msg['inc_number']
@@ -454,6 +498,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#>' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(> #t #f)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(>)')).to eq @msg['inc_number']
       expect(@parser.parse('(> 1)')).to eq @msg['inc_number']
@@ -476,6 +524,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#<=' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(<= #t #f)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(<=)')).to eq @msg['inc_number']
       expect(@parser.parse('(<= 1)')).to eq @msg['inc_number']
@@ -498,6 +550,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#>=' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(>= #t #f)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(>=)')).to eq @msg['inc_number']
       expect(@parser.parse('(>= 1)')).to eq @msg['inc_number']

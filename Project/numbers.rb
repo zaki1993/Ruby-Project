@@ -2,6 +2,7 @@
 module SchemeNumbersHelper
   def get_one_arg_function(other)
     raise 'Incorrect number of arguments' if other.size != 1
+    raise 'Invalid data type' unless check_for_number other[0]
     other[0].to_num
   end
 
@@ -24,6 +25,7 @@ module SchemeNumbersHelper
 
   def get_num_denom(other)
     num, other = find_next_value other
+    raise 'Invalid data type' unless check_for_number num
     return [num, 1] if other.empty?
     denom, other = find_next_value other
     raise 'Incorrect number of arguments' unless other.empty?
@@ -97,34 +99,34 @@ module SchemeNumbers
 
   def quotient(other)
     raise 'Incorrect number of arguments' if other.size != 2
-    x, y = other.map(&:to_num)
+    x, y = convert_to_num other
     result = divide_number x, y
     result < 0 ? result.ceil : result.floor
   end
 
   def remainder(other)
     raise 'Incorrect number of arguments' if other.size != 2
-    x, y = other.map(&:to_num)
+    x, y = convert_to_num other
     (x.abs % y.abs) * (x / x.abs)
   end
 
   def modulo(other)
     raise 'Incorrect number of arguments' if other.size != 2
-    x, y = other.map(&:to_num)
+    x, y = convert_to_num other
     x.modulo y
   end
 
   def numerator(other)
     other = num_denom_helper other
     result = (get_num_denom other)[0]
-    raise 'Number needed' unless check_for_number result
+    raise 'Invalid data type' unless check_for_number result
     result.to_num
   end
 
   def denominator(other)
     other = num_denom_helper other
     result = (get_num_denom other)[1]
-    raise 'Number needed' unless check_for_number result
+    raise 'Invalid data type' unless check_for_number result
     result.to_num
   end
 
