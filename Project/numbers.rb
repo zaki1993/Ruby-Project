@@ -38,6 +38,7 @@ module SchemeNumbersHelper
 
   def compare_value_arithmetic(other, oper)
     raise 'Incorrect number of arguments' if other.size < 2
+    other = other.map(&:to_num)
     result = other.each_cons(2).all? { |x, y| x.public_send oper, y }
     result ? '#t' : '#f'
   end
