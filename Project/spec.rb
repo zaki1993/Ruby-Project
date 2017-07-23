@@ -408,7 +408,6 @@ RSpec.describe 'LispInterpreter' do
 
     it 'can find the minumum value of multiple arguments' do
       expect(@parser.parse('(min 0 0)')).to eq 0
-      expect(@parser.parse('(min 1 2 3)')).to eq 1
       expect(@parser.parse('(min 4 2.1 9.5)')).to eq 2.1
       expect(@parser.parse('(min 5 3 1 2 4)')).to eq 1
       expect(@parser.parse('(min 1.99 1.98002 1.98001 2)')).to eq 1.98001
@@ -428,10 +427,97 @@ RSpec.describe 'LispInterpreter' do
 
     it 'can find the maximum value of multiple arguments' do
       expect(@parser.parse('(max 0 0)')).to eq 0
-      expect(@parser.parse('(max 1 2 3)')).to eq 3
       expect(@parser.parse('(max 4 2.1 9.5)')).to eq 9.5
       expect(@parser.parse('(max 5 3 1 2 4)')).to eq 5
       expect(@parser.parse('(max 1.9999999 2.000001 2)')).to eq 2.000001
+    end
+  end
+
+  describe '#<' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(<)')).to eq @messages['inc_number']
+      expect(@parser.parse('(< 1)')).to eq @messages['inc_number']
+    end
+
+    it 'returns true when called with <smaller> and <bigger> arguments' do
+      expect(@parser.parse('(< 1 2)')).to eq '#t'
+      expect(@parser.parse('(< 1.7 2.8 3)')).to eq '#t'
+    end
+
+    it 'returns false when called with <bigger> and <smaller> arguments' do
+      expect(@parser.parse('(< 3 2)')).to eq '#f'
+      expect(@parser.parse('(< 3.1 2.5 1.2)')).to eq '#f'
+    end
+
+    it 'returns false when called with equal arguments' do
+      expect(@parser.parse('(< 2 2.0)')).to eq '#f'
+      expect(@parser.parse('(< 2 2 2 2 2)')).to eq '#f'
+    end
+  end
+
+  describe '#>' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(>)')).to eq @messages['inc_number']
+      expect(@parser.parse('(> 1)')).to eq @messages['inc_number']
+    end
+
+    it 'returns true when called with <smaller> and <bigger> arguments' do
+      expect(@parser.parse('(> 3 2)')).to eq '#t'
+      expect(@parser.parse('(> 3.2 2.99 1.1)')).to eq '#t'
+    end
+
+    it 'returns false when called with <bigger> and <smaller> arguments' do
+      expect(@parser.parse('(> 1 2)')).to eq '#f'
+      expect(@parser.parse('(> 1.5 2.1 3.7)')).to eq '#f'
+    end
+
+    it 'returns false when called with equal arguments' do
+      expect(@parser.parse('(> 2 2.0)')).to eq '#f'
+      expect(@parser.parse('(> 2 2 2 2 2)')).to eq '#f'
+    end
+  end
+
+  describe '#<=' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(<=)')).to eq @messages['inc_number']
+      expect(@parser.parse('(<= 1)')).to eq @messages['inc_number']
+    end
+
+    it 'returns true when called with <smaller> and <bigger> arguments' do
+      expect(@parser.parse('(<= 1 2)')).to eq '#t'
+      expect(@parser.parse('(<= 1.5 2.1 3.6)')).to eq '#t'
+    end
+
+    it 'returns false when called with <bigger> and <smaller> arguments' do
+      expect(@parser.parse('(<= 3.1 2.1)')).to eq '#f'
+      expect(@parser.parse('(<= 3.2 2.2 1.2)')).to eq '#f'
+    end
+
+    it 'returns true when called with equal arguments' do
+      expect(@parser.parse('(<= 2 2.0)')).to eq '#t'
+      expect(@parser.parse('(<= 2 2 2 2 2)')).to eq '#t'
+    end
+  end
+
+  describe '#>=' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(>=)')).to eq @messages['inc_number']
+      expect(@parser.parse('(>= 1)')).to eq @messages['inc_number']
+    end
+
+    it 'returns true when called with <smaller> and <bigger> arguments' do
+      expect(@parser.parse('(>= 3 2)')).to eq '#t'
+      expect(@parser.parse('(>= 3.5 2.5 1.5)')).to eq '#t'
+    end
+
+    it 'returns false when called with <bigger> and <smaller> arguments' do
+      expect(@parser.parse('(>= 1 2)')).to eq '#f'
+      expect(@parser.parse('(>= 1.5 2.5 3.5)')).to eq '#f'
+    end
+
+    it 'returns true when called with equal arguments' do
+      expect(@parser.parse('(>= 2 2.0)')).to eq '#t'
+      expect(@parser.parse('(>= 2 2 2 2 2)')).to eq '#t'
     end
   end
 end
