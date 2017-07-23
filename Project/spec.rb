@@ -5,6 +5,11 @@ RSpec.describe 'LispInterpreter' do
     @parser = Parser.new
     @parser.parse('(define x 5)')
     @parser.parse('(define y 0.999)')
+    @messages =
+      {
+        'inc_number' => 'Incorrect number of arguments',
+        'zero_div' => 'divided by 0'
+      }
   end
 
   describe 'Literals' do
@@ -131,18 +136,17 @@ RSpec.describe 'LispInterpreter' do
 
   describe '/' do
     it 'throws ZeroDivisionError' do
-      expect(@parser.parse('(/ 0)')).to eq 'divided by 0'
+      expect(@parser.parse('(/ 0)')).to eq @messages['zero_div']
     end
 
-    it 'divides with no arguments' do
-      # expect(@parser.parse('(/)')).to eq 0
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(/)')).to eq @messages['inc_number']
     end
 
     it 'divides with single argument' do
       expect(@parser.parse('(/ 1)')).to eq 1
       expect(@parser.parse('(/ 10.0)')).to eq 0.1
       expect(@parser.parse('(/ 0.0)')).to eq 'Infinity'
-      expect(@parser.parse('(/ -0.0)')).to eq '-Infinity'
     end
 
     it 'divides with multiple arguments' do
@@ -163,38 +167,58 @@ RSpec.describe 'LispInterpreter' do
     end
   end
 
-  describe 'booleans' do
-    context 'not' do
-      it 'can negate with literals' do
-        expect(@parser.parse('(not #t)')).to eq '#f'
-        expect(@parser.parse('(not #f)')).to eq '#t'
-      end
-
-      it 'can negate with functions' do
-        expect(@parser.parse('(not (not #t))')).to eq '#t'
-        expect(@parser.parse('(not (not #f))')).to eq '#f'
-      end
+  describe 'not' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(quotient 10)')).to eq @messages['inc_number']
+      expect(@parser.parse('(quotient)')).to eq @messages['inc_number']
+      expect(@parser.parse('(quotient 1 3 3)')).to eq @messages['inc_number']
     end
 
-    context 'equal?' do
-      it 'can compare with literals' do
-        expect(@parser.parse('(equal? 1 1.0)')).to eq '#f'
-        expect(@parser.parse('(equal? 1 1)')).to eq '#t'
-        expect(@parser.parse('(equal? "Sample" "Sample")')).to eq '#t'
-        expect(@parser.parse('(equal? #t #f)')).to eq '#f'
-        expect(@parser.parse('(equal? \'yes \'yes)')).to eq '#t'
-        expect(@parser.parse('(equal? #\a #\b)')).to eq '#f'
-      end
+    it 'can negate with literals' do
+      expect(@parser.parse('(not #t)')).to eq '#f'
+      expect(@parser.parse('(not #f)')).to eq '#t'
+    end
 
-      it 'can compare with functions' do
-        expect(@parser.parse('(equal? (cons 1 2) (cons 1 2))')).to eq '#t'
-        expect(@parser.parse('(equal? (cons 1 2) \'(1 . 2))')).to eq '#t'
-        expect(@parser.parse('(equal? (not #t) (not #f))')).to eq '#f'
-      end
+    it 'can negate with functions' do
+      expect(@parser.parse('(not (not #t))')).to eq '#t'
+      expect(@parser.parse('(not (not #f))')).to eq '#f'
+    end
+  end
+
+  describe 'equal?' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(quotient 10)')).to eq @messages['inc_number']
+      expect(@parser.parse('(quotient)')).to eq @messages['inc_number']
+      expect(@parser.parse('(quotient 1 3 3)')).to eq @messages['inc_number']
+    end
+
+    it 'can compare with literals' do
+      expect(@parser.parse('(equal? 1 1.0)')).to eq '#f'
+      expect(@parser.parse('(equal? 1 1)')).to eq '#t'
+      expect(@parser.parse('(equal? "Sample" "Sample")')).to eq '#t'
+      expect(@parser.parse('(equal? #t #f)')).to eq '#f'
+      expect(@parser.parse('(equal? \'yes \'yes)')).to eq '#t'
+      expect(@parser.parse('(equal? #\a #\b)')).to eq '#f'
+    end
+
+    it 'can compare with functions' do
+      expect(@parser.parse('(equal? (cons 1 2) (cons 1 2))')).to eq '#t'
+      expect(@parser.parse('(equal? (cons 1 2) \'(1 . 2))')).to eq '#t'
+      expect(@parser.parse('(equal? (not #t) (not #f))')).to eq '#f'
     end
   end
 
   describe 'quotient' do
+    it 'throws ZeroDivisionError if second argument is 0' do
+      expect(@parser.parse('(quotient 1 0)')).to eq @messages['zero_div']
+    end
+
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(quotient 10)')).to eq @messages['inc_number']
+      expect(@parser.parse('(quotient)')).to eq @messages['inc_number']
+      expect(@parser.parse('(quotient 1 3 3)')).to eq @messages['inc_number']
+    end
+
     it 'can calculate quotient with integers' do
       expect(@parser.parse('(quotient 10 3)')).to eq 3
       expect(@parser.parse('(quotient -10 3)')).to eq '-3'.to_i
@@ -211,6 +235,17 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'remainder' do
+    it 'throws ZeroDivisionError if second argument is 0' do
+      expect(@parser.parse('(remainder 1 0)')).to eq @messages['zero_div']
+      expect(@parser.parse('(remainder 1 0.0)')).to eq @messages['zero_div']
+    end
+
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(remainder 10)')).to eq @messages['inc_number']
+      expect(@parser.parse('(remainder)')).to eq @messages['inc_number']
+      expect(@parser.parse('(remainder 1 3 3)')).to eq @messages['inc_number']
+    end
+
     it 'can calculate remainder with integers' do
       expect(@parser.parse('(remainder 10 3)')).to eq 1
       expect(@parser.parse('(remainder -10 3)')).to eq '-1'.to_i
@@ -227,6 +262,17 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'modulo' do
+    it 'throws ZeroDivisionError if second argument is 0' do
+      expect(@parser.parse('(modulo 1 0)')).to eq @messages['zero_div']
+      expect(@parser.parse('(modulo 1 0.0)')).to eq @messages['zero_div']
+    end
+
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(modulo 10)')).to eq @messages['inc_number']
+      expect(@parser.parse('(modulo)')).to eq @messages['inc_number']
+      expect(@parser.parse('(modulo 1 3 3)')).to eq @messages['inc_number']
+    end
+
     it 'can calculate modulo with integers' do
       expect(@parser.parse('(modulo 10 3)')).to eq 1
       expect(@parser.parse('(modulo -10 3)')).to eq 2
@@ -243,14 +289,61 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'numerator' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(numerator)')).to eq @messages['inc_number']
+      expect(@parser.parse('(numerator 1 2)')).to eq @messages['inc_number']
+    end
 
+    it 'calculates with integer' do
+      expect(@parser.parse('(numerator 5)')).to eq 5
+      expect(@parser.parse('(numerator 1)')).to eq 1
+      expect(@parser.parse('(numerator 0)')).to eq 0
+    end
+
+    it 'calculates with float' do
+      expect(@parser.parse('(numerator 5.3)')).to eq 5.3
+      expect(@parser.parse('(numerator 1.5)')).to eq 1.5
+      expect(@parser.parse('(numerator 0.7)')).to eq 0.7
+    end
+
+    it 'calculates with rational number' do
+      expect(@parser.parse('(numerator 5/6)')).to eq 5
+      expect(@parser.parse('(numerator 1/1)')).to eq 1
+      expect(@parser.parse('(numerator 1/0)')).to eq 1
+    end
   end
 
   describe 'denominator' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(denominator)')).to eq @messages['inc_number']
+      expect(@parser.parse('(denominator 1 2)')).to eq @messages['inc_number']
+    end
 
+    it 'calculates with integer' do
+      expect(@parser.parse('(denominator 5)')).to eq 1
+      expect(@parser.parse('(denominator 1)')).to eq 1
+      expect(@parser.parse('(denominator 0)')).to eq 1
+    end
+
+    it 'calculates with float' do
+      expect(@parser.parse('(denominator 5.3)')).to eq 1
+      expect(@parser.parse('(denominator 1.5)')).to eq 1
+      expect(@parser.parse('(denominator 0.7)')).to eq 1
+    end
+
+    it 'calculates with rational number' do
+      expect(@parser.parse('(denominator 5/6)')).to eq 6
+      expect(@parser.parse('(denominator 1/1.5)')).to eq 1.5
+      expect(@parser.parse('(denominator 1/0)')).to eq 0
+    end
   end
 
   describe 'abs' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(abs)')).to eq @messages['inc_number']
+      expect(@parser.parse('(abs 1 2)')).to eq @messages['inc_number']
+    end
+
     it 'can find the absolute value of integer' do
       expect(@parser.parse('(abs 1)')).to eq 1
       expect(@parser.parse('(abs -10)')).to eq 10
@@ -265,6 +358,11 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'add1' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(add1)')).to eq @messages['inc_number']
+      expect(@parser.parse('(add1 1 2)')).to eq @messages['inc_number']
+    end
+
     it 'can add 1 to integers' do
       expect(@parser.parse('(add1 1)')).to eq 2
       expect(@parser.parse('(add1 -1)')).to eq 0
@@ -279,6 +377,11 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'sub1' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(sub1)')).to eq @messages['inc_number']
+      expect(@parser.parse('(sub1 1 2)')).to eq @messages['inc_number']
+    end
+
     it 'can subtract 1 with integers' do
       expect(@parser.parse('(sub1 1)')).to eq 0
       expect(@parser.parse('(sub1 -1)')).to eq '-2'.to_i
@@ -293,8 +396,8 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'min' do
-    it 'throws argument exception if no arguments provided' do
-      expect(@parser.parse('(min)')).to eq 'min takes at least 1 argument'
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(min)')).to eq @messages['inc_number']
     end
 
     it 'can find the minumum value of single argument' do
@@ -313,8 +416,8 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'max' do
-    it 'throws argument exception if no arguments provided' do
-      expect(@parser.parse('(max)')).to eq 'max takes at least 1 argument'
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@parser.parse('(max)')).to eq @messages['inc_number']
     end
 
     it 'can find the maximum value of single argument' do
