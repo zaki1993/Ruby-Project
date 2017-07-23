@@ -70,7 +70,7 @@ module SchemeNumbers
   end
 
   def -(other)
-    raise 'Incorrect number of arguments' if other.empty?
+    return 0 if other.empty?
     other = other.map(&:to_num)
     return -other[0] if other.size == 1
     other[0] + other[1..-1].reduce(0, :-)
