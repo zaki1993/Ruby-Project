@@ -1,7 +1,9 @@
 # Helper functions for SchemeStrings
 module SchemeStringsHelper
   def substring_builder(str, from, to)
-    '"' + (str[1..-2])[from..(to.nil? ? -1 : to - 1)] + '"'
+    result = (str[1..-2])[from..(to.nil? ? -1 : to - 1)]
+    return '""' if result.nil?
+    '"' + result + '"'
   end
 
   def find_delimeter(other)
@@ -43,7 +45,7 @@ module SchemeStringsHelper
   def arg_function_validator(other, vars = 1)
     raise 'Incorrect number of arguments' if other.size != vars
     result = other[0..vars - 1].all? { |v| check_for_string v }
-    raise 'String needed' unless result
+    raise 'Incorrect parameter type' unless result
     result
   end
 
@@ -61,7 +63,9 @@ module SchemeStrings
   def substring(other)
     raise 'Incorrect number of arguments' unless other.size.between? 2, 3
     str, from, to = other
-    raise 'Integer needed' unless to.nil? || (check_for_number to.to_s)
+    arg_function_validator [str]
+    valid = (check_for_number from) && (to.nil? || (check_for_number to))
+    raise 'Incorrect parameter type' unless valid
     substring_builder str, from.to_num, to.to_num
   end
 
