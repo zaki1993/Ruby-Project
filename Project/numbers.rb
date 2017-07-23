@@ -38,9 +38,16 @@ module SchemeNumbersHelper
 
   def compare_value_arithmetic(other, oper)
     raise 'Incorrect number of arguments' if other.size < 2
-    other = other.map(&:to_num)
+    other = convert_to_num other
     result = other.each_cons(2).all? { |x, y| x.public_send oper, y }
     result ? '#t' : '#f'
+  end
+
+  def convert_to_num(other)
+    other.each do |t|
+      raise 'Invalid data type' unless check_for_number t
+    end
+    other.map(&:to_num)
   end
 end
 
@@ -65,26 +72,26 @@ module SchemeNumbers
   end
 
   def +(other)
-    other = other.map(&:to_num)
+    other = convert_to_num other
     other.reduce(0, :+)
   end
 
   def -(other)
     return 0 if other.empty?
-    other = other.map(&:to_num)
+    other = convert_to_num other
     return -other[0] if other.size == 1
     other[0] + other[1..-1].reduce(0, :-)
   end
 
   def *(other)
-    other = other.map(&:to_num)
+    other = convert_to_num other
     other.reduce(1, :*)
   end
 
   def /(other)
     raise 'Incorrect number of arguments' if other.empty?
+    other = convert_to_num other
     return (divide_number 1, other[0].to_num) if other.size == 1
-    other = other.map(&:to_num)
     other[1..-1].inject(other[0]) { |res, t| divide_number res, t }
   end
 
@@ -135,13 +142,13 @@ module SchemeNumbers
 
   def min(other)
     raise 'Incorrect number of arguments' if other.empty?
-    other = other.map(&:to_num)
+    other = convert_to_num other
     other.min
   end
 
   def max(other)
     raise 'Incorrect number of arguments' if other.empty?
-    other = other.map(&:to_num)
+    other = convert_to_num other
     other.max
   end
 end

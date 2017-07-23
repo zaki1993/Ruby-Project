@@ -8,7 +8,7 @@ module SchemeBooleansHelper
 
   def if_result_helper(other)
     values = find_all_values other
-    raise 'Incorect number of arguments' unless values.size == 2
+    raise 'Incorrect number of arguments' unless values.size == 2
     values
   end
 
@@ -29,20 +29,20 @@ end
 module SchemeBooleans
   include SchemeBooleansHelper
   def equal?(other)
-    raise 'Incorect number of arguments' if other.size != 2
+    raise 'Incorrect number of arguments' if other.size != 2
     other[0].to_s == other[1].to_s ? '#t' : '#f'
   end
 
   def not(other)
-    raise 'Incorect number of arguments' if other.size != 1
-    raise 'Boolean needed' unless check_for_bool other[0]
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'Invalid data type' unless check_for_bool other[0]
     other[0] == '#t' ? '#f' : '#t'
   end
 
   def if(other)
     idx = if_idx_helper other
     expr = if_expr_helper other, idx
-    raise 'Boolean needed' unless check_for_bool expr
+    raise 'Invalid data type' unless check_for_bool expr
     result = if_result_helper other[idx + 1..-1]
     expr == '#t' ? result[0] : result[1]
   end

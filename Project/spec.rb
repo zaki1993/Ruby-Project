@@ -8,24 +8,26 @@ RSpec.describe 'LispInterpreter' do
     @msg =
       {
         'inc_number' => 'Incorrect number of arguments',
-        'zero_div' => 'divided by 0'
+        'zero_div' => 'divided by 0',
+        'inv_type' => 'Invalid data type'
       }
   end
 
   describe 'Literals' do
+    it 'throws invalid variable error when the data is invalid' do
+      expect(@parser.parse('#\invalid')).to eq @msg['inv_type']
+    end
+
     it 'can parse integers' do
       expect(@parser.parse('1')).to eq '1'
-      expect(@parser.parse('5')).to eq '5'
     end
 
     it 'can parse floats' do
       expect(@parser.parse('1.5')).to eq '1.5'
-      expect(@parser.parse('0.99')).to eq '0.99'
     end
 
     it 'can parse strings' do
       expect(@parser.parse('"Sample"')).to eq '"Sample"'
-      expect(@parser.parse('"Hello world"')).to eq '"Hello world"'
     end
 
     it 'can parse booleans' do
@@ -45,6 +47,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '+' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(+ "not number")')).to eq @msg['inv_type']
+    end
+
     it 'sums with no arguments' do
       expect(@parser.parse('(+)')).to eq 0
     end
@@ -69,6 +75,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '-' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(- "not number")')).to eq @msg['inv_type']
+    end
+
     it 'subtracts with no arguments' do
       expect(@parser.parse('(-)')).to eq 0
     end
@@ -93,6 +103,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '*' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(* "not number")')).to eq @msg['inv_type']
+    end
+
     it 'multiplies with no arguments' do
       expect(@parser.parse('(*)')).to eq 1
     end
@@ -117,6 +131,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '/' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(/ "not number")')).to eq @msg['inv_type']
+    end
+
     it 'throws ZeroDivisionError' do
       expect(@parser.parse('(/ 0)')).to eq @msg['zero_div']
     end
@@ -144,6 +162,10 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'not' do
+    it 'throws type error when the data is invalid' do
+      expect(@parser.parse('(not 3)')).to eq @msg['inv_type']
+    end
+
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@parser.parse('(quotient 10)')).to eq @msg['inc_number']
       expect(@parser.parse('(quotient)')).to eq @msg['inc_number']
@@ -534,7 +556,6 @@ RSpec.describe 'LispInterpreter' do
       expect(@parser.parse('(substring "Apple" 4 2)')).to eq '""'
       expect(@parser.parse('(substring "Sample" 15 16)')).to eq '""'
       expect(@parser.parse('(substring "Sample" 0 0)')).to eq '"Sample"'
-
     end
   end
 end

@@ -329,6 +329,6 @@ class Tokenizer
     check = check_instance_var var
     return instance_variable_get("@#{var}") if check
     valid = valid_var var
-    valid ? var : (raise 'Invalid variable')
+    valid ? var : (raise 'Invalid data type')
   end
 end
