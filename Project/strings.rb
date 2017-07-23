@@ -59,7 +59,6 @@ end
 # Scheme numbers module
 module SchemeStrings
   include SchemeStringsHelper
-  # TODO Handle incorrect argument type
   def substring(other)
     raise 'Incorrect number of arguments' unless other.size.between? 2, 3
     str, from, to = other
@@ -131,7 +130,7 @@ module SchemeStrings
 
   def strjoin(other)
     raise 'Incorrect number of arguments' unless other.size.between? 1, 2
-    raise 'List needed' unless other[0].to_s.list?
+    raise 'Invalid data type' unless other[0].to_s.list?
     arg_function_validator [other[1]] if other.size == 2
     string_join_helper other[0], other[1]
   end
