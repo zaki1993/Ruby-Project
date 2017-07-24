@@ -107,9 +107,8 @@ module SchemeListsHelper
 
   def car_cdr_values(other)
     raise 'Incorrect number of arguments' if other.size != 1
-    raise 'Invalid data type' unless other[0].list? || other[0].pair?
     return find_list_function_value other if other[0].list?
-    (split_list_string other[0].to_s)[2..-2]
+    (split_list_string other[0].to_s)[2..-2] if other[0].pair?
   end
 
   def equalize_lists(other)
@@ -138,12 +137,14 @@ module SchemeLists
 
   def car(other)
     value = car_cdr_values other
+    raise 'Invalid data type' if value.nil?
     raise 'Cannot apply car on nil' if value.empty?
     value.shift
   end
 
   def cdr(other)
     value = car_cdr_values other
+    raise 'Invalid data type' if value.nil?
     raise 'Cannot apply cdr on nil' if value.empty?
     idx = value[1] == '.' ? 2 : 1
     build_list value[idx..-1]
@@ -225,11 +226,7 @@ module SchemeLists
     build_list values.shuffle
   end
 
-  def apply(other)
+  def apply(other) end
 
-  end
-
-  def car_cdr_infinite(other)
-
-  end
+  def car_cdr_infinite(other) end
 end
