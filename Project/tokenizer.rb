@@ -131,6 +131,7 @@ class Tokenizer
         'foldr',
         'map',
         'filter',
+        'if',
         'numerator',
         'denominator'
       ]
