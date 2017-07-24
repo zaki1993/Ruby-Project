@@ -316,8 +316,26 @@ class Tokenizer
     set_var var, values[0]
   end
 
+  def set_values_define(other, params, args)
+    other.each_with_index do |t, idx|
+      if params.include? t
+        i = params.index t
+        other[idx] = args[i]
+      end
+    end
+    other
+  end
+
   def define_function(other)
-    puts 'function: ' + other.to_s
+      idx = find_bracket_idx other, 0
+      name, *params = other[1..idx - 1]
+      @custom << name
+      define_singleton_method name.to_sym do |args|
+        raise 'Invalid number of arguments' if args.size != params.size
+        local_params = params
+        temp = set_values_define other[idx + 1..-1], local_params, args
+        calc_input_val temp
+      end
   end
 
   def set_var(var, value)
