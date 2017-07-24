@@ -123,6 +123,7 @@ class Tokenizer
 
   def initialize
     @other = []
+    @custom = []
     @predefined = []
     @do_not_calculate =
       [
@@ -223,6 +224,7 @@ class Tokenizer
       arr.each do |t|
         break t if !t.match(/[[:alpha:]]/).nil? || (operations.include? t)
       end
+    return m_name if @custom.include? m_name
     return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
