@@ -76,7 +76,7 @@ module SchemeListsHelper
 
   def find_list_function_value(other)
     raise 'Incorrect number of arguments' if other.size != 1
-    raise 'List needed' unless other[0].list?
+    raise 'Invalid data type' unless other[0].list?
     split_list_as_string other[0].to_s
   end
 
@@ -107,6 +107,7 @@ module SchemeListsHelper
 
   def car_cdr_values(other)
     raise 'Incorrect number of arguments' if other.size != 1
+    raise 'Invalid data type' unless other[0].list? || other[0].pair?
     return find_list_function_value other if other[0].list?
     (split_list_string other[0].to_s)[2..-2]
   end
@@ -137,13 +138,13 @@ module SchemeLists
 
   def car(other)
     value = car_cdr_values other
-    raise 'Cannot apply operation on nil' if value.empty?
+    raise 'Cannot apply car on nil' if value.empty?
     value.shift
   end
 
   def cdr(other)
     value = car_cdr_values other
-    raise 'Cannot apply operation on nil' if value.empty?
+    raise 'Cannot apply cdr on nil' if value.empty?
     idx = value[1] == '.' ? 2 : 1
     build_list value[idx..-1]
   end
@@ -222,6 +223,10 @@ module SchemeLists
   def shuffle(other)
     values = find_list_function_value other
     build_list values.shuffle
+  end
+
+  def apply(other)
+
   end
 
   def car_cdr_infinite(other)

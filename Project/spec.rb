@@ -872,4 +872,130 @@ RSpec.describe 'LispInterpreter' do
       expect(@p.parse('(string-join (list 1 2) "potato")')).to eq '"1potato2"'
     end
   end
+
+  describe 'null?' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@p.parse('(null?)')).to eq @msg['inc_number']
+      expect(@p.parse('(null? \'() 1)')).to eq @msg['inc_number']
+    end
+
+    it 'returns true when <null> is provided' do
+      expect(@p.parse('(null? \'())')).to eq '#t'
+      expect(@p.parse('(null? null)')).to eq '#t'
+      expect(@p.parse('(null? (list))')).to eq '#t'
+    end
+
+    it 'returns false when non empty list is provided' do
+      expect(@p.parse('(null? \'(1 2))')).to eq '#f'
+      expect(@p.parse('(null? (cons 1 \'()))')).to eq '#f'
+      expect(@p.parse('(null? (list 1 2))')).to eq '#f'
+    end
+
+    it 'returns false when literals are provided as argument' do
+      expect(@p.parse('(null? 1)')).to eq '#f'
+      expect(@p.parse('(null? 1.5)')).to eq '#f'
+      expect(@p.parse('(null? "string")')).to eq '#f'
+      expect(@p.parse('(null? #t)')).to eq '#f'
+      expect(@p.parse('(null? \'quote)')).to eq '#f'
+    end
+  end
+
+  describe 'cons' do
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@p.parse('(cons)')).to eq @msg['inc_number']
+      expect(@p.parse('(cons 1)')).to eq @msg['inc_number']
+      expect(@p.parse('(cons 1 2 3)')).to eq @msg['inc_number']
+    end
+
+    it 'returns <pair> when the second argument is not <list>' do
+      expect(@p.parse('(cons 1 2)')).to eq '\'(1 . 2)'
+      expect(@p.parse('(cons 1 (cons 2 3))')).to eq '\'(1 2 . 3)'
+    end
+
+    it 'returns <list> when the second argument is <list>' do
+      expect(@p.parse('(cons 1 \'())')).to eq '\'(1)'
+      expect(@p.parse('(cons 1 null)')).to eq '\'(1)'
+      expect(@p.parse('(cons 1 (list))')).to eq '\'(1)'
+      expect(@p.parse('(cons 1 (cons 2 \'()))')).to eq '\'(1 2)'
+      expect(@p.parse('(cons 1 (list 2 3))')).to eq '\'(1 2 3)'
+    end
+  end
+
+  describe '#reserverd_keywords' do
+    context '#null' do
+      it 'returns empty list' do
+        expect(@p.parse('null')).to eq '\'()'
+      end
+    end
+  end
+
+  describe 'list' do
+    it 'returns empty list when no arguments are provided' do
+      expect(@p.parse('(list)')).to eq '\'()'
+    end
+
+    it 'returns non empty list when 1 or more arguments are provided' do
+      expect(@p.parse('(list 1)')).to eq '\'(1)'
+      expect(@p.parse('(list 1 "s")')).to eq '\'(1 "s")'
+      result = '\'(1 \'(#t . #f) \'quote)'
+      expect(@p.parse('(list 1 (cons #t #f) \'quote)')).to eq result
+    end
+  end
+
+  describe 'car' do
+    it 'throws error when the argument is not <list> or <pair>' do
+      expect(@p.parse('(car 1)')).to eq @msg['inv_type']
+    end
+
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@p.parse('(car)')).to eq @msg['inc_number']
+      expect(@p.parse('(car \'(1 2) \'(1 2))')).to eq @msg['inc_number']
+    end
+
+    it 'throws error when <null> provided' do
+      msg = 'Cannot apply car on nil'
+      expect(@p.parse('(car null)')).to eq msg
+      expect(@p.parse('(car (list))')).to eq msg
+      expect(@p.parse('(car \'())')).to eq msg
+    end
+
+    it 'returns the first element of <pair>' do
+      expect(@p.parse('(car (cons 1 2))')).to eq '1'
+      expect(@p.parse('(car \'( #t . 2))')).to eq '#t'
+    end
+
+    it 'returns the first element of <list>' do
+      expect(@p.parse('(car (list #f 2 3 4))')).to eq '#f'
+      expect(@p.parse('(car \'(1 2 3 4))')).to eq '1'
+    end
+  end
+
+  describe 'cdr' do
+    it 'throws error when the argument is not <list> or <pair>' do
+      expect(@p.parse('(cdr 1)')).to eq @msg['inv_type']
+    end
+
+    it 'throws argument error when wrong number of arguments are provided' do
+      expect(@p.parse('(cdr)')).to eq @msg['inc_number']
+      expect(@p.parse('(cdr \'(1 2) \'(1 2))')).to eq @msg['inc_number']
+    end
+
+    it 'throws error when <null> provided' do
+      msg = 'Cannot apply cdr on nil'
+      expect(@p.parse('(cdr null)')).to eq msg
+      expect(@p.parse('(cdr (list))')).to eq msg
+      expect(@p.parse('(cdr \'())')).to eq msg
+    end
+
+    it 'returns list of rest of the <pair>' do
+      expect(@p.parse('(cdr (cons 1 2))')).to eq '\'(2)'
+      expect(@p.parse('(cdr \'( "sample" . #t))')).to eq '\'(#t)'
+      expect(@p.parse('(cdr (cons 1 (cons 2 3)))')).to eq '\'(2 . 3)'
+    end
+
+    it 'returns the first element of <list>' do
+      expect(@p.parse('(cdr (list #f 2 3 4))')).to eq '\'(2 3 4)'
+      expect(@p.parse('(cdr \'(1 2 3 4))')).to eq '\'(2 3 4)'
+    end
+  end
 end

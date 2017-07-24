@@ -134,6 +134,7 @@ class Tokenizer
         'filter',
         'if',
         'numerator',
+        'apply',
         'denominator'
       ]
     @reserved =
