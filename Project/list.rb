@@ -229,4 +229,38 @@ module SchemeLists
   def apply(other) end
 
   def car_cdr_infinite(other) end
+  
+    def lambda(other)
+    if other[0] == 'lambda'
+      eval_lambda other[1..-1]
+    else
+      proc_lambda other
+    end
+  end
+  
+  def find_params_lambda(other)
+    idx =
+      if other[0] == '('
+        idx = find_bracket_idx other, 0
+      else
+        raise 'Unbound symbol' + other[0].to_s
+      end
+    [other[1..idx - 1], other[idx + 1..-1]]
+  end
+  
+  def eval_lambda(other)
+    idx = find_bracket_idx other.unshift('('), 0
+    to_eval = other[1..idx - 1]
+    call_values = find_all_values other[idx + 1..-1]
+    (proc_lambda to_eval).call *call_values
+  end
+  
+  def proc_lambda(other)
+    params, other = find_params_lambda other
+    proc = -> (*args) do
+      temp = set_values_define other.dup, params, args
+      calc_input_val temp
+    end
+    proc
+  end
 end
