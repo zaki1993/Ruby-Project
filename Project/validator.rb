@@ -25,7 +25,7 @@ module Validator
   end
 
   def valid_function(name)
-    res = (predefined_method_caller [name]) || (custom_method_caller [name])
+    res = predefined_method_caller [name]
     raise 'No such procedure' if res.nil?
     true
   end
