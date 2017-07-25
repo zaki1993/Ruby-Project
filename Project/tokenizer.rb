@@ -136,6 +136,7 @@ class Tokenizer
         'if',
         'numerator',
         'apply',
+        'lambda',
         'denominator'
       ]
     @reserved =
@@ -174,7 +175,7 @@ class Tokenizer
     split_token token
     begin
       calc_input_val @other
-    rescue Exception => e
+    rescue RuntimeError => e
       e.message
     end
   end
@@ -198,7 +199,7 @@ class Tokenizer
     get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
     return get_raw_value arr unless get_raw
     m_name = predefined_method_caller arr
-    call_predefined_method m_name.to_s, arr[2..-2]
+    call_predefined_method m_name, arr[2..-2]
   end
 
   def find_all_values(other)
@@ -210,13 +211,13 @@ class Tokenizer
     result
   end
 
-  def call_predefined_method(name, arr)
-    return name.call *arr if name.is_a? Proc
-    if @do_not_calculate.include? name
-      send name.to_s, arr
-    elsif !name.nil?
+  def call_predefined_method(m_name, arr)
+    return m_name.call *arr if m_name.is_a? Proc
+    if @do_not_calculate.include? m_name
+      send m_name.to_s, arr
+    elsif !m_name.nil?
       values = find_all_values arr
-      send name.to_s, values
+      send m_name.to_s, values
     else
     end
   end
@@ -236,7 +237,7 @@ class Tokenizer
 
   def get_raw_value(token)
     if token.pair? || token.list?
-      build_list (no_eval_list token[2..-2])
+      build_list no_eval_list token[2..-2]
     else
       return if token.empty?
       token = token.join('') if token.is_a? Array
@@ -313,9 +314,9 @@ class Tokenizer
   def define_var(var, values)
     raise 'Incorrect number of arguments' if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
-    valid = (valid_var values[0].to_s) || values[0].lambda?
+    valid = (valid_var values[0].to_s) || (values[0].is_a? Proc)
     raise 'Invalid parameter' unless valid
-    @procs[var] = values[0] if values[0].lambda?
+    @procs[var] = values[0] if values[0].is_a? Proc
     set_var var, values[0]
   end
 
@@ -330,15 +331,15 @@ class Tokenizer
   end
 
   def define_function(other)
-      idx = find_bracket_idx other, 0
-      name, *params = other[1..idx - 1]
-      @custom << name
-      define_singleton_method name.to_sym do |args|
-        raise 'Invalid number of arguments' if args.size != params.size
-        local_params = params
-        temp = set_values_define other[idx + 1..-1], local_params, args
-        calc_input_val temp
-      end
+    idx = find_bracket_idx other, 0
+    name, *params = other[1..idx - 1]
+    @custom << name
+    define_singleton_method name.to_sym do |args|
+      raise 'Invalid number of arguments' if args.size != params.size
+      local_params = params
+      temp = set_values_define other[idx + 1..-1], local_params, args
+      calc_input_val temp
+    end
   end
 
   def set_var(var, value)

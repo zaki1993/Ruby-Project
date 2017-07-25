@@ -121,6 +121,11 @@ module SchemeListsHelper
     idx = values.index(to_check)
     build_list values[idx..-1]
   end
+
+  def map_helper(lst, func)
+    return lst.map { |t| func.call *t } if func.is_a? Proc
+    return lst.map { |t| send func, t } unless func.is_a? Proc
+  end
 end
 
 # Scheme lists module
@@ -174,15 +179,13 @@ module SchemeLists
     value = find_list_function_value other
     build_list value.reverse
   end
-  
+
   def map(other)
     func, other = valid_function other
     lst = find_all_values other
     lst = lst.map { |t| find_list_function_value [t] }
     lst = (equalize_lists lst).transpose
-    result = lst.map { |t| func.call *t } if func.is_a? Proc
-    result = lst.map { |t| send func, t } unless func.is_a? Proc
-    build_list result
+    build_list map_helper lst, func
   end
 
   def foldl(other)
@@ -229,35 +232,31 @@ module SchemeLists
   def apply(other) end
 
   def car_cdr_infinite(other) end
-  
-    def lambda(other)
+
+  def lambda(other)
     if other[0] == 'lambda'
       eval_lambda other[1..-1]
     else
       proc_lambda other
     end
   end
-  
+
   def find_params_lambda(other)
-    idx =
-      if other[0] == '('
-        idx = find_bracket_idx other, 0
-      else
-        raise 'Unbound symbol' + other[0].to_s
-      end
+    raise 'Unbound symbol ' + other.to_s if other[0] != '('
+    idx = find_bracket_idx other, 0
     [other[1..idx - 1], other[idx + 1..-1]]
   end
-  
+
   def eval_lambda(other)
     idx = find_bracket_idx other.unshift('('), 0
     to_eval = other[1..idx - 1]
     call_values = find_all_values other[idx + 1..-1]
     (proc_lambda to_eval).call *call_values
   end
-  
+
   def proc_lambda(other)
     params, other = find_params_lambda other
-    proc = -> (*args) do
+    proc = ->(*args) do
       temp = set_values_define other.dup, params, args
       calc_input_val temp
     end

@@ -26,14 +26,14 @@ module Validator
 
   def valid_function(fn)
     idx = fn[0] == '(' ? (find_bracket_idx fn, 0) : 0
-    func = 
+    func =
       if idx.zero?
         predefined_method_caller [fn[idx]]
       else
         calc_input_val fn[0..idx]
       end
     raise 'No such procedure' if func.nil? && (!func.is_a? Proc)
-    return [func, fn[idx + 1..-1]]
+    [func, fn[idx + 1..-1]]
   end
 
   private
