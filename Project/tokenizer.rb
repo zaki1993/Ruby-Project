@@ -41,7 +41,8 @@ class Object
 
   def object_split
     result = to_s.split(/(\(|\)|\.)|\ /)
-    result.delete('')
+    result
+    .delete('')
     result
   end
 
@@ -69,7 +70,7 @@ module SchemeChecker
   end
 
   def check_for_number(token)
-    return true if token.number?
+    return true if token.to_s.number?
     is_instance_var = check_instance_var token
     return true if is_instance_var && (check_for_number get_var token)
     false
@@ -93,6 +94,7 @@ module SchemeChecker
   end
 
   def check_instance_var(var)
+    return false if var.is_a? Proc
     return false unless valid_var_name var
     instance_variable_defined?("@#{var}")
   end
@@ -226,8 +228,10 @@ class Tokenizer
     operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
     m_name =
       arr.each do |t|
+        break t if t.is_a? Proc
         break t if !t.match(/[[:alpha:]]/).nil? || (operations.include? t)
       end
+    return m_name if m_name.is_a? Proc
     return @procs[m_name] if @procs.key? m_name
     return m_name if @custom.include? m_name
     return m_name if operations.include? m_name
@@ -321,6 +325,7 @@ class Tokenizer
   end
 
   def set_values_define(other, params, args)
+    args = [args] unless args.is_a? Array
     other.each_with_index do |t, idx|
       if params.include? t
         i = params.index t
@@ -330,15 +335,38 @@ class Tokenizer
     other
   end
 
+  def define_func_helper(other, params, args)
+    puts args.to_s
+    temp = set_values_define other, params, args
+    calc_input_val temp
+  end
+
+  def arg_finder(args)
+    result = []
+    until args.empty?
+      name = predefined_method_caller [args[0].to_s]
+      puts name
+      if !name.nil?
+        args = args[1..-1]
+        result << name
+      else
+        res, args = find_next_value args
+        result << res
+      end
+    end
+    result
+  end
+
   def define_function(other)
     idx = find_bracket_idx other, 0
     name, *params = other[1..idx - 1]
     @custom << name
+    @do_not_calculate << name
     define_singleton_method name.to_sym do |args|
+      args = arg_finder args
       raise 'Invalid number of arguments' if args.size != params.size
       local_params = params
-      temp = set_values_define other[idx + 1..-1], local_params, args
-      calc_input_val temp
+      define_func_helper other[idx + 1..-1], local_params, args
     end
   end
 

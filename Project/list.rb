@@ -189,15 +189,15 @@ module SchemeLists
   end
 
   def foldl(other)
-    valid_function other[0]
-    val_one, val_two = get_fold_values other[1..-1]
-    foldl_helper other[0], val_one, val_two
+    func, other = valid_function other
+    val_one, val_two = get_fold_values other
+    foldl_helper func, val_one, val_two
   end
 
   def foldr(other)
-    valid_function other[0]
-    val_one, val_two = get_fold_values other[1..-1]
-    foldr_helper other[0], val_one, val_two
+    func, other = valid_function other
+    val_one, val_two = get_fold_values other
+    foldr_helper func, val_one, val_two
   end
 
   def filter(other)
@@ -257,8 +257,8 @@ module SchemeLists
   def proc_lambda(other)
     params, other = find_params_lambda other
     proc = ->(*args) do
-      temp = set_values_define other.dup, params, args
-      calc_input_val temp
+      args = arg_finder args
+      define_func_helper other.dup, params.dup, args
     end
     proc
   end
