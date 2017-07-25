@@ -174,14 +174,14 @@ module SchemeLists
     value = find_list_function_value other
     build_list value.reverse
   end
-
+  
   def map(other)
-    valid_function other[0]
-    lists = find_all_values other[1..-1]
-    lists = lists.map { |t| find_list_function_value [t] }
-    lists = equalize_lists lists
-    lists = lists.transpose
-    result = lists.map { |t| send other[0], t }
+    func, other = valid_function other
+    lst = find_all_values other
+    lst = lst.map { |t| find_list_function_value [t] }
+    lst = (equalize_lists lst).transpose
+    result = lst.map { |t| func.call *t } if func.is_a? Proc
+    result = lst.map { |t| send func, t } unless func.is_a? Proc
     build_list result
   end
 
