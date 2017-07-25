@@ -315,7 +315,8 @@ class Tokenizer
   def define_var(var, values)
     raise 'Incorrect number of arguments' if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
-    raise 'Invalid parameter' unless valid_var values[0].to_s
+    valid = (valid_var values[0].to_s) || values[0].lambda?
+    raise 'Invalid parameter' unless valid
     set_var var, values[0]
   end
 
