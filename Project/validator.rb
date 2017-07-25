@@ -24,10 +24,16 @@ module Validator
     (valid_literals var) || (valid_objects var)
   end
 
-  def valid_function(name)
-    res = predefined_method_caller [name]
-    raise 'No such procedure' if res.nil?
-    true
+  def valid_function(fn)
+    idx = fn[0] == '(' ? (find_bracket_idx fn, 0) : 0
+    func = 
+      if idx.zero?
+        predefined_method_caller [fn[idx]]
+      else
+        calc_input_val fn[0..idx]
+      end
+    raise 'No such procedure' if func.nil? && (!func.is_a? Proc)
+    return [func, fn[idx + 1..-1]]
   end
 
   private
