@@ -124,6 +124,7 @@ class Tokenizer
   def initialize
     @other = []
     @custom = []
+    @procs = {}
     @predefined = []
     @do_not_calculate =
       [
@@ -211,11 +212,13 @@ class Tokenizer
   end
 
   def call_predefined_method(name, arr)
+    return name.call *arr if name.is_a? Proc
     if @do_not_calculate.include? name
       send name.to_s, arr
     elsif !name.nil?
       values = find_all_values arr
       send name.to_s, values
+    else
     end
   end
 
@@ -225,6 +228,7 @@ class Tokenizer
       arr.each do |t|
         break t if !t.match(/[[:alpha:]]/).nil? || (operations.include? t)
       end
+    return @procs[m_name] if @procs.key? m_name
     return m_name if @custom.include? m_name
     return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
@@ -317,6 +321,7 @@ class Tokenizer
     raise 'Invalid variable name' unless valid_var_name var
     valid = (valid_var values[0].to_s) || values[0].lambda?
     raise 'Invalid parameter' unless valid
+    @procs[var] = values[0] if values[0].lambda?
     set_var var, values[0]
   end
 
