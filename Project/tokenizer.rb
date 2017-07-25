@@ -197,8 +197,7 @@ class Tokenizer
   def calc_input_val(arr)
     get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
     return get_raw_value arr unless get_raw
-    m_name = custom_method_caller arr
-    m_name = predefined_method_caller arr if m_name == arr
+    m_name = predefined_method_caller arr
     call_predefined_method m_name.to_s, arr[2..-2]
   end
 
@@ -233,11 +232,6 @@ class Tokenizer
     return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
-  end
-
-  def custom_method_caller(arr)
-    # puts 'trying custom methods: ' + arr.to_s
-    arr
   end
 
   def get_raw_value(token)
