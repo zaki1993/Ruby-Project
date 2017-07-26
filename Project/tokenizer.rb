@@ -236,6 +236,7 @@ class Tokenizer
     return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
+    return m_name if @functions.has_value? m_name
   end
 
   def get_raw_value(token)
