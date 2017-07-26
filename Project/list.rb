@@ -236,7 +236,22 @@ module SchemeLists
     build_list values.shuffle
   end
 
-  def apply(other) end
+  def apply(other)
+    func, other = valid_function other
+    values = find_all_values other
+    *vs, lst = values
+    raise 'Incorrect data type' unless lst.list?
+    lst_vars = (find_list_function_value [lst]).each { |t| vs << t }
+    if func.is_a? Proc
+      func.call *vs
+    else
+      send func, vs
+    end
+  end
+
+  def compose(other)
+
+  end
 
   def car_cdr_infinite(other) end
 

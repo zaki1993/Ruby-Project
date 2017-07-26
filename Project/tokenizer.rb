@@ -176,7 +176,7 @@ class Tokenizer
     split_token token
     begin
       calc_input_val @other
-    rescue RuntimeError => e
+    rescue Exception => e
       e.message
     end
   end
@@ -375,6 +375,8 @@ class Tokenizer
   end
 
   def get_var(var)
+    val = (predefined_method_caller [var])
+    return val unless val.nil?
     check = check_instance_var var
     return instance_variable_get("@#{var}") if check
     valid = valid_var var
