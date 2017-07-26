@@ -124,9 +124,7 @@ class Tokenizer
 
   def initialize
     @other = []
-    @custom = []
     @procs = {}
-    @predefined = []
     @do_not_calculate =
       [
         'define',
@@ -146,7 +144,6 @@ class Tokenizer
         'null' => '\'()'
       }
     set_reserved_keywords
-    File.readlines('functions.txt').each { |l| @predefined << l.chomp }
     @functions =
       {
         'string-length' => 'strlen',
@@ -162,6 +159,9 @@ class Tokenizer
         'list-ref' => 'listref',
         'list-tail' => 'listtail'
       }
+    File.readlines('functions.txt').each do |t|
+      @functions[t.chomp] = t.chomp;
+    end
   end
 
   # /c[ad]{2,}r/
@@ -221,7 +221,6 @@ class Tokenizer
     elsif !m_name.nil?
       values = find_all_values arr
       send m_name.to_s, values
-    else
     end
   end
 
@@ -234,9 +233,7 @@ class Tokenizer
       end
     return m_name if m_name.is_a? Proc
     return @procs[m_name] if @procs.key? m_name
-    return m_name if @custom.include? m_name
     return m_name if operations.include? m_name
-    return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
     return m_name if @functions.value? m_name
   end
@@ -317,17 +314,17 @@ class Tokenizer
     end
   end
 
-  def set_var_if_proc(var, value)
-    @procs[var] = value
+  def set_var_helper(var, value)
+    valid = (valid_var value.to_s) || (value.is_a? Proc)
+    raise 'Invalid parameter' unless valid
+    return @procs[var] = value if value.is_a? Proc
+    set_var var, value
   end
 
   def define_var(var, values)
     raise 'Incorrect number of arguments' if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
-    valid = (valid_var values[0].to_s) || (values[0].is_a? Proc)
-    raise 'Invalid parameter' unless valid
-    set_var_if_proc var, values[0] if values[0].is_a? Proc
-    set_var var, values[0]
+    set_var_helper var, values[0]
   end
 
   def set_values_define(other, params, args)
@@ -346,17 +343,21 @@ class Tokenizer
     calc_input_val temp
   end
 
+  def arg_finder_helper(name, args)
+    if !name.nil?
+      args = args[1..-1]
+      [name, args]
+    else
+      find_next_value args
+    end
+  end
+
   def arg_finder(args)
     result = []
     until args.empty?
       name = predefined_method_caller [args[0]]
-      if !name.nil?
-        args = args[1..-1]
-        result << name
-      else
-        res, args = find_next_value args
-        result << res
-      end
+      temp, args = arg_finder_helper name, args
+      result << temp
     end
     result
   end
@@ -364,7 +365,7 @@ class Tokenizer
   def define_function(other)
     idx = find_bracket_idx other, 0
     name, *params = other[1..idx - 1]
-    build_fn = ['(', 'lambda', '(', *params, ')', *other[idx + 1..-1], ')' ]
+    build_fn = ['(', 'lambda', '(', *params, ')', *other[idx + 1..-1], ')']
     define_var name, (find_all_values build_fn)
   end
 

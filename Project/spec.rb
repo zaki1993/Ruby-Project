@@ -879,7 +879,7 @@ RSpec.describe 'LispInterpreter' do
       expect(@p.parse('(null? \'() 1)')).to eq @msg['inc_number']
     end
 
-    it 'returns true when <null> is provided' do
+    it 'returns true when empty <list> is provided' do
       expect(@p.parse('(null? \'())')).to eq '#t'
       expect(@p.parse('(null? null)')).to eq '#t'
       expect(@p.parse('(null? (list))')).to eq '#t'
