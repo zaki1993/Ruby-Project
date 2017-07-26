@@ -187,7 +187,7 @@ class Tokenizer
 
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
-      if t.include?('(') || t.include?(')')
+      if !t.string? && (t.include?('(') || t.include?(')'))
         t.to_s.split(%r{(\(|\))}).each { |p| @other << p }
       else
         @other << t
@@ -197,7 +197,6 @@ class Tokenizer
   end
 
   def calc_input_val(arr)
-    puts arr.to_s
     get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
     return get_raw_value arr unless get_raw
     m_name = predefined_method_caller arr
