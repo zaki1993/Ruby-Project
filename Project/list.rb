@@ -95,13 +95,15 @@ module SchemeListsHelper
 
   def foldl_helper(func, accum, lst)
     return accum if lst.empty?
-    value = send func, [lst[0], accum]
+    value = func.call *[lst[0], accum] if func.is_a? Proc
+    value = send func, [lst[0], accum] if value.nil?
     foldl_helper func, value, lst[1..-1]
   end
 
   def foldr_helper(func, accum, lst)
     return accum if lst.empty?
     value = foldr_helper func, accum, lst[1..-1]
+    return func.call *[lst[0], value] if func.is_a? Proc
     send func, [lst[0], value]
   end
 
