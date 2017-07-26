@@ -203,10 +203,15 @@ module SchemeLists
   end
 
   def filter(other)
-    valid_function other[0]
-    values = find_all_values other[1..-1]
+    func, other = valid_function other
+    values = find_all_values other
     values = find_list_function_value [values[0]]
-    result = values.select { |t| (send other[0], [t]) == '#t' }
+    result =
+      if func.is_a? Proc
+        values.select { |t| (func.call *[t]) == '#t' }
+      else
+        values.select { |t| (send func, [t]) == '#t' }
+      end
     build_list result
   end
 
