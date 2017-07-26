@@ -198,8 +198,6 @@ class Tokenizer
   end
 
   def calc_input_val(arr)
-    puts arr.to_s
-    puts ""
     get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
     return get_raw_value arr unless get_raw
     m_name = predefined_method_caller arr
