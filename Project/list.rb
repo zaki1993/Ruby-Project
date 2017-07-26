@@ -250,8 +250,7 @@ module SchemeLists
   def eval_lambda(other)
     idx = find_bracket_idx other.unshift('('), 0
     to_eval = other[1..idx - 1]
-    call_values = find_all_values other[idx + 1..-1]
-    (proc_lambda to_eval).call *call_values
+    (proc_lambda to_eval).call *other[idx + 1..-1]
   end
 
   def proc_lambda(other)
