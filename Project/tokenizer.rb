@@ -189,7 +189,7 @@ class Tokenizer
   def split_token(token)
     token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
       if !t.string? && (t.include?('(') || t.include?(')'))
-        t.to_s.split(%r{(\(|\))}).each { |p| @other << p }
+        t.to_s.split(/(\(|\))/).each { |p| @other << p }
       else
         @other << t
       end
