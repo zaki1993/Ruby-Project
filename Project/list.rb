@@ -258,6 +258,7 @@ module SchemeLists
     params, other = find_params_lambda other
     proc = ->(*args) do
       args = arg_finder args
+      raise 'Incorrect number of arguments' unless params.size == args.size
       define_func_helper other.dup, params.dup, args
     end
     proc

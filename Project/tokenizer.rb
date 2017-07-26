@@ -336,7 +336,6 @@ class Tokenizer
   end
 
   def define_func_helper(other, params, args)
-    puts args.to_s
     temp = set_values_define other, params, args
     calc_input_val temp
   end
@@ -345,7 +344,6 @@ class Tokenizer
     result = []
     until args.empty?
       name = predefined_method_caller [args[0].to_s]
-      puts name
       if !name.nil?
         args = args[1..-1]
         result << name
