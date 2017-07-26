@@ -375,10 +375,10 @@ class Tokenizer
   end
 
   def get_var(var)
-    val = (predefined_method_caller [var])
-    return val unless val.nil?
     check = check_instance_var var
     return instance_variable_get("@#{var}") if check
+    val = (predefined_method_caller [var])
+    return val unless val.nil?
     valid = valid_var var
     valid ? var : (raise 'Invalid data type')
   end
