@@ -200,6 +200,7 @@ class Tokenizer
     get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
     return get_raw_value arr unless get_raw
     m_name = predefined_method_caller arr
+    raise 'No procedure found' if m_name.nil?
     call_predefined_method m_name, arr[2..-2]
   end
 
