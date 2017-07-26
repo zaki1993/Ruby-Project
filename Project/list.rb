@@ -250,7 +250,14 @@ module SchemeLists
   end
 
   def compose(other)
-
+    tmp = ['(', *other[1..-1]]
+    idx = find_bracket_idx tmp, 0
+    funcs = find_all_values tmp[1..idx - 1]
+    value, = find_next_value tmp[idx + 1..-1]
+    funcs.reverse.each do |t|
+      value = calc_input_val ['(', t, value, ')']
+    end
+    value
   end
 
   def car_cdr_infinite(other) end

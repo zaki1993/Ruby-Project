@@ -138,6 +138,7 @@ class Tokenizer
         'numerator',
         'apply',
         'lambda',
+        'compose',
         'denominator'
       ]
     @reserved =
@@ -237,7 +238,7 @@ class Tokenizer
     return m_name if operations.include? m_name
     return m_name if @predefined.include? m_name
     return @functions[m_name] if @functions.key? m_name
-    return m_name if @functions.has_value? m_name
+    return m_name if @functions.value? m_name
   end
 
   def get_raw_value(token)
@@ -316,12 +317,16 @@ class Tokenizer
     end
   end
 
+  def set_var_if_proc(var, value)
+    @procs[var] = value
+  end
+
   def define_var(var, values)
     raise 'Incorrect number of arguments' if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
     valid = (valid_var values[0].to_s) || (values[0].is_a? Proc)
     raise 'Invalid parameter' unless valid
-    @procs[var] = values[0] if values[0].is_a? Proc
+    set_var_if_proc var, values[0] if values[0].is_a? Proc
     set_var var, values[0]
   end
 

@@ -30,7 +30,7 @@ module Validator
       if idx.zero?
         predefined_method_caller [fn[idx]]
       else
-        calc_input_val fn[0..idx]
+        calc_input_val fn[idx]
       end
     raise 'No such procedure' if func.nil? && (!func.is_a? Proc)
     [func, fn[idx + 1..-1]]
