@@ -364,14 +364,8 @@ class Tokenizer
   def define_function(other)
     idx = find_bracket_idx other, 0
     name, *params = other[1..idx - 1]
-    @custom << name
-    @do_not_calculate << name
-    define_singleton_method name.to_sym do |args|
-      args = arg_finder args
-      raise 'Invalid number of arguments' if args.size != params.size
-      local_params = params
-      define_func_helper other[idx + 1..-1], local_params, args
-    end
+    build_fn = ['(', 'lambda', '(', *params, ')', *other[idx + 1..-1], ')' ]
+    define_var name, (find_all_values build_fn)
   end
 
   def set_var(var, value)
