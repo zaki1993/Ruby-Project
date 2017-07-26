@@ -228,7 +228,7 @@ class Tokenizer
     m_name =
       arr.each do |t|
         break t if t.is_a? Proc
-        break t if !t.match(/[[:alpha:]]/).nil? || (operations.include? t)
+        break t if !t.to_s.match(/[[:alpha:]]/).nil? || (operations.include? t.to_s)
       end
     return m_name if m_name.is_a? Proc
     return @procs[m_name] if @procs.key? m_name
