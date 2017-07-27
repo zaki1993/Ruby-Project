@@ -196,12 +196,18 @@ class Tokenizer
     end
     @other.delete('')
   end
+  
+  def check_car_cdr(arr)
+    result = arr[1].match(/c[ad]{2,}r/)
+    raise 'No procedure found' if result.nil?
+    car_cdr_infinite arr
+  end
 
   def calc_input_val(arr)
     get_raw = (arr.is_a? Array) && arr.size > 1 && arr[0..1].join != '\'('
     return get_raw_value arr unless get_raw
     m_name = predefined_method_caller arr
-    raise 'No procedure found' if m_name.nil?
+    return check_car_cdr arr if m_name.nil?
     call_predefined_method m_name, arr
   end
 
