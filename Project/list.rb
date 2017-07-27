@@ -144,15 +144,13 @@ module SchemeLists
 
   def car(other)
     value = car_cdr_values other
-    raise 'Invalid data type' if value.nil?
-    raise 'Cannot apply car on nil' if value.empty?
+    raise 'Cannot apply car on ' + other[0].to_s if value.nil? || value.empty?
     value.shift
   end
 
   def cdr(other)
     value = car_cdr_values other
-    raise 'Invalid data type' if value.nil?
-    raise 'Cannot apply cdr on nil' if value.empty?
+    raise 'Cannot apply cdr on ' + other[0].to_s if value.nil? || value.empty?
     idx = value[1] == '.' ? 2 : 1
     build_list value[idx..-1]
   end
@@ -259,8 +257,24 @@ module SchemeLists
     end
     value
   end
+  
+  def car_cdr_infinite_helper(value, fn)
+    fn.reverse[1..-2].each_char do |t|
+      if t == 'a'
+        value = car [*value]
+      else
+        value = cdr [*value]
+      end
+    end
+    value
+  end
 
-  def car_cdr_infinite(other) end
+  def car_cdr_infinite(other)
+    fn = other[1]
+    values = find_all_values other[2..-2]
+    raise 'Incorrect number of arguments' unless values.size == 1
+    car_cdr_infinite_helper values[0], fn
+  end
 
   def lambda(other)
     if other[0] == 'lambda'
