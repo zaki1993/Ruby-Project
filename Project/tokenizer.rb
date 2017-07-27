@@ -340,8 +340,13 @@ class Tokenizer
   def set_var_helper(var, value)
     valid = (valid_var value.to_s) || (value.is_a? Proc)
     raise 'Invalid parameter' unless valid
-    return @procs[var] = value if value.is_a? Proc
-    set_var var, value
+    if value.is_a? Proc
+      remove_instance_variable("@#{var}") if check_instance_var var
+      @procs[var] = value if value.is_a? Proc
+    else
+      @procs.delete var
+      set_var var, value
+    end
   end
 
   def define_var(var, values)

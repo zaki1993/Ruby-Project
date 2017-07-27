@@ -39,7 +39,7 @@ class Parser
   end
 
   def print_result(result)
-    result = result.gsub('\'(', '(')
+    #result = result.gsub('\'(', '(')
     puts result
     result
   end
