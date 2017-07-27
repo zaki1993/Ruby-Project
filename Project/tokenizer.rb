@@ -202,7 +202,7 @@ class Tokenizer
     return get_raw_value arr unless get_raw
     m_name = predefined_method_caller arr
     raise 'No procedure found' if m_name.nil?
-    call_predefined_method m_name, arr[2..-2]
+    call_predefined_method m_name, arr
   end
 
   def find_all_values(other)
@@ -213,13 +213,24 @@ class Tokenizer
     end
     result
   end
+  
+  def special_check_proc(m_name, arr)
+    if arr[0..1].join == '(('
+      idx = find_bracket_idx arr, 1
+      func, = valid_function arr[1..idx]
+      values = find_all_values arr[idx + 1..-2]
+      func.call *values
+    else
+      m_name.call *arr[2..-2]
+    end
+  end
 
   def call_predefined_method(m_name, arr)
-    return m_name.call *arr if m_name.is_a? Proc
+    return special_check_proc m_name, arr if (m_name.is_a? Proc)
     if @do_not_calculate.include? m_name
-      send m_name.to_s, arr
+      send m_name.to_s, arr[2..-2]
     elsif !m_name.nil?
-      values = find_all_values arr
+      values = find_all_values arr[2..-2]
       send m_name.to_s, values
     end
   end
