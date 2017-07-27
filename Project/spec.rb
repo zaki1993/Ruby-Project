@@ -11,6 +11,9 @@ RSpec.describe 'LispInterpreter' do
         'zero_div' => 'divided by 0',
         'inv_type' => 'Invalid data type'
       }
+    def car_cdr_err(got, fn)
+      'Cannot apply ' + fn + ' on ' + got
+    end
   end
 
   describe 'Literals' do
@@ -137,6 +140,7 @@ RSpec.describe 'LispInterpreter' do
 
     it 'throws ZeroDivisionError' do
       expect(@p.parse('(/ 0)')).to eq @msg['zero_div']
+      expect(@p.parse('(/ 0.0)')).to eq @msg['zero_div']
     end
 
     it 'throws argument error when wrong number of arguments are provided' do
@@ -146,7 +150,6 @@ RSpec.describe 'LispInterpreter' do
     it 'divides with single argument' do
       expect(@p.parse('(/ 1)')).to eq 1
       expect(@p.parse('(/ 10.0)')).to eq 0.1
-      expect(@p.parse('(/ 0.0)')).to eq 'Infinity'
     end
 
     it 'divides with multiple arguments' do
@@ -908,55 +911,50 @@ RSpec.describe 'LispInterpreter' do
     end
 
     it 'returns <pair> when the second argument is not <list>' do
-      expect(@p.parse('(cons 1 2)')).to eq '\'(1 . 2)'
-      expect(@p.parse('(cons 1 (cons 2 3))')).to eq '\'(1 2 . 3)'
+      expect(@p.parse('(cons 1 2)')).to eq '(1 . 2)'
+      expect(@p.parse('(cons 1 (cons 2 3))')).to eq '(1 2 . 3)'
     end
 
     it 'returns <list> when the second argument is <list>' do
-      expect(@p.parse('(cons 1 \'())')).to eq '\'(1)'
-      expect(@p.parse('(cons 1 null)')).to eq '\'(1)'
-      expect(@p.parse('(cons 1 (list))')).to eq '\'(1)'
-      expect(@p.parse('(cons 1 (cons 2 \'()))')).to eq '\'(1 2)'
-      expect(@p.parse('(cons 1 (list 2 3))')).to eq '\'(1 2 3)'
+      expect(@p.parse('(cons 1 \'())')).to eq '(1)'
+      expect(@p.parse('(cons 1 null)')).to eq '(1)'
+      expect(@p.parse('(cons 1 (list))')).to eq '(1)'
+      expect(@p.parse('(cons 1 (cons 2 \'()))')).to eq '(1 2)'
+      expect(@p.parse('(cons 1 (list 2 3))')).to eq '(1 2 3)'
     end
   end
 
   describe '#reserverd_keywords' do
     context '#null' do
       it 'returns empty list' do
-        expect(@p.parse('null')).to eq '\'()'
+        expect(@p.parse('null')).to eq '()'
       end
     end
   end
 
   describe 'list' do
     it 'returns empty list when no arguments are provided' do
-      expect(@p.parse('(list)')).to eq '\'()'
+      expect(@p.parse('(list)')).to eq '()'
     end
 
     it 'returns non empty list when 1 or more arguments are provided' do
-      expect(@p.parse('(list 1)')).to eq '\'(1)'
-      expect(@p.parse('(list 1 "s")')).to eq '\'(1 "s")'
+      expect(@p.parse('(list 1)')).to eq '(1)'
+      expect(@p.parse('(list 1 "s")')).to eq '(1 "s")'
       result = '\'(1 \'(#t . #f) \'quote)'
       expect(@p.parse('(list 1 (cons #t #f) \'quote)')).to eq result
     end
   end
 
   describe 'car' do
-    it 'throws error when the argument is not <list> or <pair>' do
-      expect(@p.parse('(car 1)')).to eq @msg['inv_type']
-    end
-
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@p.parse('(car)')).to eq @msg['inc_number']
       expect(@p.parse('(car \'(1 2) \'(1 2))')).to eq @msg['inc_number']
     end
 
     it 'throws error when <null> provided' do
-      msg = 'Cannot apply car on nil'
-      expect(@p.parse('(car null)')).to eq msg
-      expect(@p.parse('(car (list))')).to eq msg
-      expect(@p.parse('(car \'())')).to eq msg
+      expect(@p.parse('(car null)')).to eq car_cdr_err '\'()', 'car'
+      expect(@p.parse('(car (list))')).to eq car_cdr_err '\'()', 'car'
+      expect(@p.parse('(car \'())')).to eq car_cdr_err '\'()', 'car'
     end
 
     it 'returns the first element of <pair>' do
@@ -971,31 +969,26 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'cdr' do
-    it 'throws error when the argument is not <list> or <pair>' do
-      expect(@p.parse('(cdr 1)')).to eq @msg['inv_type']
-    end
-
     it 'throws argument error when wrong number of arguments are provided' do
       expect(@p.parse('(cdr)')).to eq @msg['inc_number']
       expect(@p.parse('(cdr \'(1 2) \'(1 2))')).to eq @msg['inc_number']
     end
 
     it 'throws error when <null> provided' do
-      msg = 'Cannot apply cdr on nil'
-      expect(@p.parse('(cdr null)')).to eq msg
-      expect(@p.parse('(cdr (list))')).to eq msg
-      expect(@p.parse('(cdr \'())')).to eq msg
+      expect(@p.parse('(cdr null)')).to eq car_cdr_err '\'()', 'cdr'
+      expect(@p.parse('(cdr (list))')).to eq car_cdr_err '\'()', 'cdr'
+      expect(@p.parse('(cdr \'())')).to eq car_cdr_err '\'()', 'cdr'
     end
 
     it 'returns list of rest of the <pair>' do
       expect(@p.parse('(cdr (cons 1 2))')).to eq '\'(2)'
-      expect(@p.parse('(cdr \'( "sample" . #t))')).to eq '\'(#t)'
-      expect(@p.parse('(cdr (cons 1 (cons 2 3)))')).to eq '\'(2 . 3)'
+      expect(@p.parse('(cdr \'( "sample" . #t))')).to eq '(#t)'
+      expect(@p.parse('(cdr (cons 1 (cons 2 3)))')).to eq '(2 . 3)'
     end
 
     it 'returns the first element of <list>' do
-      expect(@p.parse('(cdr (list #f 2 3 4))')).to eq '\'(2 3 4)'
-      expect(@p.parse('(cdr \'(1 2 3 4))')).to eq '\'(2 3 4)'
+      expect(@p.parse('(cdr (list #f 2 3 4))')).to eq '(2 3 4)'
+      expect(@p.parse('(cdr \'(1 2 3 4))')).to eq '(2 3 4)'
     end
   end
 end

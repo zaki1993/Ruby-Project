@@ -51,6 +51,12 @@ module SchemeNumbersHelper
     end
     other.map(&:to_num)
   end
+
+  def divide_special_convert(other)
+    other = convert_to_num other
+    return [0] if other.size == 1 && other[0] == 0.0
+    other
+  end
 end
 
 # Scheme numbers module
@@ -92,7 +98,7 @@ module SchemeNumbers
 
   def /(other)
     raise 'Incorrect number of arguments' if other.empty?
-    other = convert_to_num other
+    other = divide_special_convert other
     return (divide_number 1, other[0].to_num) if other.size == 1
     other[1..-1].inject(other[0]) { |res, t| divide_number res, t }
   end

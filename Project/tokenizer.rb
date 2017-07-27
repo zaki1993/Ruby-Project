@@ -4,6 +4,7 @@ load 'numbers.rb'
 load 'strings.rb'
 load 'boolean.rb'
 load 'list.rb'
+load 'functional.rb'
 
 # redefine method in Object class
 class Object
@@ -121,46 +122,42 @@ class Tokenizer
   include SchemeStrings
   include SchemeBooleans
   include SchemeLists
+  include FunctionalScheme
+
+  def init_do_not_calculate_fn
+    %w[
+      foldl foldr map filter
+      if apply numerator denominator
+      lambda compose define
+    ]
+  end
+
+  def init_functions
+    {
+      'string-downcase'  => 'strdowncase', 'string-upcase'  => 'strupcase',
+      'string-contains?' => 'strcontains', 'string-length'  => 'strlen',
+      'string->list'     => 'strlist',     'string-split'   => 'strsplit',
+      'string-sufix?'    => 'strsufix',    'string-prefix?' => 'strprefix',
+      'string-replace'   => 'strreplace',  'string-join'    => 'strjoin',
+      'list-ref'         => 'listref',     'list-tail'      => 'listtail'
+    }
+  end
+
+  def init_reserved_fn
+    {
+      'null' => '\'()'
+    }
+  end
 
   def initialize
     @other = []
     @procs = {}
-    @do_not_calculate =
-      [
-        'define',
-        'foldl',
-        'foldr',
-        'map',
-        'filter',
-        'if',
-        'numerator',
-        'apply',
-        'lambda',
-        'compose',
-        'denominator'
-      ]
-    @reserved =
-      {
-        'null' => '\'()'
-      }
+    @do_not_calculate = init_do_not_calculate_fn
+    @reserved = init_reserved_fn
     set_reserved_keywords
-    @functions =
-      {
-        'string-length' => 'strlen',
-        'string-upcase' => 'strupcase',
-        'string-downcase' => 'strdowncase',
-        'string-contains?' => 'strcontains',
-        'string->list' => 'strlist',
-        'string-split' => 'strsplit',
-        'string-replace' => 'strreplace',
-        'string-prefix?' => 'strprefix',
-        'string-sufix?' => 'strsufix',
-        'string-join' => 'strjoin',
-        'list-ref' => 'listref',
-        'list-tail' => 'listtail'
-      }
+    @functions = init_functions
     File.readlines('functions.txt').each do |t|
-      @functions[t.chomp] = t.chomp;
+      @functions[t.chomp] = t.chomp
     end
   end
 
@@ -177,7 +174,7 @@ class Tokenizer
     split_token token
     begin
       calc_input_val @other
-    rescue Exception => e
+    rescue ZeroDivisionError, RuntimeError => e
       e.message
     end
   end
@@ -196,7 +193,7 @@ class Tokenizer
     end
     @other.delete('')
   end
-  
+
   def check_car_cdr(arr)
     result = arr[1].match(/c[ad]{2,}r/)
     raise 'No procedure found' if result.nil?
@@ -219,20 +216,20 @@ class Tokenizer
     end
     result
   end
-  
+
   def special_check_proc(m_name, arr)
     if arr[0..1].join == '(('
       idx = find_bracket_idx arr, 1
       func, = valid_function arr[1..idx]
       values = find_all_values arr[idx + 1..-2]
-      func.call *values
+      func.call(*values)
     else
-      m_name.call *arr[2..-2]
+      m_name.call(*arr[2..-2])
     end
   end
 
   def call_predefined_method(m_name, arr)
-    return special_check_proc m_name, arr if (m_name.is_a? Proc)
+    return special_check_proc m_name, arr if m_name.is_a? Proc
     if @do_not_calculate.include? m_name
       send m_name.to_s, arr[2..-2]
     elsif !m_name.nil?
@@ -241,19 +238,27 @@ class Tokenizer
     end
   end
 
+  def predefined_method_caller_helper(m_name, operations)
+    return m_name if m_name.is_a? Proc
+    return @procs[m_name] if @procs.key? m_name
+    return m_name if operations.include? m_name
+    return @functions[m_name] if @functions.key? m_name
+    m_name if @functions.value? m_name
+  end
+
+  def method_caller_checker(token, operations)
+    !token.to_s.match(/[[:alpha:]]/).nil? || (operations.include? token.to_s)
+  end
+
   def predefined_method_caller(arr)
     operations = ['+', '-', '/', '*', '<', '<=', '>', '>=']
     m_name =
       arr.each do |t|
         break t if t.is_a? Proc
-        break t if !t.to_s.match(/[[:alpha:]]/).nil? || (operations.include? t.to_s)
-        break t if !t.match(/[[:digit:]]/).nil?
+        break t if method_caller_checker t, operations
+        break t unless t.match(/[[:digit:]]/).nil?
       end
-    return m_name if m_name.is_a? Proc
-    return @procs[m_name] if @procs.key? m_name
-    return m_name if operations.include? m_name
-    return @functions[m_name] if @functions.key? m_name
-    return m_name if @functions.value? m_name
+    predefined_method_caller_helper m_name, operations
   end
 
   def get_raw_value(token)

@@ -95,7 +95,7 @@ module SchemeListsHelper
 
   def foldl_helper(func, accum, lst)
     return accum if lst.empty?
-    value = func.call *[lst[0], accum] if func.is_a? Proc
+    value = func.call lst[0], accum if func.is_a? Proc
     value = send func, [lst[0], accum] if value.nil?
     foldl_helper func, value, lst[1..-1]
   end
@@ -103,7 +103,7 @@ module SchemeListsHelper
   def foldr_helper(func, accum, lst)
     return accum if lst.empty?
     value = foldr_helper func, accum, lst[1..-1]
-    return func.call *[lst[0], value] if func.is_a? Proc
+    return func.call lst[0], value if func.is_a? Proc
     send func, [lst[0], value]
   end
 
@@ -125,8 +125,8 @@ module SchemeListsHelper
   end
 
   def map_helper(lst, func)
-    return lst.map { |t| func.call *t } if func.is_a? Proc
-    return lst.map { |t| send func, t } unless func.is_a? Proc
+    return lst.map { |t| func.call(*t) } if func.is_a? Proc
+    lst.map { |t| send func, t }
   end
 end
 
@@ -206,7 +206,7 @@ module SchemeLists
     values = find_list_function_value [values[0]]
     result =
       if func.is_a? Proc
-        values.select { |t| (func.call *[t]) == '#t' }
+        values.select { |t| func.call(*t) == '#t' }
       else
         values.select { |t| (send func, [t]) == '#t' }
       end
@@ -239,9 +239,9 @@ module SchemeLists
     values = find_all_values other
     *vs, lst = values
     raise 'Incorrect data type' unless lst.list?
-    lst_vars = (find_list_function_value [lst]).each { |t| vs << t }
+    (find_list_function_value [lst]).each { |t| vs << t }
     if func.is_a? Proc
-      func.call *vs
+      func.call(*vs)
     else
       send func, vs
     end
@@ -257,14 +257,10 @@ module SchemeLists
     end
     value
   end
-  
+
   def car_cdr_infinite_helper(value, fn)
     fn.reverse[1..-2].each_char do |t|
-      if t == 'a'
-        value = car [*value]
-      else
-        value = cdr [*value]
-      end
+      value = t == 'a' ? car[value] : cdr[value]
     end
     value
   end
@@ -293,12 +289,12 @@ module SchemeLists
   def eval_lambda(other)
     idx = find_bracket_idx other.unshift('('), 0
     to_eval = other[1..idx - 1]
-    (proc_lambda to_eval).call *other[idx + 1..-1]
+    (proc_lambda to_eval).call(*other[idx + 1..-1])
   end
 
   def proc_lambda(other)
     params, other = find_params_lambda other
-    proc = ->(*args) do
+    proc = proc do |*args|
       args = arg_finder args
       raise 'Incorrect number of arguments' unless params.size == args.size
       define_func_helper other.dup, params.dup, args
