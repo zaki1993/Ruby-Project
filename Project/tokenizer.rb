@@ -38,6 +38,11 @@ class Object
     list? && !res[2..-2].empty?
   end
 
+  def quote?
+    return true if start_with? '\''
+    false
+  end
+
   private
 
   def object_split
@@ -77,7 +82,7 @@ module SchemeChecker
   end
 
   def check_for_quote(token)
-    return true if token[0] == '\''
+    return true if token[0].quote?
     is_instance_var = check_instance_var token
     return true if is_instance_var && (check_for_number get_var token)
     false

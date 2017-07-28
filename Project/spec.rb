@@ -14,6 +14,47 @@ RSpec.describe 'LispInterpreter' do
     def car_cdr_err(got, fn)
       'Cannot apply ' + fn + ' on ' + got
     end
+    @p.parse('(define xl (lambda (x) (* 2 x)))')
+    @p.parse('(define yl (lambda () 5))')
+    @p.parse('(define zl (lambda ()))')
+  end
+
+  describe 'exceptions' do
+    context 'wrong number of arguments' do
+      it 'throws error when less arguments are provided' do
+        expect(@p.parse('(cons 1)')).to eq @msg['inc_number']
+        expect(@p.parse('(xl)')).to eq @msg['inc_number']
+      end
+
+      it 'throws error when more arguments are provided' do
+        expect(@p.parse('(cons 6 6 6)')).to eq @msg['inc_number']
+        expect(@p.parse('(xl 6 6)')).to eq @msg['inc_number']
+        expect(@p.parse('(equal? 1 3 3)')).to eq @msg['inc_number']
+      end
+
+      it 'throws error when no arguments are expected' do
+        expect(@p.parse('(yl 5)')).to eq @msg['inc_number']
+        expect(@p.parse('(zl 5)')).to eq @msg['inc_number']
+      end
+    end
+
+    context 'incorrect argument type' do
+      it 'throws error when <number> is expected' do
+        expect(@p.parse('(+ #t)')).to eq @msg['inv_type']
+      end
+
+      it 'throws error when <string> is expected' do
+        expect(@p.parse('(string-length 1)')).to eq @msg['inv_type']
+      end
+
+      it 'throws error when <boolean> is expected' do
+        expect(@p.parse('(not \'apple)')).to eq @msg['inv_type']
+      end
+
+      it 'throws error when <list> is expected' do
+        expect(@p.parse('(length "not list")')).to eq @msg['inv_type']
+      end
+    end
   end
 
   describe 'Literals' do

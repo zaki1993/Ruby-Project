@@ -39,7 +39,8 @@ class Parser
   end
 
   def print_result(result)
-    #result = result.gsub('\'(', '(')
+    to_remove = result.to_s.list? || result.to_s.pair? || result.to_s.quote?
+    result = result.delete('\'') if to_remove
     puts result
     result
   end
