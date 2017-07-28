@@ -10,17 +10,17 @@ module SchemeBooleans
     raise 'Invalid data type' unless check_for_bool other[0]
     other[0] == '#t' ? '#f' : '#t'
   end
-  
+
   def if_idx_helper(other)
     if other[0] == '('
       idx = find_bracket_idx other, 0
       (find_next_value other[idx + 1..-1])[0]
     else
-      _,other = find_next_value other
+      _, other = find_next_value other
       (find_next_value other)[0]
     end
   end
-  
+
   def if_helper(expr, other)
     if expr == '#f'
       if_idx_helper other
