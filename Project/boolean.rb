@@ -16,7 +16,8 @@ module SchemeBooleans
       idx = find_bracket_idx other, 0
       (find_next_value other[idx + 1..-1])[0]
     else
-      (find_next_value other[1..-1])[0]
+      _,other = find_next_value other
+      (find_next_value other)[0]
     end
   end
   
