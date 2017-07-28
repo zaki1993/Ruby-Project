@@ -91,10 +91,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '+' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(+ "not number")')).to eq @msg['inv_type']
-    end
-
     it 'sums with no arguments' do
       expect(@p.parse('(+)')).to eq 0
     end
@@ -119,10 +115,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '-' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(- "not number")')).to eq @msg['inv_type']
-    end
-
     it 'subtracts with no arguments' do
       expect(@p.parse('(-)')).to eq 0
     end
@@ -147,10 +139,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '*' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(* "not number")')).to eq @msg['inv_type']
-    end
-
     it 'multiplies with no arguments' do
       expect(@p.parse('(*)')).to eq 1
     end
@@ -175,17 +163,9 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '/' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(/ "not number")')).to eq @msg['inv_type']
-    end
-
     it 'throws ZeroDivisionError' do
       expect(@p.parse('(/ 0)')).to eq @msg['zero_div']
       expect(@p.parse('(/ 0.0)')).to eq @msg['zero_div']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(/)')).to eq @msg['inc_number']
     end
 
     it 'divides with single argument' do
@@ -206,16 +186,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'not' do
-    it 'throws error when the argument is not <boolean>' do
-      expect(@p.parse('(not 3)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(quotient 10)')).to eq @msg['inc_number']
-      expect(@p.parse('(quotient)')).to eq @msg['inc_number']
-      expect(@p.parse('(quotient 1 3 3)')).to eq @msg['inc_number']
-    end
-
     it 'can negate with literals' do
       expect(@p.parse('(not #t)')).to eq '#f'
       expect(@p.parse('(not #f)')).to eq '#t'
@@ -228,12 +198,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'equal?' do
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(quotient 10)')).to eq @msg['inc_number']
-      expect(@p.parse('(quotient)')).to eq @msg['inc_number']
-      expect(@p.parse('(quotient 1 3 3)')).to eq @msg['inc_number']
-    end
-
     it 'can compare with literals' do
       expect(@p.parse('(equal? 1 1.0)')).to eq '#f'
       expect(@p.parse('(equal? 1 1)')).to eq '#t'
@@ -251,18 +215,8 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'quotient' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(quotient 1 #t)')).to eq @msg['inv_type']
-    end
-
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@p.parse('(quotient 1 0)')).to eq @msg['zero_div']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(quotient 10)')).to eq @msg['inc_number']
-      expect(@p.parse('(quotient)')).to eq @msg['inc_number']
-      expect(@p.parse('(quotient 1 3 3)')).to eq @msg['inc_number']
     end
 
     it 'can calculate quotient with integers' do
@@ -281,19 +235,9 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'remainder' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(remainder 1 #t)')).to eq @msg['inv_type']
-    end
-
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@p.parse('(remainder 1 0)')).to eq @msg['zero_div']
       expect(@p.parse('(remainder 1 0.0)')).to eq @msg['zero_div']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(remainder 10)')).to eq @msg['inc_number']
-      expect(@p.parse('(remainder)')).to eq @msg['inc_number']
-      expect(@p.parse('(remainder 1 3 3)')).to eq @msg['inc_number']
     end
 
     it 'can calculate remainder with integers' do
@@ -312,19 +256,9 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'modulo' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(modulo 1 #t)')).to eq @msg['inv_type']
-    end
-
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@p.parse('(modulo 1 0)')).to eq @msg['zero_div']
       expect(@p.parse('(modulo 1 0.0)')).to eq @msg['zero_div']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(modulo 10)')).to eq @msg['inc_number']
-      expect(@p.parse('(modulo)')).to eq @msg['inc_number']
-      expect(@p.parse('(modulo 1 3 3)')).to eq @msg['inc_number']
     end
 
     it 'can calculate modulo with integers' do
@@ -343,15 +277,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'numerator' do
-    it 'throws error when the argument is not <number>' do
-      expect(@p.parse('(numerator #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(numerator)')).to eq @msg['inc_number']
-      expect(@p.parse('(numerator 1 2)')).to eq @msg['inc_number']
-    end
-
     it 'calculates with integer' do
       expect(@p.parse('(numerator 5)')).to eq 5
       expect(@p.parse('(numerator 1)')).to eq 1
@@ -372,15 +297,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'denominator' do
-    it 'throws error when the argument is not <number>' do
-      expect(@p.parse('(denominator #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(denominator)')).to eq @msg['inc_number']
-      expect(@p.parse('(denominator 1 2)')).to eq @msg['inc_number']
-    end
-
     it 'calculates with integer' do
       expect(@p.parse('(denominator 5)')).to eq 1
       expect(@p.parse('(denominator 1)')).to eq 1
@@ -401,15 +317,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'abs' do
-    it 'throws error when the argument is not <number>' do
-      expect(@p.parse('(abs #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(abs)')).to eq @msg['inc_number']
-      expect(@p.parse('(abs 1 2)')).to eq @msg['inc_number']
-    end
-
     it 'can find the absolute value of integer' do
       expect(@p.parse('(abs 1)')).to eq 1
       expect(@p.parse('(abs -10)')).to eq 10
@@ -424,15 +331,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'add1' do
-    it 'throws error when the argument is not <number>' do
-      expect(@p.parse('(add1 #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(add1)')).to eq @msg['inc_number']
-      expect(@p.parse('(add1 1 2)')).to eq @msg['inc_number']
-    end
-
     it 'can add 1 to integers' do
       expect(@p.parse('(add1 1)')).to eq 2
       expect(@p.parse('(add1 -1)')).to eq 0
@@ -447,15 +345,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'sub1' do
-    it 'throws error when the argument is not <number>' do
-      expect(@p.parse('(sub1 #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(sub1)')).to eq @msg['inc_number']
-      expect(@p.parse('(sub1 1 2)')).to eq @msg['inc_number']
-    end
-
     it 'can subtract 1 with integers' do
       expect(@p.parse('(sub1 1)')).to eq 0
       expect(@p.parse('(sub1 -1)')).to eq '-2'.to_i
@@ -470,14 +359,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'min' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(min #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(min)')).to eq @msg['inc_number']
-    end
-
     it 'can find the minumum value of single argument' do
       expect(@p.parse('(min -5)')).to eq '-5'.to_i
       expect(@p.parse('(min 1.5)')).to eq 1.5
@@ -493,14 +374,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'max' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(min #t)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(max)')).to eq @msg['inc_number']
-    end
-
     it 'can find the maximum value of single argument' do
       expect(@p.parse('(max -5)')).to eq '-5'.to_i
       expect(@p.parse('(max 1.5)')).to eq 1.5
@@ -516,15 +389,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#<' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(< #t #f)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(<)')).to eq @msg['inc_number']
-      expect(@p.parse('(< 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(< 1 2)')).to eq '#t'
       expect(@p.parse('(< 1.7 2.8 3)')).to eq '#t'
@@ -542,15 +406,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#>' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(> #t #f)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(>)')).to eq @msg['inc_number']
-      expect(@p.parse('(> 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(> 3 2)')).to eq '#t'
       expect(@p.parse('(> 3.2 2.99 1.1)')).to eq '#t'
@@ -568,15 +423,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#<=' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(<= #t #f)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(<=)')).to eq @msg['inc_number']
-      expect(@p.parse('(<= 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(<= 1 2)')).to eq '#t'
       expect(@p.parse('(<= 1.5 2.1 3.6)')).to eq '#t'
@@ -594,15 +440,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe '#>=' do
-    it 'throws error when the arguments are not <numbers>' do
-      expect(@p.parse('(>= #t #f)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(>=)')).to eq @msg['inc_number']
-      expect(@p.parse('(>= 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(>= 3 2)')).to eq '#t'
       expect(@p.parse('(>= 3.5 2.5 1.5)')).to eq '#t'
@@ -620,15 +457,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-length' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string-length 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-length)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-length "a" "b")')).to eq @msg['inc_number']
-    end
-
     it 'can find the length of an empty string' do
       expect(@p.parse('(string-length "")')).to eq 0
     end
@@ -641,15 +469,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'substring' do
-    it 'throws error when the arguments are not <string> <number> <number>' do
-      expect(@p.parse('(substring #t 1 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(substring)')).to eq @msg['inc_number']
-      expect(@p.parse('(substring "a" 1 2 3)')).to eq @msg['inc_number']
-    end
-
     it 'can find the substring with 2 arguments' do
       expect(@p.parse('(substring "Apple" 1)')).to eq '"pple"'
       expect(@p.parse('(substring "Hello world" 4)')).to eq '"o world"'
@@ -668,15 +487,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-upcase' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string-upcase 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-upcase)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-upcase "a" "a")')).to eq @msg['inc_number']
-    end
-
     it 'returns empty string if empty string as argument' do
       expect(@p.parse('(string-upcase "")')).to eq '""'
     end
@@ -693,15 +503,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-downcase' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string-downcase 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-downcase)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-downcase "a" 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns empty string if empty string as argument' do
       expect(@p.parse('(string-downcase "")')).to eq '""'
     end
@@ -718,16 +519,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-contains?' do
-    it 'throws error when the arguments are not <strings>' do
-      expect(@p.parse('(string-contains? 1 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-contains?)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-contains? "a")')).to eq @msg['inc_number']
-      expect(@p.parse('(string-contains? "a" "a" 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true if the second word is prefix of the first' do
       expect(@p.parse('(string-contains? "Racket" "Rac")')).to eq '#t'
       expect(@p.parse('(string-contains? "racket" "rac")')).to eq '#t'
@@ -751,15 +542,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string->list' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string->list 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string->list)')).to eq @msg['inc_number']
-      expect(@p.parse('(string->list "a" "a")')).to eq @msg['inc_number']
-    end
-
     it 'converts empty string to <null>' do
       expect(@p.parse('(string->list "")')).to eq '\'()'
     end
@@ -771,15 +553,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-split' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string-split 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-split)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-split "a" "a")')).to eq @msg['inc_number']
-    end
-
     it 'can split empty string' do
       expect(@p.parse('(string-split "")')).to eq '\'()'
     end
@@ -799,16 +572,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string?' do
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string?)')).to eq @msg['inc_number']
-      expect(@p.parse('(string? "a" "a")')).to eq @msg['inc_number']
-    end
-
-    it 'returns true if the argument is <string>' do
-      expect(@p.parse('(string? "")')).to eq '#t'
-      expect(@p.parse('(string? "Sample")')).to eq '#t'
-    end
-
     it 'returns false if the aregument is not <string>' do
       expect(@p.parse('(string? 1)')).to eq '#f'
       expect(@p.parse('(string? 1.5)')).to eq '#f'
@@ -820,15 +583,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-replace' do
-    it 'throws error when the argument are not <strings>' do
-      expect(@p.parse('(string-replace 1 2 3)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-replace "a")')).to eq @msg['inc_number']
-      expect(@p.parse('(string-replace "a" "a")')).to eq @msg['inc_number']
-    end
-
     it 'can replace the empty string' do
       expect(@p.parse('(string-replace "pen" "" " ")')).to eq '" p e n "'
     end
@@ -840,16 +594,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-prefix?' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string-prefix? 1 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-prefix?)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-prefix? "a")')).to eq @msg['inc_number']
-      expect(@p.parse('(string-prefix? "a" "a" 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true if the second word is prefix of the first' do
       expect(@p.parse('(string-prefix? "Racket" "Rac")')).to eq '#t'
       expect(@p.parse('(string-prefix? "racket" "rac")')).to eq '#t'
@@ -867,16 +611,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-sufix?' do
-    it 'throws error when the argument is not <string>' do
-      expect(@p.parse('(string-sufix? 1 1)')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-sufix?)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-sufix? "a")')).to eq @msg['inc_number']
-      expect(@p.parse('(string-sufix? "a" "a" 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true if the second word is sufix of the first' do
       expect(@p.parse('(string-sufix? "Racket" "cket")')).to eq '#t'
       expect(@p.parse('(string-sufix? "racket" "cket")')).to eq '#t'
@@ -894,16 +628,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'string-join' do
-    it 'throws error when the argument is not <list>' do
-      expect(@p.parse('(string-join "string")')).to eq @msg['inv_type']
-      expect(@p.parse('(string-join (cons 1 2))')).to eq @msg['inv_type']
-    end
-
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(string-join)')).to eq @msg['inc_number']
-      expect(@p.parse('(string-join \'() "a" "a")')).to eq @msg['inc_number']
-    end
-
     it 'joins the list when no delimeter is provided' do
       expect(@p.parse('(string-join \'(1 2))')).to eq '"1 2"'
       expect(@p.parse('(string-join \'())')).to eq '""'
@@ -918,11 +642,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'null?' do
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(null?)')).to eq @msg['inc_number']
-      expect(@p.parse('(null? \'() 1)')).to eq @msg['inc_number']
-    end
-
     it 'returns true when empty <list> is provided' do
       expect(@p.parse('(null? \'())')).to eq '#t'
       expect(@p.parse('(null? null)')).to eq '#t'
@@ -945,12 +664,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'cons' do
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(cons)')).to eq @msg['inc_number']
-      expect(@p.parse('(cons 1)')).to eq @msg['inc_number']
-      expect(@p.parse('(cons 1 2 3)')).to eq @msg['inc_number']
-    end
-
     it 'returns <pair> when the second argument is not <list>' do
       expect(@p.parse('(cons 1 2)')).to eq '(1 . 2)'
       expect(@p.parse('(cons 1 (cons 2 3))')).to eq '(1 2 . 3)'
@@ -987,11 +700,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'car' do
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(car)')).to eq @msg['inc_number']
-      expect(@p.parse('(car \'(1 2) \'(1 2))')).to eq @msg['inc_number']
-    end
-
     it 'throws error when <null> provided' do
       expect(@p.parse('(car null)')).to eq car_cdr_err '\'()', 'car'
       expect(@p.parse('(car (list))')).to eq car_cdr_err '\'()', 'car'
@@ -1010,11 +718,6 @@ RSpec.describe 'LispInterpreter' do
   end
 
   describe 'cdr' do
-    it 'throws argument error when wrong number of arguments are provided' do
-      expect(@p.parse('(cdr)')).to eq @msg['inc_number']
-      expect(@p.parse('(cdr \'(1 2) \'(1 2))')).to eq @msg['inc_number']
-    end
-
     it 'throws error when <null> provided' do
       expect(@p.parse('(cdr null)')).to eq car_cdr_err '\'()', 'cdr'
       expect(@p.parse('(cdr (list))')).to eq car_cdr_err '\'()', 'cdr'
