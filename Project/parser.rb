@@ -13,9 +13,14 @@ class Parser
 
   def run
     loop do
-      token = gets.chomp
+      token = ''
+      until (validate_token token).nil? && token != ''
+        crr_input = gets.chomp
+        token << crr_input
+        break if crr_input == ''
+      end
       result = parse token
-      print_result result
+      print_result result unless token.empty?
     end
   end
 
