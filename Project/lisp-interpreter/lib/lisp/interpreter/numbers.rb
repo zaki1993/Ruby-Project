@@ -51,6 +51,11 @@ module SchemeNumbersHelper
     return [0] if other.size == 1 && other[0] == 0.0
     other
   end
+
+  def divide_number(a, b)
+    return a / b if (a / b).to_i.to_f == a / b.to_f
+    a / b.to_f
+  end
 end
 
 # Scheme numbers module

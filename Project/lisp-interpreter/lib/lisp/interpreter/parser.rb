@@ -23,11 +23,23 @@ class Parser
     end
   end
 
+  def split_token(token)
+    result = []
+    token.split(/\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/).each do |t|
+      if !t.string? && (t.include?('(') || t.include?(')'))
+        t.to_s.split(/(\(|\))/).each { |p| result << p }
+      else
+        result << t
+      end
+    end
+    result
+  end
+
   def parse(token)
     token_error = validate_token token
     result =
       if token_error.nil?
-        @tokenizer.tokenize token
+        @tokenizer.tokenize split_token token
       else
         token_error
       end
