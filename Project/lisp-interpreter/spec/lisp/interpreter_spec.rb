@@ -59,7 +59,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  describe 'Literals' do
+  describe 'literals' do
     it 'throws invalid variable error when the data is invalid' do
       expect(@p.parse('#\invalid')).to eq @msg['inv_type']
     end
@@ -92,8 +92,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (+ z ...)
-  describe '+' do
+  describe '(+ z ...)' do
     it 'returns 0 when <z> is not provided' do
       expect(@p.parse('(+)')).to eq 0
     end
@@ -113,8 +112,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (- z w ...+)
-  describe '-' do
+  describe '(- z w ...+)' do
     it 'returns 0 if no <z> and <w>s are provided' do
       expect(@p.parse('(-)')).to eq 0
     end
@@ -134,8 +132,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (* z ...)
-  describe '*' do
+  describe '(* z ...)' do
     it 'returns 1 if <z> is not provided' do
       expect(@p.parse('(*)')).to eq 1
     end
@@ -154,8 +151,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (/ z w ...+)
-  describe '/' do
+  describe '(/ z w ...+)' do
     it 'throws ZeroDivisionError when <z> is 0 and no <w>s are provided' do
       expect(@p.parse('(/ 0)')).to eq @msg['zero_div']
       expect(@p.parse('(/ 0.0)')).to eq @msg['zero_div']
@@ -174,8 +170,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (not v)
-  describe 'not' do
+  describe '(not v)' do
     it 'returns #t when <v> is #f' do
       expect(@p.parse('(not #f)')).to eq '#t'
       expect(@p.parse('(not (not #t))')).to eq '#t'
@@ -187,8 +182,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (equal? v1 v2)
-  describe 'equal?' do
+  describe '(equal? v1 v2)' do
     it 'returns #t when <v1> = <v2>' do
       expect(@p.parse('(equal? 1 1)')).to eq '#t'
       expect(@p.parse('(equal? "Sample" "Sample")')).to eq '#t'
@@ -205,8 +199,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (quotient n m)
-  describe 'quotient' do
+  describe '(quotient n m)' do
     it 'throws ZeroDivisionError if second argument is 0' do
       expect(@p.parse('(quotient 1 0)')).to eq @msg['zero_div']
     end
@@ -226,8 +219,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (remainder n m)
-  describe 'remainder' do
+  describe '(remainder n m)' do
     it 'throws ZeroDivisionError if <m> is 0' do
       expect(@p.parse('(remainder 1 0)')).to eq @msg['zero_div']
       expect(@p.parse('(remainder 1 0.0)')).to eq @msg['zero_div']
@@ -248,8 +240,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (modulo n m)
-  describe 'modulo' do
+  describe '(modulo n m)' do
     it 'throws ZeroDivisionError if <m> is 0' do
       expect(@p.parse('(modulo 1 0)')).to eq @msg['zero_div']
       expect(@p.parse('(modulo 1 0.0)')).to eq @msg['zero_div']
@@ -270,8 +261,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (numerator q)
-  describe 'numerator' do
+  describe '(numerator q)' do
     it 'returns the numerator of <q> when <q> is integer' do
       expect(@p.parse('(numerator 5)')).to eq 5
       expect(@p.parse('(numerator 1)')).to eq 1
@@ -291,8 +281,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (denominator q)
-  describe 'denominator' do
+  describe '(denominator q)' do
     it 'returns the denominator of <q> when <q> is integer' do
       expect(@p.parse('(denominator 5)')).to eq 1
       expect(@p.parse('(denominator 1)')).to eq 1
@@ -312,8 +301,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (abs z)
-  describe 'abs' do
+  describe '(abs z)' do
     it 'returns the absolute value of <z> when <z> is integer' do
       expect(@p.parse('(abs 1)')).to eq 1
       expect(@p.parse('(abs -10)')).to eq 10
@@ -327,8 +315,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (add1 z)
-  describe 'add1' do
+  describe '(add1 z)' do
     it 'returns <z> + 1 when <z> is integer' do
       expect(@p.parse('(add1 1)')).to eq 2
       expect(@p.parse('(add1 -1)')).to eq 0
@@ -342,8 +329,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (sub1 z)
-  describe 'sub1' do
+  describe '(sub1 z)' do
     it 'returns <z> - 1 when <z> is integer' do
       expect(@p.parse('(sub1 1)')).to eq 0
       expect(@p.parse('(sub1 -1)')).to eq '-2'.to_i
@@ -357,8 +343,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (min x ...+)
-  describe 'min' do
+  describe '(min x ...+)' do
     it 'returns <x> if <x> is single argument' do
       expect(@p.parse('(min -5)')).to eq '-5'.to_i
       expect(@p.parse('(min 1.5)')).to eq 1.5
@@ -373,8 +358,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (max x ...+)
-  describe 'max' do
+  describe '(max x ...+)' do
     it 'returns <x> if <x>s is single argument' do
       expect(@p.parse('(max -5)')).to eq '-5'.to_i
       expect(@p.parse('(max 1.5)')).to eq 1.5
@@ -389,8 +373,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (< x y ...+)
-  describe '#<' do
+  describe '(< x y ...+)' do
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(< 1 2)')).to eq '#t'
       expect(@p.parse('(< 1.7 2.8 3)')).to eq '#t'
@@ -407,8 +390,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (> x y ...+)
-  describe '#>' do
+  describe '(> x y ...+)' do
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(> 3 2)')).to eq '#t'
       expect(@p.parse('(> 3.2 2.99 1.1)')).to eq '#t'
@@ -425,8 +407,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (<= x y ...+)
-  describe '#<=' do
+  describe '(<= x y ...+)' do
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(<= 1 2)')).to eq '#t'
       expect(@p.parse('(<= 1.5 2.1 3.6)')).to eq '#t'
@@ -443,8 +424,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (>= x y ...+)
-  describe '#>=' do
+  describe '(>= x y ...+)' do
     it 'returns true when called with <smaller> and <bigger> arguments' do
       expect(@p.parse('(>= 3 2)')).to eq '#t'
       expect(@p.parse('(>= 3.5 2.5 1.5)')).to eq '#t'
@@ -461,8 +441,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-length str)
-  describe 'string-length' do
+  describe '(string-length str)' do
     it 'returns 0 whem <str> is the empty string' do
       expect(@p.parse('(string-length "")')).to eq 0
     end
@@ -474,8 +453,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (substring str from [to])
-  describe 'substring' do
+  describe '(substring str from [to])' do
     it 'finds the substring of <str> when only <from> is provided' do
       expect(@p.parse('(substring "Apple" 1)')).to eq '"pple"'
       expect(@p.parse('(substring "Hello world" 4)')).to eq '"o world"'
@@ -493,8 +471,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-upcase str)
-  describe 'string-upcase' do
+  describe '(string-upcase str)' do
     it 'returns <str> if <str> is the empty string' do
       expect(@p.parse('(string-upcase "")')).to eq '""'
     end
@@ -507,8 +484,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-downcase str)
-  describe 'string-downcase' do
+  describe '(string-downcase str)' do
     it 'returns <str> if <str> is the empty string' do
       expect(@p.parse('(string-downcase "")')).to eq '""'
     end
@@ -521,8 +497,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-contains? s contained)
-  describe 'string-contains?' do
+  describe '(string-contains? s contained)' do
     it 'returns true if <contained> is prefix of <s>' do
       expect(@p.parse('(string-contains? "Racket" "Rac")')).to eq '#t'
       expect(@p.parse('(string-contains? "racket" "rac")')).to eq '#t'
@@ -539,14 +514,13 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(string-contains? "Racket" "Racket")')).to eq '#t'
     end
 
-    it 'returns false if <s> does not contains <contained>' do
+    it 'returns false if <s> does not contain <contained>' do
       expect(@p.parse('(string-contains? "Racket" "Rackett")')).to eq '#f'
       expect(@p.parse('(string-contains? "racket" "sample")')).to eq '#f'
     end
   end
 
-  # (string->list str)
-  describe 'string->list' do
+  describe '(string->list str)' do
     it 'return the empty list if <str> is the empty string' do
       expect(@p.parse('(string->list "")')).to eq '()'
     end
@@ -557,8 +531,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-split str [sep])
-  describe 'string-split' do
+  describe '(string-split str [sep])' do
     it 'splits the empty string' do
       expect(@p.parse('(string-split "")')).to eq '()'
     end
@@ -577,8 +550,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string? v)
-  describe 'string?' do
+  describe '(string? v)' do
     it 'returns true if <v> is string' do
       expect(@p.parse('(string? "str")')).to eq '#t'
       expect(@p.parse('(string? "")')).to eq '#t'
@@ -594,8 +566,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-replace str from to)
-  describe 'string-replace' do
+  describe '(string-replace str from to)' do
     it 'can replace the empty string' do
       expect(@p.parse('(string-replace "pen" "" " ")')).to eq '" p e n "'
     end
@@ -606,8 +577,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-prefix? s prefix)
-  describe 'string-prefix?' do
+  describe '(string-prefix? s prefix)' do
     it 'returns true if <s> starts with <prefix>' do
       expect(@p.parse('(string-prefix? "Racket" "Rac")')).to eq '#t'
       expect(@p.parse('(string-prefix? "racket" "rac")')).to eq '#t'
@@ -624,8 +594,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-sufix? s suffix)
-  describe 'string-sufix?' do
+  describe '(string-sufix? s suffix)' do
     it 'returns true if <s> ends with <suffix>' do
       expect(@p.parse('(string-sufix? "Racket" "cket")')).to eq '#t'
       expect(@p.parse('(string-sufix? "racket" "cket")')).to eq '#t'
@@ -642,8 +611,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (string-join strs [sep])
-  describe 'string-join' do
+  describe '(string-join strs [sep])' do
     it 'appends the strings in <strs> when <sep> is not provided' do
       expect(@p.parse('(string-join \'(1 2))')).to eq '"1 2"'
       expect(@p.parse('(string-join \'())')).to eq '""'
@@ -657,8 +625,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (null? v)
-  describe 'null?' do
+  describe '(null? v)' do
     it 'returns true when <v> is the empty list' do
       expect(@p.parse('(null? \'())')).to eq '#t'
       expect(@p.parse('(null? null)')).to eq '#t'
@@ -677,8 +644,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (cons a d)
-  describe 'cons' do
+  describe '(cons a d)' do
     it 'returns pair of <a> and <d> when <d> is not list' do
       expect(@p.parse('(cons 1 2)')).to eq '(1 . 2)'
       expect(@p.parse('(cons 1 (cons 2 3))')).to eq '(1 2 . 3)'
@@ -701,8 +667,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (list v ...)
-  describe 'list' do
+  describe '(list v ...)' do
     it 'returns empty list when <v> is not provided' do
       expect(@p.parse('(list)')).to eq '()'
     end
@@ -715,9 +680,8 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (car p); p->pair?
-  describe 'car' do
-    it 'throws error when <p> is empty list' do
+  describe '(car p)' do
+    it 'throws error when <p> is the empty list' do
       expect(@p.parse('(car null)')).to eq car_cdr_err '\'()', 'car'
       expect(@p.parse('(car (list))')).to eq car_cdr_err '\'()', 'car'
       expect(@p.parse('(car \'())')).to eq car_cdr_err '\'()', 'car'
@@ -732,9 +696,8 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (cdr p); p->pair?
-  describe 'cdr' do
-    it 'throws error when <p> is empty list' do
+  describe '(cdr p)' do
+    it 'throws error when <p> is the empty list' do
       expect(@p.parse('(cdr null)')).to eq car_cdr_err '\'()', 'cdr'
       expect(@p.parse('(cdr (list))')).to eq car_cdr_err '\'()', 'cdr'
       expect(@p.parse('(cdr \'())')).to eq car_cdr_err '\'()', 'cdr'
@@ -750,8 +713,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (list? v)
-  describe 'list?' do
+  describe '(list? v)' do
     it 'returns true if <v> is empty list' do
       expect(@p.parse('(list? null)')).to eq '#t'
       expect(@p.parse('(list? (list))')).to eq '#t'
@@ -773,8 +735,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (pair? v)
-  describe 'pair?' do
+  describe '(pair? v)' do
     it 'returns true if <v> is not empty list' do
       expect(@p.parse('(pair? \'(1 2))')).to eq '#t'
       expect(@p.parse('(pair? \'(1))')).to eq '#t'
@@ -796,30 +757,28 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (length lst)
-  describe 'length' do
-    it 'returns 0 if empty list is provided' do
+  describe '(length lst)' do
+    it 'returns 0 if <lst> is the empty list' do
       expect(@p.parse('(length null)')).to eq 0
       expect(@p.parse('(length (list))')).to eq 0
       expect(@p.parse('(length \'())')).to eq 0
     end
 
-    it 'returns the number of elemets in non empty list' do
+    it 'returns the number of elements in <lst> if <lst> is not empty list' do
       expect(@p.parse('(length \'(1 2))')).to eq 2
       expect(@p.parse('(length (list 1 2 3))')).to eq 3
       expect(@p.parse('(length (cons 1 \'(2 3 4)))')).to eq 4
     end
   end
 
-  # (reverse lst)
-  describe 'reverse' do
-    it 'returns empty list if empty list is provided' do
+  describe '(reverse lst)' do
+    it 'returns <lst> if <lst> is the empty list' do
       expect(@p.parse('(reverse null)')).to eq '()'
       expect(@p.parse('(reverse (list))')).to eq '()'
       expect(@p.parse('(reverse \'())')).to eq '()'
     end
 
-    it 'returns the list backwards' do
+    it 'returns <lst> backwards if <lst> is not the empty list' do
       expect(@p.parse('(reverse \'(1 2))')).to eq '(2 1)'
       expect(@p.parse('(reverse (list 1 2 3))')).to eq '(3 2 1)'
       expect(@p.parse('(reverse (cons 1 \'(2 3 4)))')).to eq '(4 3 2 1)'
@@ -827,9 +786,8 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (remove v lst)
-  describe 'remove' do
-    it 'removes nothing if the <v> is not found in <lst>' do
+  describe '(remove v lst)' do
+    it 'returns <lst> if the <v> is not found in <lst>' do
       expect(@p.parse('(remove 9 (list 1 2 3))')).to eq '(1 2 3)'
       expect(@p.parse('(remove (list 1 2 3) (cons 1 \'(2 3)))')).to eq '(1 2 3)'
       expect(@p.parse('(remove #t \'(1 2 3))')).to eq '(1 2 3)'
@@ -845,8 +803,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (shuffle lst)
-  describe 'shuffle' do
+  describe '(shuffle lst)' do
     it 'returns <lst> if <lst> is the empty list' do
       expect(@p.parse('(shuffle \'())')).to eq '()'
       expect(@p.parse('(shuffle (list))')).to eq '()'
@@ -861,8 +818,7 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-  # (map proc lst ...+)
-  describe 'map' do
+  describe '(map proc lst ...+)' do
     it 'returns <lst> if <lst> is the empty list' do
       expect(@p.parse('(map + \'())')).to eq '()'
       expect(@p.parse('(map (lambda ()) null)')).to eq '()'
