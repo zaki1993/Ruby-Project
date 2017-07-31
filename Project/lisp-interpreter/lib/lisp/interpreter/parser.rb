@@ -1,6 +1,6 @@
-load 'errors.rb'
-load 'validator.rb'
-load 'tokenizer.rb'
+require 'lisp/interpreter/errors.rb'
+require 'lisp/interpreter/validator.rb'
+require 'lisp/interpreter/tokenizer.rb'
 
 # Parser is used to validate the user input and parse it to the tokenizer
 class Parser
@@ -15,12 +15,11 @@ class Parser
     loop do
       token = ''
       until (validate_token token).nil? && token != ''
-        crr_input = gets.chomp
+        crr_input = STDIN.gets.chomp
         token << crr_input
         break if crr_input == ''
       end
-      result = parse token
-      print_result result unless token.empty?
+      parse token
     end
   end
 
@@ -32,7 +31,7 @@ class Parser
       else
         token_error
       end
-    result
+    print_result result unless result.to_s.empty?
   end
 
   def validate_token(token)
@@ -46,7 +45,6 @@ class Parser
   def print_result(result)
     to_remove = result.to_s.list? || result.to_s.pair? || result.to_s.quote?
     result = result.delete('\'') if to_remove
-    puts result
     result
   end
 end

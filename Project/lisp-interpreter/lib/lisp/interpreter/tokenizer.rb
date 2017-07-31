@@ -1,10 +1,10 @@
-load 'errors.rb'
-load 'validator.rb'
-load 'numbers.rb'
-load 'strings.rb'
-load 'boolean.rb'
-load 'list.rb'
-load 'functional.rb'
+require 'lisp/interpreter/errors.rb'
+require 'lisp/interpreter/validator.rb'
+require 'lisp/interpreter/numbers.rb'
+require 'lisp/interpreter/strings.rb'
+require 'lisp/interpreter/boolean.rb'
+require 'lisp/interpreter/list.rb'
+require 'lisp/interpreter/functional.rb'
 
 # redefine method in Object class
 class Object
@@ -148,6 +148,15 @@ class Tokenizer
     }
   end
 
+  def init_predefined
+    %w[
+      define not equal? if quotient remainder modulo numerator denominator
+      min max sub1 add1 abs string? substring null? cons null list car
+      cdr list? pair? length reverse remove shuffle map foldl foldr filter
+      member lambda apply compose
+    ]
+  end
+
   def init_reserved_fn
     {
       'null' => '\'()'
@@ -161,12 +170,8 @@ class Tokenizer
     @reserved = init_reserved_fn
     set_reserved_keywords
     @functions = init_functions
-    File.readlines('functions.txt').each do |t|
-      @functions[t.chomp] = t.chomp
-    end
+    init_predefined.each { |f| @functions[f] = f }
   end
-
-  # /c[ad]{2,}r/
 
   def set_reserved_keywords
     @reserved.each do |key, value|
