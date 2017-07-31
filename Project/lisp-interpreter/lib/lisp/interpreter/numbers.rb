@@ -32,12 +32,6 @@ module SchemeNumbersHelper
     [num, denom]
   end
 
-  def primary_func_tokenizer(other, oper)
-    x, y, other = get_k_arguments other, true, 2
-    raise 'Incorrect number of arguments' unless other.empty?
-    primary_func_parser(oper, x, y)
-  end
-
   def compare_value_arithmetic(other, oper)
     raise 'Incorrect number of arguments' if other.size < 2
     other = convert_to_num other

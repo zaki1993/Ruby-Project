@@ -36,12 +36,6 @@ module SchemeStringsHelper
     str.gsub('\n', '').gsub('\r', '').gsub('\t', '').strip.squeeze(' ')
   end
 
-  def string_getter(other, get_other)
-    str, other = find_next_value other
-    raise 'String needed' unless check_for_string str
-    [str, get_other ? other : _]
-  end
-
   def arg_function_validator(other, vars = 1)
     raise 'Incorrect number of arguments' if other.size != vars
     result = other[0..vars - 1].all? { |v| check_for_string v }

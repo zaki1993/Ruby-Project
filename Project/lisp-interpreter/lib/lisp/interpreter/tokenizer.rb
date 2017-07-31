@@ -88,16 +88,6 @@ module SchemeChecker
     false
   end
 
-  def check_for_list(other)
-    if other[0..1].join == '\'('
-      other.list?
-    else
-      result, = find_next_function_value other
-      split_result = split_list_string result
-      split_result.list?
-    end
-  end
-
   def check_instance_var(var)
     return false if var.is_a? Proc
     return false unless valid_var_name var
@@ -323,16 +313,6 @@ class Tokenizer
       value = get_var other[0].to_s
       [value, other[1..-1]]
     end
-  end
-
-  def get_k_arguments(other, return_other, k)
-    result = []
-    while (k -= 1) >= 0
-      x, other = find_next_value other
-      result << x
-    end
-    result << other if return_other
-    result
   end
 
   def define(other)

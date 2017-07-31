@@ -62,12 +62,6 @@ module SchemeListsHelper
     '\'(' + result + ')'
   end
 
-  def get_cons_values(tokens)
-    result = get_k_arguments tokens, false, 2
-    raise 'Too little arguments' if result.size != 2
-    result
-  end
-
   def split_list_string(list)
     result = list.split(/(\(|\)|\.)|\ /)
     result.delete('')
