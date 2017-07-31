@@ -735,4 +735,48 @@ RSpec.describe 'LispInterpreter' do
       expect(@p.parse('(cdr \'(1 2 3 4))')).to eq '(2 3 4)'
     end
   end
+  
+  describe 'list?' do
+    it 'returns true if empty list is provided' do
+      expect(@p.parse('(list? null)')).to eq '#t'
+      expect(@p.parse('(list? (list))')).to eq '#t'
+      expect(@p.parse('(list? \'())')).to eq '#t'
+    end
+    
+    it 'returns true if non empty list is provided' do
+      expect(@p.parse('(list? \'(1 2)')).to eq '#t'
+      expect(@p.parse('(list? (list 1 2))')).to eq '#t'
+      expect(@p.parse('(list? \'(1 #t "str"))')).to eq '#t'
+    end
+        
+    it 'returns false if the argument is not list' do
+      expect(@p.parse('(list? #t)')).to eq '#f'
+      expect(@p.parse('(list? 1)')).to eq '#f'
+      expect(@p.parse('(list? \'quote)')).to eq '#f'
+      expect(@p.parse('(list? "string")')).to eq '#f'
+      expect(@p.parse('(list? '(1 . 2))')).to eq '#f'
+    end
+    
+    describe 'pair?' do
+    it 'returns false if empty list is provided' do
+      expect(@p.parse('(pair? null)')).to eq '#f'
+      expect(@p.parse('(pair? (list))')).to eq '#f'
+      expect(@p.parse('(pair? \'())')).to eq '#f'
+    end
+    
+    it 'returns true if non empty list is provided' do
+      expect(@p.parse('(pair? \'(1 2)')).to eq '#t'
+      expect(@p.parse('(pair? \'(1)')).to eq '#t'
+      expect(@p.parse('(pair? (list 1 2))')).to eq '#t'
+      expect(@p.parse('(pair? \'(1 #t "str"))')).to eq '#t'
+    end
+        
+    it 'returns false if the argument is not list' do
+      expect(@p.parse('(pair? #t)')).to eq '#f'
+      expect(@p.parse('(pair? 1)')).to eq '#f'
+      expect(@p.parse('(pair? \'quote)')).to eq '#f'
+      expect(@p.parse('(pair? "string")')).to eq '#f'
+      expect(@p.parse('(pair? '(1 . 2))')).to eq '#f'
+    end
+  end
 end
