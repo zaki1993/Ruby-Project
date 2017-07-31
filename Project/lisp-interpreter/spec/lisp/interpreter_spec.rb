@@ -15,17 +15,11 @@ RSpec.describe Lisp::Interpreter do
     def car_cdr_err(got, fn)
       'Cannot apply ' + fn + ' on ' + got
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
     def build_lst(arr)
       '(' + arr.join(' ') + ')'
     end
 
-=======
-    def build_lst(arr)
-      '(' + arr.join(' ') + ')'
-    end
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
     @p.parse('(define xl (lambda (x) (* 2 x)))')
     @p.parse('(define yl (lambda () 5))')
     @p.parse('(define zl (lambda ()))')
@@ -554,19 +548,11 @@ RSpec.describe Lisp::Interpreter do
   # (string->list str)
   describe 'string->list' do
     it 'return the empty list if <str> is the empty string' do
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
       expect(@p.parse('(string->list "")')).to eq '()'
     end
 
     it 'returns a list of <str> characters when <str> is not the empty list' do
       result = '(#\S #\a #\m #\p #\l #\e)'
-=======
-      expect(@p.parse('(string->list "")')).to eq '\'()'
-    end
-
-    it 'returns a list of <str> characters when <str> is not the empty list' do
-      result = '\'(#\S #\a #\m #\p #\l #\e)'
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
       expect(@p.parse('(string->list "Sample")')).to eq result
     end
   end
@@ -574,7 +560,6 @@ RSpec.describe Lisp::Interpreter do
   # (string-split str [sep])
   describe 'string-split' do
     it 'splits the empty string' do
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
       expect(@p.parse('(string-split "")')).to eq '()'
     end
 
@@ -584,17 +569,6 @@ RSpec.describe Lisp::Interpreter do
 
     it 'removes the carriage when splitting' do
       result = '("foo" "bar" "baz")'
-=======
-      expect(@p.parse('(string-split "")')).to eq '\'()'
-    end
-
-    it 'splits string only with spaces' do
-      expect(@p.parse('(string-split "  ")')).to eq '\'()'
-    end
-
-    it 'removes the carriage when splitting' do
-      result = '\'("foo" "bar" "baz")'
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
       expect(@p.parse('(string-split "  foo bar  baz \r\n\t")')).to eq result
     end
 
@@ -609,11 +583,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(string? "str")')).to eq '#t'
       expect(@p.parse('(string? "")')).to eq '#t'
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
-=======
-    
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
     it 'returns false if <v> is not string' do
       expect(@p.parse('(string? 1)')).to eq '#f'
       expect(@p.parse('(string? 1.5)')).to eq '#f'
@@ -671,11 +641,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(string-sufix? "racket" "rack")')).to eq '#f'
     end
   end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
-=======
-  
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
   # (string-join strs [sep])
   describe 'string-join' do
     it 'appends the strings in <strs> when <sep> is not provided' do
@@ -710,11 +676,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(null? \'quote)')).to eq '#f'
     end
   end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
-=======
-  
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
   # (cons a d)
   describe 'cons' do
     it 'returns pair of <a> and <d> when <d> is not list' do
@@ -779,11 +741,7 @@ RSpec.describe Lisp::Interpreter do
     end
 
     it 'returns the second element of <p>' do
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
       expect(@p.parse('(cdr (cons 1 2))')).to eq '(2)'
-=======
-      expect(@p.parse('(cdr (cons 1 2))')).to eq '\'(2)'
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
       expect(@p.parse('(cdr \'( "sample" . #t))')).to eq '(#t)'
       expect(@p.parse('(cdr (cons 1 (cons 2 3)))')).to eq '(2 . 3)'
       expect(@p.parse('(cdr (list #f 2 3 4))')).to eq '(2 3 4)'
@@ -791,11 +749,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(cdr \'(1))')).to eq '()'
     end
   end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
-=======
-  
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
   # (list? v)
   describe 'list?' do
     it 'returns true if <v> is empty list' do
@@ -803,7 +757,6 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(list? (list))')).to eq '#t'
       expect(@p.parse('(list? \'())')).to eq '#t'
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
     it 'returns true if <v> is not empty list' do
       expect(@p.parse('(list? \'(1 2))')).to eq '#t'
@@ -811,21 +764,11 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(list? \'(1 #t "str"))')).to eq '#t'
     end
 
-=======
-    
-    it 'returns true if <v> is not empty list' do
-      expect(@p.parse('(list? \'(1 2)')).to eq '#t'
-      expect(@p.parse('(list? (list 1 2))')).to eq '#t'
-      expect(@p.parse('(list? \'(1 #t "str"))')).to eq '#t'
-    end
-        
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
     it 'returns false if <v> is not list' do
       expect(@p.parse('(list? #t)')).to eq '#f'
       expect(@p.parse('(list? 1)')).to eq '#f'
       expect(@p.parse('(list? \'quote)')).to eq '#f'
       expect(@p.parse('(list? "string")')).to eq '#f'
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
       expect(@p.parse('(list? \'(1 . 2))')).to eq '#f'
     end
   end
@@ -839,45 +782,20 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(pair? \'(1 #t "str"))')).to eq '#t'
     end
 
-=======
-      expect(@p.parse('(list? '(1 . 2))')).to eq '#f'
-    end
-  
-  # (pair? v)
-  describe 'pair?' do
-    it 'returns true if <v> is not empty list' do
-      expect(@p.parse('(pair? \'(1 2)')).to eq '#t'
-      expect(@p.parse('(pair? \'(1)')).to eq '#t'
-      expect(@p.parse('(pair? (list 1 2))')).to eq '#t'
-      expect(@p.parse('(pair? \'(1 #t "str"))')).to eq '#t'
-    end
-    
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
     it 'returns false if <v> is empty list' do
       expect(@p.parse('(pair? null)')).to eq '#f'
       expect(@p.parse('(pair? (list))')).to eq '#f'
       expect(@p.parse('(pair? \'())')).to eq '#f'
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
-=======
-        
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
     it 'returns false if <v> is not pair' do
       expect(@p.parse('(pair? #t)')).to eq '#f'
       expect(@p.parse('(pair? 1)')).to eq '#f'
       expect(@p.parse('(pair? \'quote)')).to eq '#f'
       expect(@p.parse('(pair? "string")')).to eq '#f'
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
     end
   end
 
-=======
-      expect(@p.parse('(pair? '(1 . 2))')).to eq '#f'
-    end
-  end
-    
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
   # (length lst)
   describe 'length' do
     it 'returns 0 if empty list is provided' do
@@ -885,24 +803,14 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(length (list))')).to eq 0
       expect(@p.parse('(length \'())')).to eq 0
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
     it 'returns the number of elemets in non empty list' do
       expect(@p.parse('(length \'(1 2))')).to eq 2
-=======
-    
-    it 'returns the number of elemets in non empty list' do
-      expect(@p.parse('(length \'(1 2)')).to eq 2
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
       expect(@p.parse('(length (list 1 2 3))')).to eq 3
       expect(@p.parse('(length (cons 1 \'(2 3 4)))')).to eq 4
     end
   end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
-=======
-  
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
   # (reverse lst)
   describe 'reverse' do
     it 'returns empty list if empty list is provided' do
@@ -910,7 +818,6 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(reverse (list))')).to eq '()'
       expect(@p.parse('(reverse \'())')).to eq '()'
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
     it 'returns the list backwards' do
       expect(@p.parse('(reverse \'(1 2))')).to eq '(2 1)'
@@ -920,23 +827,11 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
-=======
-    
-    it 'returns the list backwards' do
-      expect(@p.parse('(reverse \'(1 2)')).to eq '(2 1)'
-      expect(@p.parse('(reverse (list 1 2 3))')).to eq '(3 2 1)'
-      expect(@p.parse('(reverse (cons 1 \'(2 3 4)))')).to eq '(4 3 2 1)'
-      expect(@p.parse('(reverse \'(1 \'(2 3 4) 5))')).to eq '(5 4 3 2 1)'
-    end
-  end
-  
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
   # (remove v lst)
   describe 'remove' do
     it 'removes nothing if the <v> is not found in <lst>' do
       expect(@p.parse('(remove 9 (list 1 2 3))')).to eq '(1 2 3)'
       expect(@p.parse('(remove (list 1 2 3) (cons 1 \'(2 3)))')).to eq '(1 2 3)'
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
       expect(@p.parse('(remove #t \'(1 2 3))')).to eq '(1 2 3)'
     end
 
@@ -975,66 +870,16 @@ RSpec.describe Lisp::Interpreter do
 
     it 'Applies <proc> to the elements of the <lst> when <proc> is lambda' do
       expr1 = '(map (lambda (n)(+ 1 n))\'(1 2 3 4))'
-=======
-      expect(@p.parse('(remove #t \'(1 2 3)')).to eq '(1 2 3)'
-    end
-    
-    it 'returns <lst> ommiting the first element that is equal to <v>' do
-      expect(@p.parse('(remove 1 (list 1 2 3))')).to eq '(2 3)'
-      expect(@p.parse('(remove \'(1) (list \'(1) 2 3))')).to eq '(2 3)'
-      expect(@p.parse('(remove #t \'(1 2 #t 3)')).to eq '(1 2 3)'
-      expect(@p.parse('(remove 1 (list 1 2 1 3))')).to eq '(2 1 3)'
-      expect(@p.parse('(remove #t \'(#t #t #t)')).to eq '(#t #t)'
-      expect(@p.parse('(remove "str" \'("str")')).to eq '()'
-    end
-  end
-  
-  # (shuffle lst)
-  describe 'shuffle' do
-    it 'returns <lst> if <lst> is the empty list' do
-      it 'removes nothing if the <v> is not found in <lst>' do
-      expect(@p.parse('(shuffle \'()))')).to eq '()'
-      expect(@p.parse('(shuffle (list))')).to eq '()'
-      expect(@p.parse('(shuffle null)')).to eq '()'
-    end
-    
-    it 'returns <lst> with randomly shuffled elements' do
-      permuts = [1,2,3].permutation(5).to_a
-      permuts = permuts.map { |p| build_lst p }
-      expect(@p.parse('(shuffle (list 1 2 3))')).to be_within permuts 
-      expect(@p.parse('(shuffle (list 1 1 1))')).to eq '(1 1 1)'
-    end
-  end
-  
-  # (map proc lst ...+)
-  describe 'map' do
-    it 'returns <lst> if <lst> is the empty list and <proc> takes 0 arguments' do
-      expect(@p.parse('(map + \'()')).to eq '()'
-      expect(@p.parse('(map (lambda ()) null)')).to eq '()'
-    end
-    
-    it 'Applies <proc> to the elements of the <lst> when <proc> is lambda' do
-      expr1 = '(map (lambda (n)(+ 1 n))\'(1 2 3 4)))'
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
       expr2 = '(map (lambda (x y)(+ x y))\'(1 2 3 4)\'(10 100 1000 10000))'
       expect(@p.parse(expr1)).to eq '(2 3 4 5)'
       expect(@p.parse(expr2)).to eq '(11 102 1003 10004)'
     end
-<<<<<<< HEAD:Project/lisp-interpreter/spec/lisp/interpreter_spec.rb
 
     it 'Applies <proc> to the elements of the <lst> when <proc> is function' do
       expr1 = '(map list \'(1 2 3 4))'
       expr2 = '(map cons \'(1 2 3 4)\'(1 10 100 1000))'
       expect(@p.parse(expr1)).to eq '((1) (2) (3) (4))'
       expect(@p.parse(expr2)).to eq '((1 . 1) (2 . 10) (3 . 100) (4 . 1000))'
-=======
-    
-    it 'Applies <proc> to the elements of the <lst> when <proc> is function' do
-      expr1 = '(map list \'(1 2 3 4)))'
-      expr2 = '(map cons \'(1 2 3 4)\'(10 100 1000 10000))'
-      expect(@p.parse(expr1)).to eq '((1) (2) (3) (4))'
-      expect(@p.parse(expr2)).to eq '((1 . 10) (2 . 100) (3 . 1000) (4 . 10000))'
->>>>>>> b0395bae8d94245373dcd318a3bae19475f313f1:Project/spec.rb
     end
   end
 end
