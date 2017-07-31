@@ -14,6 +14,9 @@ RSpec.describe 'LispInterpreter' do
     def car_cdr_err(got, fn)
       'Cannot apply ' + fn + ' on ' + got
     end
+    def build_lst(arr)
+      '(' + arr.join(' ') + ')'
+    end
     @p.parse('(define xl (lambda (x) (* 2 x)))')
     @p.parse('(define yl (lambda () 5))')
     @p.parse('(define zl (lambda ()))')
@@ -840,6 +843,45 @@ RSpec.describe 'LispInterpreter' do
       expect(@p.parse('(remove 1 (list 1 2 1 3))')).to eq '(2 1 3)'
       expect(@p.parse('(remove #t \'(#t #t #t)')).to eq '(#t #t)'
       expect(@p.parse('(remove "str" \'("str")')).to eq '()'
+    end
+  end
+  
+  # (shuffle lst)
+  describe 'shuffle' do
+    it 'returns <lst> if <lst> is the empty list' do
+      it 'removes nothing if the <v> is not found in <lst>' do
+      expect(@p.parse('(shuffle \'()))')).to eq '()'
+      expect(@p.parse('(shuffle (list))')).to eq '()'
+      expect(@p.parse('(shuffle null)')).to eq '()'
+    end
+    
+    it 'returns <lst> with randomly shuffled elements' do
+      permuts = [1,2,3].permutation(5).to_a
+      permuts = permuts.map { |p| build_lst p }
+      expect(@p.parse('(shuffle (list 1 2 3))')).to be_within permuts 
+      expect(@p.parse('(shuffle (list 1 1 1))')).to eq '(1 1 1)'
+    end
+  end
+  
+  # (map proc lst ...+)
+  describe 'map' do
+    it 'returns <lst> if <lst> is the empty list and <proc> takes 0 arguments' do
+      expect(@p.parse('(map + \'()')).to eq '()'
+      expect(@p.parse('(map (lambda ()) null)')).to eq '()'
+    end
+    
+    it 'Applies <proc> to the elements of the <lst> when <proc> is lambda' do
+      expr1 = '(map (lambda (n)(+ 1 n))\'(1 2 3 4)))'
+      expr2 = '(map (lambda (x y)(+ x y))\'(1 2 3 4)\'(10 100 1000 10000))'
+      expect(@p.parse(expr1)).to eq '(2 3 4 5)'
+      expect(@p.parse(expr2)).to eq '(11 102 1003 10004)'
+    end
+    
+    it 'Applies <proc> to the elements of the <lst> when <proc> is function' do
+      expr1 = '(map list \'(1 2 3 4)))'
+      expr2 = '(map cons \'(1 2 3 4)\'(10 100 1000 10000))'
+      expect(@p.parse(expr1)).to eq '((1) (2) (3) (4))'
+      expect(@p.parse(expr2)).to eq '((1 . 10) (2 . 100) (3 . 1000) (4 . 10000))'
     end
   end
 end
