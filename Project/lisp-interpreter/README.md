@@ -25,15 +25,16 @@ Minimal subset of Lisp.
         #t, #f
         not, equal?, if
         
-    --scheme
+    ```lisp
         #t; #t
         #f; #f
         (not #t); #f
         (equal? 5 5); #t
         (if (<= 2 3) 'TRUE 'FALSE) # TRUE
-    --
+    ```
     numbers:
-    ```scheme
+    
+    ```lisp
         (+ 1 2); 3
         (- 1 2); -1
         (* 1 2); 2
@@ -56,7 +57,7 @@ Minimal subset of Lisp.
     
     strings:
     
-    ```scheme
+    ```lisp
         (string-length "Hello world"); 11
         (substring "Hello world" 4); "o world"
         (string-upcase "sample"); "SAMPLE"
@@ -72,7 +73,7 @@ Minimal subset of Lisp.
     ```
     
     list and pairs:
-    ```scheme
+    ```lisp
         (null? \'()); #t
         (cons 1 2); (1 . 2)
         null; ()
@@ -96,7 +97,7 @@ Minimal subset of Lisp.
     
     functions and procedures:
     
-    ```scheme
+    ```lisp
         (lambda (x) (* 2 x)); <Proc>
         ((lambda (x) (* 2 x)) 5); 10
         (apply + '(1 2 3)); 6
@@ -105,7 +106,7 @@ Minimal subset of Lisp.
     
     other:
     
-    ``` scheme
+    ``` lisp
         (define x 5) ; 5
         (define (even? x) (if (equal? (remainder x 2) 0) #t #f))
         (even? 4); #t
