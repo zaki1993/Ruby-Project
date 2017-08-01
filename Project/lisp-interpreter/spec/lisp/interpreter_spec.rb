@@ -827,8 +827,10 @@ RSpec.describe Lisp::Interpreter do
     it 'Applies <proc> to the elements of the <lst> when <proc> is lambda' do
       expr1 = '(map (lambda (n)(+ 1 n))\'(1 2 3 4))'
       expr2 = '(map (lambda (x y)(+ x y))\'(1 2 3 4)\'(10 100 1000 10000))'
+      expr3 = '(map xl \'(1 2 3 4))'
       expect(@p.parse(expr1)).to eq '(2 3 4 5)'
       expect(@p.parse(expr2)).to eq '(11 102 1003 10004)'
+      expect(@p.parse(expr3)).to eq '(2 4 6 8)'
     end
 
     it 'Applies <proc> to the elements of the <lst> when <proc> is function' do
