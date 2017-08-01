@@ -90,6 +90,11 @@ module SchemeListsHelper
     return find_list_function_value other if other[0].list?
     (split_list_string other[0].to_s)[2..-2] if other[0].pair?
   end
+
+  def map_helper(lst, func)
+    return lst.map { |t| func.call(*t) } if func.is_a? Proc
+    lst.map { |t| send func, t }
+  end
 end
 
 # Scheme lists module
@@ -140,5 +145,18 @@ module SchemeLists
   def reverse(other)
     value = find_list_function_value other
     build_list value.reverse
+  end
+
+  def map(other)
+    func, other = valid_function other
+    lst = find_all_values other
+    lst = lst.map { |t| find_list_function_value [t] }
+    lst = (equalize_lists lst).transpose
+    build_list map_helper lst, func
+  end
+
+  def shuffle(other)
+    values = find_list_function_value other
+    build_list values.shuffle
   end
 end

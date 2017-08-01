@@ -1,25 +1,59 @@
-# FunctionalScheme helper
-module FunctionalSchemeHelper
+# Optimization module
+module Optimize
+  def fold_values_helper(other)
+    other = other.map { |t| find_list_function_value [t] }
+    (equalize_lists other).transpose
+  end
+
   def get_fold_values(other)
     values = find_all_values other
-    raise 'Incorrect number of arguments' if values.size != 2
-    x, y = values
-    y = split_list_as_string y.to_s
+    raise 'Incorrect number of arguments' if values.empty?
+    x = values[0]
+    y = fold_values_helper values[1..-1]
     [x, y]
   end
 
+  def rm_from_in_scope(scope, idx, def_vars)
+    i = find_bracket_idx scope, idx - 1
+    def_vars[scope[idx + 1].to_s] = scope[idx + 2..i - 1]
+    scope.slice!(start_idx..end_idx)
+    [i + 1, scope, def_vars]
+  end
+
+  def inner_scope_replace(scope, vars)
+    scope.each_with_index do |t, i|
+      scope[i] = vars[t.to_s] if vars.key t.to_s
+    end
+    scope.flatten
+  end
+
+  def fetch_inner_scope(scope, idx = 0, def_vars = {})
+    until idx >= scope.size
+      if scope[idx] == 'define'
+        idx, scope, def_vars = rm_from_in_scope scope, idx - 1, def_vars
+      else
+        idx += 1
+      end
+    end
+    inner_scope_replace scope, def_vars
+  end
+end
+
+# FunctionalScheme helper
+module FunctionalSchemeHelper
+  include Optimize
   def foldl_helper(func, accum, lst)
     return accum if lst.empty?
-    value = func.call lst[0], accum if func.is_a? Proc
-    value = send func, [lst[0], accum] if value.nil?
-    foldl_helper func, value, lst[1..-1]
+    value = func.call(*lst[0], accum) if func.is_a? Proc
+    value = send func, [*lst[0], accum] if value.nil?
+    foldl_helper func, value.to_s, lst[1..-1]
   end
 
   def foldr_helper(func, accum, lst)
     return accum if lst.empty?
     value = foldr_helper func, accum, lst[1..-1]
-    return func.call lst[0], value if func.is_a? Proc
-    send func, [lst[0], value]
+    return func.call(*lst[0], value) if func.is_a? Proc
+    send func, [*lst[0], value]
   end
 
   def equalize_lists(other)
@@ -33,11 +67,6 @@ module FunctionalSchemeHelper
     build_list values[idx..-1]
   end
 
-  def map_helper(lst, func)
-    return lst.map { |t| func.call(*t) } if func.is_a? Proc
-    lst.map { |t| send func, t }
-  end
-
   def find_params_lambda(other)
     raise 'Unbound symbol ' + other.to_s if other[0] != '('
     idx = find_bracket_idx other, 0
@@ -49,38 +78,11 @@ module FunctionalSchemeHelper
     to_eval = other[1..idx - 1]
     (proc_lambda to_eval).call(*other[idx + 1..-1])
   end
-   
-  def remove_from_inner_scope(scope, start_idx, end_idx)
-    scope.slice!(start_idx..end_idx)
-    [end_idx + 1, scope]
-  end
-  
-  def inner_scope_replace(scope, vars)
-    scope.each_with_index do |t, i|
-      if vars.key? t.to_s
-        scope[i] = vars[t.to_s]
-      end
-    end
-    scope.flatten
-  end
-  
-  def fetch_inner_scope(scope, idx = 0, defined_vars = {})
-    until idx >= scope.size
-      if scope[idx] == 'define'
-        i = find_bracket_idx scope, idx - 1
-        defined_vars[scope[idx + 1].to_s] = scope[idx + 2..i - 1]
-        idx, scope = remove_from_inner_scope scope, idx - 1, i
-      else
-        idx += 1
-      end
-    end
-    inner_scope_replace scope, defined_vars
-  end
 
   def proc_lambda(other)
     params, other = find_params_lambda other
     other = fetch_inner_scope other
-    proc = ->(*args) do
+    proc = proc do |*args|
       args = arg_finder args
       raise 'Incorrect number of arguments' unless params.size == args.size
       define_func_helper other.dup, params.dup, args
@@ -148,14 +150,6 @@ end
 # Functional programming main functions
 module FunctionalScheme
   include FunctionalSchemeHelper
-  def map(other)
-    func, other = valid_function other
-    lst = find_all_values other
-    lst = lst.map { |t| find_list_function_value [t] }
-    lst = (equalize_lists lst).transpose
-    build_list map_helper lst, func
-  end
-
   def foldl(other)
     func, other = valid_function other
     val_one, val_two = get_fold_values other
@@ -195,11 +189,6 @@ module FunctionalScheme
     values = find_list_function_value [other[1]]
     values.delete_at(values.index(to_remove) || values.length)
     build_list values
-  end
-
-  def shuffle(other)
-    values = find_list_function_value other
-    build_list values.shuffle
   end
 
   def apply(other)
