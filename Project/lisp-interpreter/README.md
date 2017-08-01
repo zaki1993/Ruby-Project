@@ -31,7 +31,6 @@ booleans:
     ```
 numbers:
     
-    ```scheme 
     (+ 1 2); 3
     (- 1 2); -1
     (* 1 2); 2
@@ -50,11 +49,9 @@ numbers:
     (<= 2 2); #t
     (> 1 2); #f
     (>= 2 2); #t
-    ```
     
 strings:
     
-    ```scheme 
     (string-length "Hello world"); 11
     (substring "Hello world" 4); "o world"
     (string-upcase "sample"); "SAMPLE"
@@ -67,11 +64,9 @@ strings:
     (string-prefix? "Racket" "Rac"); #t
     (string-sufix? "Racket" "cket"); #t
     (string-join '(1 2) "potato"); "1potato2"
-    ```
     
 list and pairs:
     
-    ```scheme 
     (null? \'()); #t
     (cons 1 2); (1 . 2)
     null; ()
@@ -90,26 +85,21 @@ list and pairs:
     (foldl cons '() '(1 2 3 4 5)); (5 4 3 2 1)
     (foldr cons '() '(1 2 3 4 5)); (1 2 3 4 5)
     (filter (<= 3) '(1 2 3 4 5)); (1 2 3)
-    (member 2 (list 1 2 3 4)); (2 3 4)
-    ```
+    (member 2 (list 1 2 3 4)); (2 3 4
     
 functions and procedures:
     
-    ```scheme 
     (lambda (x) (* 2 x)); <Proc>
     ((lambda (x) (* 2 x)) 5); 10
     (apply + '(1 2 3)); 6
     ((compose fn1 fn2) val); (fn1 (fn2 val))
-    ```
     
 other:
     
-    ``` scheme 
     (define x 5) ; 5
     (define (even? x) (if (equal? (remainder x 2) 0) #t #f))
     (even? 4); #t
     (even? 3); #f
-    ```
     
 ## Development
 
