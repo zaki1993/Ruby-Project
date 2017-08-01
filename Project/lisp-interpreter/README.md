@@ -20,9 +20,11 @@ Or install it yourself as:
 ## Usage
 
 Minimal subset of Lisp.
+
     booleans:
         #t, #f
         not, equal?, if
+        
     ```scheme
         #t; #t
         #f; #f
@@ -53,6 +55,7 @@ Minimal subset of Lisp.
     ```
     
     strings:
+    
     ```scheme
         (string-length "Hello world"); 11
         (substring "Hello world" 4); "o world"
@@ -90,14 +93,18 @@ Minimal subset of Lisp.
         (filter (<= 3) '(1 2 3 4 5)); (1 2 3)
         (member 2 (list 1 2 3 4)); (2 3 4)
     ```
+    
     functions and procedures:
+    
     ```scheme
         (lambda (x) (* 2 x)); <Proc>
         ((lambda (x) (* 2 x)) 5); 10
         (apply + '(1 2 3)); 6
         ((compose fn1 fn2) val); (fn1 (fn2 val))
     ```
+    
     other:
+    
     ``` scheme
         (define x 5) ; 5
         (define (even? x) (if (equal? (remainder x 2) 0) #t #f))
