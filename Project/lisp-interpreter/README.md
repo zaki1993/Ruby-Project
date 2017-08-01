@@ -25,13 +25,13 @@ Minimal subset of Lisp.
         #t, #f
         not, equal?, if
         
-    ```scheme
+    --scheme
         #t; #t
         #f; #f
         (not #t); #f
         (equal? 5 5); #t
         (if (<= 2 3) 'TRUE 'FALSE) # TRUE
-    ```
+    --
     numbers:
     ```scheme
         (+ 1 2); 3
