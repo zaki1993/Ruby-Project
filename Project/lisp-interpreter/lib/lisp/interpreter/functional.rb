@@ -49,10 +49,38 @@ module FunctionalSchemeHelper
     to_eval = other[1..idx - 1]
     (proc_lambda to_eval).call(*other[idx + 1..-1])
   end
+   
+  def remove_from_inner_scope(scope, start_idx, end_idx)
+    scope.slice!(start_idx..end_idx)
+    [end_idx + 1, scope]
+  end
+  
+  def inner_scope_replace(scope, vars)
+    scope.each_with_index do |t, i|
+      if vars.key? t.to_s
+        scope[i] = vars[t.to_s]
+      end
+    end
+    scope.flatten
+  end
+  
+  def fetch_inner_scope(scope, idx = 0, defined_vars = {})
+    until idx >= scope.size
+      if scope[idx] == 'define'
+        i = find_bracket_idx scope, idx - 1
+        defined_vars[scope[idx + 1].to_s] = scope[idx + 2..i - 1]
+        idx, scope = remove_from_inner_scope scope, idx - 1, i
+      else
+        idx += 1
+      end
+    end
+    inner_scope_replace scope, defined_vars
+  end
 
   def proc_lambda(other)
     params, other = find_params_lambda other
-    proc = proc do |*args|
+    other = fetch_inner_scope other
+    proc = ->(*args) do
       args = arg_finder args
       raise 'Incorrect number of arguments' unless params.size == args.size
       define_func_helper other.dup, params.dup, args
