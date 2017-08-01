@@ -22,7 +22,7 @@ booleans:
     #t, #f
     not, equal?, if
         
-    ```ruby 
+    ``` scheme 
     #t; #t
     #f; #f
     (not #t); #f
