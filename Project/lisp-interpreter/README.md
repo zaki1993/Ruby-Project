@@ -18,10 +18,9 @@ Or install it yourself as:
     $ gem install lisp-interpreter
 
 ## Usage
-@
-    booleans:
-        #t, #f
-        not, equal?, if
+booleans:
+    #t, #f
+    not, equal?, if
         
     ```lisp
         #t; #t
@@ -30,7 +29,7 @@ Or install it yourself as:
         (equal? 5 5); #t
         (if (<= 2 3) 'TRUE 'FALSE); TRUE
     ```
-    numbers:
+numbers:
     
     ```lisp
         (+ 1 2); 3
@@ -53,7 +52,7 @@ Or install it yourself as:
         (>= 2 2); #t
     ```
     
-    strings:
+strings:
     
     ```lisp
         (string-length "Hello world"); 11
@@ -70,7 +69,8 @@ Or install it yourself as:
         (string-join '(1 2) "potato"); "1potato2"
     ```
     
-    list and pairs:
+list and pairs:
+    
     ```lisp
         (null? \'()); #t
         (cons 1 2); (1 . 2)
@@ -93,7 +93,7 @@ Or install it yourself as:
         (member 2 (list 1 2 3 4)); (2 3 4)
     ```
     
-    functions and procedures:
+functions and procedures:
     
     ```lisp
         (lambda (x) (* 2 x)); <Proc>
@@ -102,7 +102,7 @@ Or install it yourself as:
         ((compose fn1 fn2) val); (fn1 (fn2 val))
     ```
     
-    other:
+other:
     
     ``` lisp
         (define x 5) ; 5
