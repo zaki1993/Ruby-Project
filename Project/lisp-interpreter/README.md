@@ -18,9 +18,7 @@ Or install it yourself as:
     $ gem install lisp-interpreter
 
 ## Usage
-
-Minimal subset of Lisp.
-
+@
     booleans:
         #t, #f
         not, equal?, if
@@ -30,7 +28,7 @@ Minimal subset of Lisp.
         #f; #f
         (not #t); #f
         (equal? 5 5); #t
-        (if (<= 2 3) 'TRUE 'FALSE) # TRUE
+        (if (<= 2 3) 'TRUE 'FALSE); TRUE
     ```
     numbers:
     
