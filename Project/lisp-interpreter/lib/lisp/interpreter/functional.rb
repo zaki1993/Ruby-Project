@@ -180,7 +180,8 @@ module FunctionalScheme
     to_check = other[0]
     split_val = split_list_string other[1]
     raise 'Invalid argument' unless split_val.pair? || split_val.list?
-    member_helper to_check, split_val[2..-2]
+    values = find_all_values split_val[2..-2]
+    member_helper to_check, values
   end
 
   def remove(other)
