@@ -891,4 +891,27 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse(expr2)).to eq 10
     end
   end
+  
+  describe '(compose proc ...)' do
+    # TODO to fix compose !
+  end
+  
+  describe 'define' do
+    it 'can define variable' do
+      expect(@p.parse('(define x 5)')).to eq 5
+      expect(@p.parse('(x)')).to eq 5
+    end
+    
+    it 'can define function' do
+      expr1 = '(define (prod x y)(* x y))'
+      expect(@p.parse(expr1)).to eq be_an_instance_of(Proc)
+      expect(@p.parse('(prod 2 3)')).to eq 6
+    end
+    
+    it 'can define lambda' do
+      expr1 = '(define x (lambda (x) (* 2 x)))'
+      expect(@p.parse(expr1)).to eq be_an_instance_of(Proc)
+      expect(@p.parse('(x 5)')).to eq 10
+    end
+  end
 end
