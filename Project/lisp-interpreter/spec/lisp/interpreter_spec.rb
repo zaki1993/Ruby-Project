@@ -925,7 +925,8 @@ RSpec.describe Lisp::Interpreter do
     it 'defines variables visible only in the scope of deffinition or lower' do
       expr1 = '(define prodfive (lambda (x)(define y 5)(* x y)))'
       expect(@p.parse(epxr1)).to be_an_instance_of(Proc)
-      expect(@p.parse(prodfive 6)).to eq 30
+      expect(@p.parse('(prodfive 6)')).to eq 30
+      expect(@p.parse('y')).to eq @msg['inv_type']
     end
   end
 end
