@@ -130,7 +130,7 @@ list and pairs:
     
     (foldr cons '() '(1 2 3 4 5)); (1 2 3 4 5)
     
-    (filter (<= 3) '(1 2 3 4 5)); (1 2 3)
+    (filter (even?) '(1 2 3 4 5)); (2 4)
     
     (member 2 (list 1 2 3 4)); (2 3 4
     
