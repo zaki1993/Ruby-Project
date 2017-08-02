@@ -1,6 +1,6 @@
-require 'lisp/interpreter/errors.rb'
-require 'lisp/interpreter/validator.rb'
-require 'lisp/interpreter/tokenizer.rb'
+require 'lisp/interpreter/errors'
+require 'lisp/interpreter/validator'
+require 'lisp/interpreter/tokenizer'
 
 # Parser is used to validate the user input and parse it to the tokenizer
 class Parser

@@ -14,15 +14,15 @@ module Optimize
   end
 
   def rm_from_in_scope(scope, idx, def_vars)
-    i = find_bracket_idx scope, idx - 1
-    def_vars[scope[idx + 1].to_s] = scope[idx + 2..i - 1]
-    scope.slice!(start_idx..end_idx)
+    i = find_bracket_idx scope, idx
+    def_vars[scope[idx + 2].to_s] = scope[idx + 3..i - 1]
+    scope.slice!(idx..i)
     [i + 1, scope, def_vars]
   end
 
   def inner_scope_replace(scope, vars)
     scope.each_with_index do |t, i|
-      scope[i] = vars[t.to_s] if vars.key t.to_s
+      scope[i] = vars[t.to_s] if vars.key? t.to_s
     end
     scope.flatten
   end
