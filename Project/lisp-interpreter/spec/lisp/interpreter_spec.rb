@@ -840,5 +840,55 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse(expr2)).to eq '((1 . 1) (2 . 10) (3 . 100) (4 . 1000))'
     end
   end
-
+  
+  describe '(member v lst)' do
+    it 'returns false if <v> is not found in <lst>' do
+      expect(@p.parse('(member 9 (list 1 2 3 4))')).to eq '#f'
+      expect(@p.parse('(member 2 (list))')).to eq '#f'
+      expect(@p.parse('(member 2.0 (list 1 2 3 4))')).to eq '#f'
+    end
+    
+    it 'returns <lst> with elements after the first occurance of <v> in <lst>' do
+      expect(@p.parse('(member 2 (list 1 2 3 4))')).to eq '(2 3 4)'
+      expect(@p.parse('(member \'(1) (list 3 (list 1) 2))')).to eq '((1) 2)'
+      expect(@p.parse('(member 1 (list 1 1 1))')).to eq '(1 1 1)'
+    end
+  end
+  
+  describe '(lambda params body ...+)' do
+    it 'returns procedure when there are no <params>' do
+      expect(@p.parse('(lambda ())')).to be_an_instance_of(Proc)
+      expect(@p.parse('(lambda () 5)')).to be_an_instance_of(Proc)
+    end
+    
+    it 'returns procedure when there are <params>' do
+      expect(@p.parse('(lambda (x))')).to be_an_instance_of(Proc)
+      expect(@p.parse('(lambda (x) x)')).to be_an_instance_of(Proc)
+    end
+    
+    it 'calls the procedure by given values for the <params>' do
+      expect(@p.parse('((lambda (x) x) 10)')).to eq '10'
+      expect(@p.parse('((lambda (x y) (* x y)) 10 10)')).to '100'
+    end
+  end
+  
+  describe '(apply proc v ... lst)' do
+    it 'applies <proc> to <lst> when no <v>s are supplied' do
+      expect(@p.parse('(apply + \'(1 2 3))')).to eq 6
+      expect(@p.parse('(apply + \'())')).to eq 0
+    end
+    
+    it 'applies <proc> to <lst> when <v>s are supplied' do
+      expect(@p.parse('(apply + 1 2 \'(3))')).to eq 6
+      expr2 = '(apply map list \'((a b c) (1 2 3)))'
+      expect(@p.parse(expr2)).to eq '((a 1) (b 2) (c 3))'
+    end
+    
+    it 'applies <proc> to <lst> when <proc> is lambda expression' do
+      expr1 = '(apply (lambda (x) (* x x x)) (list 2))'
+      expr2 = '(apply xl) (list 5))'
+      expect(@p.parse(expr1)).to eq 8
+      expect(@p.parse(expr2)).to eq 10
+    end
+  end
 end
