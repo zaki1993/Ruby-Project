@@ -130,7 +130,7 @@ list and pairs:
     
     (foldr cons '() '(1 2 3 4 5)); (1 2 3 4 5)
     
-    (filter (<= 3) '(1 2 3 4 5)); (1 2 3)
+    (filter (even?) '(1 2 3 4 5)); (2 4)
     
     (member 2 (list 1 2 3 4)); (2 3 4
     
@@ -162,7 +162,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/lisp-interpreter. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/Ruby-Project/zaki1993/lisp-interpreter. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
@@ -170,4 +170,4 @@ The gem is available as open source under the terms of the [MIT License](http://
 
 ## Code of Conduct
 
-Everyone interacting in the Lisp::Interpreter project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/lisp-interpreter/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Lisp::Interpreter project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/Ruby-Project/zaki1993/lisp-interpreter/blob/master/CODE_OF_CONDUCT.md).

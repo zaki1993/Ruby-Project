@@ -18,6 +18,7 @@ module SchemeBooleansHelper
     end
   end
 end
+<<<<<<< HEAD
 
 # Scheme booleans module
 module SchemeBooleans
@@ -32,7 +33,23 @@ module SchemeBooleans
     raise 'Invalid data type' unless check_for_bool other[0]
     other[0] == '#t' ? '#f' : '#t'
   end
+=======
+>>>>>>> 1f7d2a147a3326776e43a45f6548ef1e61804137
 
+# Scheme booleans module
+module SchemeBooleans
+  include SchemeBooleansHelper
+  def equal?(other)
+    raise 'Incorrect number of arguments' if other.size != 2
+    other[0].to_s == other[1].to_s ? '#t' : '#f'
+  end
+
+  def not(other)
+    raise 'Incorrect number of arguments' if other.size != 1
+    raise 'Invalid data type' unless check_for_bool other[0]
+    other[0] == '#t' ? '#f' : '#t'
+  end
+  
   def if(other)
     raise 'Incorrect number of arguments' if other.empty?
     expr, other = find_next_value other
