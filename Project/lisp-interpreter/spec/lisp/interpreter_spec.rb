@@ -824,7 +824,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(map (lambda ()) null)')).to eq '()'
     end
 
-    it 'Applies <proc> to the elements of the <lst> when <proc> is lambda' do
+    it 'applies <proc> to the elements of the <lst> when <proc> is lambda' do
       expr1 = '(map (lambda (n)(+ 1 n))\'(1 2 3 4))'
       expr2 = '(map (lambda (x y)(+ x y))\'(1 2 3 4)\'(10 100 1000 10000))'
       expr3 = '(map xl \'(1 2 3 4))'
@@ -833,7 +833,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse(expr3)).to eq '(2 4 6 8)'
     end
 
-    it 'Applies <proc> to the elements of the <lst> when <proc> is function' do
+    it 'applies <proc> to the elements of the <lst> when <proc> is function' do
       expr1 = '(map list \'(1 2 3 4))'
       expr2 = '(map cons \'(1 2 3 4)\'(1 10 100 1000))'
       expect(@p.parse(expr1)).to eq '((1) (2) (3) (4))'
@@ -841,4 +841,132 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
+  describe '(foldl proc init lst ...+)' do
+    it 'applies <proc> to <lst> when <proc> is function' do
+      expect(@p.parse('(foldl cons \'() \'(1 2 3 4))')).to eq '(4 3 2 1)'
+      expect(@p.parse('(foldl + 0 \'(1 2 3 4 5))')).to eq '15'
+    end
+
+    it 'applies <proc> to <lst> when <proc> is lambda expression' do
+      expr1 = '(foldl (lambda (a b r)(* r (- a b))) 1 \'(1 2 3) \'(4 5 6))'
+      expr2 = '(foldl (lambda (a b) (+ a b)) 0 \'(1 2 3 4 5))'
+      expect(@p.parse(expr1)).to eq '-27'
+      expect(@p.parse(expr2)).to eq '15'
+    end
+  end
+
+  describe '(foldr proc init lst ...+)' do
+    it 'applies <proc> to <lst> when <proc> is function' do
+      expect(@p.parse('(foldr cons \'() \'(1 2 3 4))')).to eq '(1 2 3 4)'
+      expect(@p.parse('(foldr + 0 \'(1 2 3 4 5))')).to eq 15
+    end
+
+    it 'applies <proc> to <lst> when <proc> is lambda expression' do
+      expr1 = '(foldr (lambda (a b r)(* r (- a b))) 1 \'(1 2 3) \'(4 5 6))'
+      expr2 = '(foldr (lambda (a b) (+ a b)) 0 \'(1 2 3 4 5))'
+      expect(@p.parse(expr1)).to eq -27
+      expect(@p.parse(expr2)).to eq 15
+    end
+  end
+
+  describe '(filter pred lst)' do
+    it 'returns the empty list if <pred> is false for all elements of <lst>' do
+      expr1 = '(filter (lambda (x) (< x 3)) \'(3 3 3))'
+      expect(@p.parse(expr1)).to eq '()'
+    end
+
+    it 'returns a <lst> with elements for which <pred> is true' do
+      expr1 = '(filter (lambda (x) (< x 3)) \'(1 3 -4 0 5))'
+      expect(@p.parse(expr1)).to eq '(1 -4 0)'
+    end
+  end
+
+  describe '(member v lst)' do
+    it 'returns false if <v> is not found in <lst>' do
+      expect(@p.parse('(member 9 (list 1 2 3 4))')).to eq '#f'
+      expect(@p.parse('(member 2 (list))')).to eq '#f'
+      expect(@p.parse('(member 2.0 (list 1 2 3 4))')).to eq '#f'
+    end
+
+    it 'returns <lst> with elements after the first occurance of <v> in <lst>' do
+      expect(@p.parse('(member 2 (list 1 2 3 4))')).to eq '(2 3 4)'
+      expect(@p.parse('(member \'(1) (list 3 (list 1) 2))')).to eq '((1) 2)'
+      expect(@p.parse('(member 1 (list 1 1 1))')).to eq '(1 1 1)'
+    end
+  end
+
+  describe '(lambda params body ...+)' do
+    it 'returns procedure when there are no <params>' do
+      expect(@p.parse('(lambda ())')).to be_instance_of(Proc)
+      expect(@p.parse('(lambda () 5)')).to be_instance_of(Proc)
+    end
+
+    it 'returns procedure when there are <params>' do
+      expect(@p.parse('(lambda (x))')).to be_an_instance_of(Proc)
+      expect(@p.parse('(lambda (x) x)')).to be_an_instance_of(Proc)
+    end
+
+    it 'calls the procedure by given values for the <params>' do
+      expect(@p.parse('((lambda (x) x) 10)')).to eq '10'
+      expect(@p.parse('((lambda (x y) (* x y)) 10 10)')).to eq 100
+    end
+  end
+
+  describe '(apply proc v ... lst)' do
+    it 'applies <proc> to <lst> when no <v>s are supplied' do
+      expect(@p.parse('(apply + \'(1 2 3))')).to eq 6
+      expect(@p.parse('(apply + \'())')).to eq 0
+    end
+
+    it 'applies <proc> to <lst> when <v>s are supplied' do
+      expect(@p.parse('(apply + 1 2 \'(3))')).to eq 6
+      expr2 = '(apply map list \'(\'(a b c) \'(1 2 3)))'
+      expect(@p.parse(expr2)).to eq '((a 1) (b 2) (c 3))'
+    end
+
+    it 'applies <proc> to <lst> when <proc> is lambda expression' do
+      expr1 = '(apply (lambda (x) (* x x x)) (list 2))'
+      expr2 = '(apply xl (list 5))'
+      expect(@p.parse(expr1)).to eq 8
+      expect(@p.parse(expr2)).to eq 10
+    end
+  end
+
+  describe '(compose proc ...)' do
+    # TODO to fix compose !
+  end
+
+  describe 'define' do
+    it 'can define variable' do
+      expect(@p.parse('(define x 5)')).to eq '5'
+      expect(@p.parse('x')).to eq '5'
+    end
+
+    it 'can define function' do
+      expr1 = '(define (prod x y)(* x y))'
+      expect(@p.parse(expr1)).to be_instance_of(Proc)
+      expect(@p.parse('(prod 2 3)')).to eq 6
+    end
+
+    it 'can define lambda' do
+      expr1 = '(define x (lambda (x) (* 2 x)))'
+      expect(@p.parse(expr1)).to be_instance_of(Proc)
+      expect(@p.parse('(x 5)')).to eq 10
+    end
+  end
+
+  describe 'scopes' do
+    it 'uses inner scope variables with the same name as in outer scope' do
+      expr1 = '(define (prod x y) ((lambda (x y) (* x y)) x y))'
+      expect(@p.parse(expr1)).to be_instance_of(Proc)
+      expect(@p.parse('(prod 2 3)')).to eq 6
+    end
+
+    it 'defines variables visible only in the scope of deffinition or lower' do
+      expr1 = '(define prodfive (lambda (x)(define yy 5)(* x yy)))'
+      expect(@p.parse(expr1)).to be_instance_of(Proc)
+      expect(@p.parse('(prodfive 6)')).to eq 30
+      expect(@p.parse('yy')).to eq @msg['inv_type']
+    end
+  end
 end
