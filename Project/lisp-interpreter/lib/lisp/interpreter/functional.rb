@@ -44,7 +44,7 @@ module FunctionalSchemeHelper
   include Optimize
   def foldl_helper(func, accum, lst)
     return accum if lst.empty?
-    value = func.call(*lst[0], accum) if func.is_a? Proc
+    value = func.call(*lst[0], accum.to_s) if func.is_a? Proc
     value = send func, [*lst[0], accum] if value.nil?
     foldl_helper func, value.to_s, lst[1..-1]
   end
@@ -52,8 +52,8 @@ module FunctionalSchemeHelper
   def foldr_helper(func, accum, lst)
     return accum if lst.empty?
     value = foldr_helper func, accum, lst[1..-1]
-    return func.call(*lst[0], value) if func.is_a? Proc
-    send func, [*lst[0], value]
+    return func.call(*lst[0], value.to_s) if func.is_a? Proc
+    send func, [*lst[0], value.to_s]
   end
 
   def equalize_lists(other)
