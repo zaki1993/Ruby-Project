@@ -42,9 +42,7 @@ module ValueFinder
     [(build_list value), other[3 + (size_for_list_elem value)..-1]]
   end
 
-
-  def find_next_value(other)
-    return [other[0], other[1..-1]] if other[0].is_a? Proc
+  def find_value_helper(other)
     if other[0] == '('
       find_next_function_value other
     elsif other[0..1].join == '\'('
@@ -53,5 +51,10 @@ module ValueFinder
       value = get_var other[0].to_s
       [value, other[1..-1]]
     end
+  end
+
+  def find_next_value(other)
+    return [other[0], other[1..-1]] if other[0].is_a? Proc
+    find_value_helper other
   end
 end

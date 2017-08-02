@@ -888,7 +888,7 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(member 2.0 (list 1 2 3 4))')).to eq '#f'
     end
 
-    it 'returns <lst> with elements after the first occurance of <v> in <lst>' do
+    it 'returns <lst> with elements after first occurance of <v> in <lst>' do
       expect(@p.parse('(member 2 (list 1 2 3 4))')).to eq '(2 3 4)'
       expect(@p.parse('(member \'(1) (list 3 (list 1) 2))')).to eq '((1) 2)'
       expect(@p.parse('(member 1 (list 1 1 1))')).to eq '(1 1 1)'

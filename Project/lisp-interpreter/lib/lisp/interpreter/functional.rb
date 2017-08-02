@@ -79,15 +79,19 @@ module FunctionalSchemeHelper
     (proc_lambda to_eval).call(*other[idx + 1..-1])
   end
 
+  def proc_lambda_helper(other, params, args)
+    args = arg_finder args
+    raise 'Incorrect number of arguments' unless params.size == args.size
+    define_func_helper other.dup, params.dup, args
+  end
+
   def proc_lambda(other)
     params, other = find_params_lambda other
     other = fetch_inner_scope other
     to_return = other[0..1].join == '(compose' && params.empty?
     return calc_input_val other if to_return
     proc = proc do |*args|
-      args = arg_finder args
-      raise 'Incorrect number of arguments' unless params.size == args.size
-      define_func_helper other.dup, params.dup, args
+      proc_lambda_helper other, params, args
     end
     proc
   end
@@ -227,7 +231,7 @@ module FunctionalScheme
       expr << f
     end
     expr << 'x'
-    funcs.size.times do expr << ')' end
+    funcs.size.times { expr << ')' }
     proc_lambda expr
   end
 
