@@ -864,7 +864,7 @@ RSpec.describe Lisp::Interpreter do
     it 'applies <proc> to <lst> when <proc> is lambda expression' do
       expr1 = '(foldr (lambda (a b r)(* r (- a b))) 1 \'(1 2 3) \'(4 5 6))'
       expr2 = '(foldr (lambda (a b) (+ a b)) 0 \'(1 2 3 4 5))'
-      expect(@p.parse(expr1)).to eq -27
+      expect(@p.parse(expr1)).to eq(-27)
       expect(@p.parse(expr2)).to eq 15
     end
   end
@@ -933,7 +933,22 @@ RSpec.describe Lisp::Interpreter do
   end
 
   describe '(compose proc ...)' do
-    # TODO to fix compose !
+    it 'it returns Proc if called with only functions as argument' do
+      @p.parse('(define y (compose xl xl))')
+      expr1 = '(define x (lambda (x y) (compose x y)))'
+      expect(@p.parse('y')).to be_instance_of(Proc)
+      expect(@p.parse('(compose xl xl)')).to be_instance_of(Proc)
+      expect(@p.parse(expr1)).to be_instance_of(Proc)
+    end
+
+    it 'returns value if values are parsed to the proc' do
+      @p.parse('(define y (compose xl xl))')
+      expr1 = '(define x (lambda (x y) (compose x y)))'
+      expect(@p.parse('(y 5)')).to eq 20
+      expect(@p.parse('((compose xl xl) 5)')).to eq 20
+      expect(@p.parse(expr1)).to be_instance_of(Proc)
+      expect(@p.parse('((x xl xl) 5)')).to eq 20
+    end
   end
 
   describe 'define' do

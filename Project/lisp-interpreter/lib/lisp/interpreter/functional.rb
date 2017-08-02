@@ -82,6 +82,8 @@ module FunctionalSchemeHelper
   def proc_lambda(other)
     params, other = find_params_lambda other
     other = fetch_inner_scope other
+    to_return = other[0..1].join == '(compose' && params.empty?
+    return calc_input_val other if to_return
     proc = proc do |*args|
       args = arg_finder args
       raise 'Incorrect number of arguments' unless params.size == args.size
@@ -205,15 +207,36 @@ module FunctionalScheme
     end
   end
 
-  def compose(other)
+  def call_compose(other)
     tmp = ['(', *other[1..-1]]
     idx = find_bracket_idx tmp, 0
     funcs = find_all_values tmp[1..idx - 1]
     value, = find_next_value tmp[idx + 1..-1]
     funcs.reverse.each do |t|
-      value = calc_input_val ['(', t, value, ')']
+      value = calc_input_val ['(', t, value.to_s, ')']
     end
     value
+  end
+
+  def do_not_call_compose(other)
+    expr = ['(', 'x', ')']
+    funcs = find_all_values other
+    raise 'Incorrect data type' if funcs.any? { |t| t.to_s.number? }
+    funcs.each do |f|
+      expr << '('
+      expr << f
+    end
+    expr << 'x'
+    funcs.size.times do expr << ')' end
+    proc_lambda expr
+  end
+
+  def compose(other)
+    if other[-2] != ')'
+      do_not_call_compose other
+    else
+      call_compose other
+    end
   end
 
   def lambda(other)
