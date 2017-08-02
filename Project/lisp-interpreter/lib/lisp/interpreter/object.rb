@@ -1,4 +1,3 @@
-
 # redefine method in Object class
 class Object
   def number?
