@@ -914,4 +914,18 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('(x 5)')).to eq 10
     end
   end
+  
+  describe 'scopes' do
+    it 'uses inner scope variables with the same name as in outer scope' do
+      expr1 = '(define (prod x y) ((lambda (x y) (* x y)) x y))'
+      expect(@p.parse(epxr1)).to be_an_instance_of(Proc)
+      expect(@p.parse(prod 2 3)).to eq 6
+    end
+    
+    it 'defines variables visible only in the scope of deffinition or lower' do
+      expr1 = '(define prodfive (lambda (x)(define y 5)(* x y)))'
+      expect(@p.parse(epxr1)).to be_an_instance_of(Proc)
+      expect(@p.parse(prodfive 6)).to eq 30
+    end
+  end
 end
