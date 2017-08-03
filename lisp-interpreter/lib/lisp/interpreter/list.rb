@@ -148,7 +148,9 @@ module SchemeLists
   end
 
   def map(other)
+    raise 'Incorrect number of arguments' if other.empty?
     func, other = valid_function other
+    raise 'Incorrect number of arguments' if other.empty?
     lst = find_all_values other
     lst = lst.map { |t| find_list_function_value [t] }
     lst = (equalize_lists lst).transpose

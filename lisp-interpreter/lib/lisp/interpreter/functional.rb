@@ -53,10 +53,16 @@ module Optimize
     send func, values
   end
 
-  def call_compose(other)
+  def call_compose_helper(other)
     tmp = ['(', *other[1..-1]]
     idx = find_bracket_idx tmp, 0
     funcs = find_all_values tmp[1..idx - 1]
+    raise '' if tmp[idx + 1..-1].empty?
+    [funcs, idx, tmp]
+  end
+
+  def call_compose(other)
+    funcs, idx, tmp = call_compose_helper other
     value, = find_next_value tmp[idx + 1..-1]
     funcs.reverse.each do |t|
       value = calc_input_val ['(', t, value.to_s, ')']
@@ -267,6 +273,7 @@ module FunctionalScheme
   end
 
   def define(other)
+    raise 'Incorrect number of arguments' if other.size < 2
     fetch_define other
   end
 end

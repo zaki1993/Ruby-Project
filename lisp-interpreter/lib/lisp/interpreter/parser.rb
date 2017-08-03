@@ -15,13 +15,13 @@ class Parser
   include Environment
 
   def initialize(env_type = Environment::TEST)
-    @ENV_TYPE = env_type
+    @env_type = env_type
     @tokenizer = Tokenizer.new
   end
 
   def run
     loop do
-      print 'zakichan> ' if @ENV_TYPE == Environment::PROD
+      print 'zakichan> ' if @env_type == Environment::PROD
       token = ''
       until (validate_token token).nil? && token != ''
         crr_input = STDIN.gets.chomp
@@ -66,7 +66,7 @@ class Parser
   def print_result(result)
     to_remove = result.to_s.list? || result.to_s.pair? || result.to_s.quote?
     result = result.delete('\'') if to_remove
-    puts result if @ENV_TYPE == Environment::PROD
+    puts result if @env_type == Environment::PROD
     result
   end
 end
