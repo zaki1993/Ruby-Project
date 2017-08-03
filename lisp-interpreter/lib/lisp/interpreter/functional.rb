@@ -37,6 +37,50 @@ module Optimize
     end
     inner_scope_replace scope, def_vars
   end
+
+  def filter_helper(func, values)
+    result =
+      if func.is_a? Proc
+        values.select { |t| func.call(*t) == '#t' }
+      else
+        values.select { |t| (send func, [t]) == '#t' }
+      end
+    build_list result
+  end
+
+  def apply_helper(func, values)
+    return func.call(*values) if func.is_a? Proc
+    send func, values
+  end
+
+  def call_compose(other)
+    tmp = ['(', *other[1..-1]]
+    idx = find_bracket_idx tmp, 0
+    funcs = find_all_values tmp[1..idx - 1]
+    value, = find_next_value tmp[idx + 1..-1]
+    funcs.reverse.each do |t|
+      value = calc_input_val ['(', t, value.to_s, ')']
+    end
+    value
+  end
+
+  def build_compose_expr(funcs)
+    expr = ['(', 'x', ')']
+    funcs.each do |f|
+      expr << '('
+      expr << f
+    end
+    expr << 'x'
+    funcs.size.times { expr << ')' }
+    expr
+  end
+
+  def do_not_call_compose(other)
+    funcs = find_all_values other
+    raise 'Incorrect data type' if funcs.any? { |t| t.to_s.number? }
+    expr = build_compose_expr funcs
+    proc_lambda expr
+  end
 end
 
 # FunctionalScheme helper
@@ -157,28 +201,26 @@ end
 module FunctionalScheme
   include FunctionalSchemeHelper
   def foldl(other)
+    raise 'Incorrect number of parameters' if other.size < 2
     func, other = valid_function other
     val_one, val_two = get_fold_values other
     foldl_helper func, val_one, val_two
   end
 
   def foldr(other)
+    raise 'Incorrect number of parameters' if other.size < 2
     func, other = valid_function other
     val_one, val_two = get_fold_values other
     foldr_helper func, val_one, val_two
   end
 
   def filter(other)
+    raise 'Incorrect number of parameters' if other.size < 2
     func, other = valid_function other
+    raise 'Incorrect number of parameters' if other.empty?
     values = find_all_values other
     values = find_list_function_value [values[0]]
-    result =
-      if func.is_a? Proc
-        values.select { |t| func.call(*t) == '#t' }
-      else
-        values.select { |t| (send func, [t]) == '#t' }
-      end
-    build_list result
+    filter_helper func, values
   end
 
   def member(other)
@@ -199,44 +241,17 @@ module FunctionalScheme
   end
 
   def apply(other)
+    raise 'Incorrect number of arguments' if other.nil? || other.empty?
     func, other = valid_function other
     values = find_all_values other
     *vs, lst = values
     raise 'Incorrect data type' unless lst.list?
     (find_list_function_value [lst]).each { |t| vs << t }
-    if func.is_a? Proc
-      func.call(*vs)
-    else
-      send func, vs
-    end
-  end
-
-  def call_compose(other)
-    tmp = ['(', *other[1..-1]]
-    idx = find_bracket_idx tmp, 0
-    funcs = find_all_values tmp[1..idx - 1]
-    value, = find_next_value tmp[idx + 1..-1]
-    funcs.reverse.each do |t|
-      value = calc_input_val ['(', t, value.to_s, ')']
-    end
-    value
-  end
-
-  def do_not_call_compose(other)
-    expr = ['(', 'x', ')']
-    funcs = find_all_values other
-    raise 'Incorrect data type' if funcs.any? { |t| t.to_s.number? }
-    funcs.each do |f|
-      expr << '('
-      expr << f
-    end
-    expr << 'x'
-    funcs.size.times { expr << ')' }
-    proc_lambda expr
+    apply_helper func, vs
   end
 
   def compose(other)
-    if other[-2] != ')'
+    if other[0] != 'compose'
       do_not_call_compose other
     else
       call_compose other
