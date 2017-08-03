@@ -1,18 +1,27 @@
-require 'lisp/interpreter/errors'
-require 'lisp/interpreter/validator'
-require 'lisp/interpreter/tokenizer'
+require_relative 'errors'
+require_relative 'validator'
+require_relative 'tokenizer'
+
+# Environment type
+module Environment
+  TEST = 1
+  PROD = 2
+end
 
 # Parser is used to validate the user input and parse it to the tokenizer
 class Parser
   include ErrorMessages
   include Validator
+  include Environment
 
-  def initialize
+  def initialize(env_type = Environment::TEST)
+    @ENV_TYPE = env_type
     @tokenizer = Tokenizer.new
   end
 
   def run
     loop do
+      print 'zakichan> ' if @ENV_TYPE == Environment::PROD
       token = ''
       until (validate_token token).nil? && token != ''
         crr_input = STDIN.gets.chomp
@@ -57,6 +66,7 @@ class Parser
   def print_result(result)
     to_remove = result.to_s.list? || result.to_s.pair? || result.to_s.quote?
     result = result.delete('\'') if to_remove
+    puts result if @ENV_TYPE == Environment::PROD
     result
   end
 end

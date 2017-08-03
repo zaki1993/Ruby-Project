@@ -1,13 +1,13 @@
-require 'lisp/interpreter/object'
-require 'lisp/interpreter/errors'
-require 'lisp/interpreter/value_finder'
-require 'lisp/interpreter/checker'
-require 'lisp/interpreter/validator'
-require 'lisp/interpreter/numbers'
-require 'lisp/interpreter/strings'
-require 'lisp/interpreter/boolean'
-require 'lisp/interpreter/list'
-require 'lisp/interpreter/functional'
+require_relative 'object'
+require_relative 'errors'
+require_relative 'value_finder'
+require_relative 'checker'
+require_relative 'validator'
+require_relative 'numbers'
+require_relative 'strings'
+require_relative 'boolean'
+require_relative 'list'
+require_relative 'functional'
 
 # Tokenizer helper
 module TokenizerHelper
