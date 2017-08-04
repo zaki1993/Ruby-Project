@@ -985,13 +985,14 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
+  # You must provide fullpath of the file or place it in the directory where you run the script
   describe 'file read' do
     it 'reads from .ss file' do
-      expect(@p.parse('ghci D:/Github/Ruby-Project/lisp-interpreter/spec/lisp/test.ss')).to be_instance_of(Proc)
+      expect(@p.parse('ghci D:\Github\b\Ruby-Project\lisp-interpreter\spec\lisp\test.ss')).to be_instance_of(Proc)
     end
-
+	
     it 'reads from .scm file' do
-      expect(@p.parse('ghci test.scm')).to eq 3
+      expect(@p.parse('ghci D:\Github\b\Ruby-Project\lisp-interpreter\spec\lisp\test.scm')).to eq 3
     end
 
     it 'returns error if the file is missing or not valid scheme file' do

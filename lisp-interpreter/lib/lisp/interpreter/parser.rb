@@ -60,7 +60,7 @@ class Parser
     while (c = f.read(1))
       expr << c
       if (validate_token expr).nil? && expr != ''
-        last_value =parse expr
+        last_value = parse expr
         expr = ''
       end
     end
@@ -74,19 +74,24 @@ class Parser
     read_file_reader f, last_value, expr
   end
 
-  def read_file(token)
+  def read_file(token) 
     res = read_file_helper token
     return res if res.is_a? String
     filename = token[5..-1]
     if !File.exist? filename
-      return 'File with name "' + filename + '" does not exist!'
+      'File with name "' + filename + '" does not exist!'
     else
       read_file_executor filename
     end
   end
 
+  def fetch_file_read(token)
+    res = read_file token
+    print_result res unless res.to_s.empty?
+  end
+
   def parse(token)
-    return read_file token if token.start_with? 'ghci'
+    return fetch_file_read token if token.start_with? 'ghci'
     token_error = validate_token token
     result =
       if token_error.nil?
