@@ -7,7 +7,7 @@ module Optimize
 
   def get_fold_values(other)
     values = find_all_values other
-    raise 'Incorrect number of arguments' if values.empty?
+    raise arg_err_build 'at least 2', 0 if values.empty?
     x = values[0]
     y = fold_values_helper values[1..-1]
     [x, y]
@@ -49,23 +49,27 @@ module Optimize
   end
 
   def apply_helper(func, values)
-    return func.call(*values) if func.is_a? Proc
-    send func, values
+    *vs, lst = values
+    raise 'Incorrect data type' unless lst.list?
+    (find_list_function_value [lst]).each { |t| vs << t }
+    return func.call(*vs) if func.is_a? Proc
+    send func, vs
   end
 
   def call_compose_helper(other)
     tmp = ['(', *other[1..-1]]
     idx = find_bracket_idx tmp, 0
     funcs = find_all_values tmp[1..idx - 1]
-    raise '' if tmp[idx + 1..-1].empty?
+    return '' if tmp[idx + 1..-1].nil? && funcs.empty?
     [funcs, idx, tmp]
   end
 
   def call_compose(other)
     funcs, idx, tmp = call_compose_helper other
-    value, = find_next_value tmp[idx + 1..-1]
+    value = find_all_values tmp[idx + 1..-1]
     funcs.reverse.each do |t|
-      value = calc_input_val ['(', t, value.to_s, ')']
+      value = value.to_s unless value.is_a? Array
+      value = calc_input_val ['(', t, *value, ')']
     end
     value
   end
@@ -131,7 +135,7 @@ module FunctionalSchemeHelper
 
   def proc_lambda_helper(other, params, args)
     args = arg_finder args
-    raise 'Incorrect number of arguments' unless params.size == args.size
+    raise arg_err_build params.size, args.size unless params.size == args.size
     define_func_helper other.dup, params.dup, args
   end
 
@@ -155,7 +159,7 @@ module FunctionalSchemeHelper
   end
 
   def define_var(var, values)
-    raise 'Incorrect number of arguments' if values.size != 1
+    raise arg_err_build 1, values.size if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
     set_var_helper var, values[0]
   end
@@ -207,30 +211,30 @@ end
 module FunctionalScheme
   include FunctionalSchemeHelper
   def foldl(other)
-    raise 'Incorrect number of parameters' if other.size < 2
+    raise arg_err_build 'at least 2', other.size if other.size < 2
     func, other = valid_function other
     val_one, val_two = get_fold_values other
     foldl_helper func, val_one, val_two
   end
 
   def foldr(other)
-    raise 'Incorrect number of parameters' if other.size < 2
+    raise arg_err_build 'at least 2', other.size if other.size < 2
     func, other = valid_function other
     val_one, val_two = get_fold_values other
     foldr_helper func, val_one, val_two
   end
 
   def filter(other)
-    raise 'Incorrect number of parameters' if other.size < 2
+    raise arg_err_build 2, other.size if other.size < 2
     func, other = valid_function other
-    raise 'Incorrect number of parameters' if other.empty?
+    raise arg_err_build 2, 1 if other.empty?
     values = find_all_values other
     values = find_list_function_value [values[0]]
     filter_helper func, values
   end
 
   def member(other)
-    raise 'Incorrect number of arguments' unless other.size == 2
+    raise arg_err_build 2, other.size unless other.size == 2
     to_check = other[0]
     split_val = split_list_string other[1]
     raise 'Invalid argument' unless split_val.pair? || split_val.list?
@@ -239,7 +243,7 @@ module FunctionalScheme
   end
 
   def remove(other)
-    raise 'Incorrect number of arguments' unless other.size == 2
+    raise arg_err_build 2, other.size unless other.size == 2
     to_remove = other[0]
     values = find_list_function_value [other[1]]
     values.delete_at(values.index(to_remove) || values.length)
@@ -247,13 +251,11 @@ module FunctionalScheme
   end
 
   def apply(other)
-    raise 'Incorrect number of arguments' if other.nil? || other.empty?
+    raise arg_err_build 'at least 2', 0 if other.nil? || other.empty?
     func, other = valid_function other
+    raise arg_err_build 'at least 2', 1 if other.empty?
     values = find_all_values other
-    *vs, lst = values
-    raise 'Incorrect data type' unless lst.list?
-    (find_list_function_value [lst]).each { |t| vs << t }
-    apply_helper func, vs
+    apply_helper func, values
   end
 
   def compose(other)
@@ -273,7 +275,7 @@ module FunctionalScheme
   end
 
   def define(other)
-    raise 'Incorrect number of arguments' if other.size < 2
+    raise arg_err_build 2, other.size if other.size < 2
     fetch_define other
   end
 end

@@ -23,20 +23,20 @@ end
 module SchemeBooleans
   include SchemeBooleansHelper
   def equal?(other)
-    raise 'Incorrect number of arguments' if other.size != 2
+    raise arg_err_build 2, other.size if other.size != 2
     other[0].to_s == other[1].to_s ? '#t' : '#f'
   end
 
   def not(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     raise 'Invalid data type' unless check_for_bool other[0]
     other[0] == '#t' ? '#f' : '#t'
   end
 
   def if(other)
-    raise 'Incorrect number of arguments' if other.empty?
+    raise arg_err_build 3, 0 if other.empty?
     expr, other = find_next_value other
-    raise 'Incorrect number of arguments' if other.empty?
+    raise 3, 1 if other.empty?
     if_helper expr, other
   end
 end

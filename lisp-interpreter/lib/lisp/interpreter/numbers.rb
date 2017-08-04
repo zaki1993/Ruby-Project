@@ -1,7 +1,7 @@
 # Helper functions for SchemeNumbers
 module SchemeNumbersHelper
   def get_one_arg_function(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     raise 'Invalid data type' unless check_for_number other[0]
     other[0].to_num
   end
@@ -11,12 +11,11 @@ module SchemeNumbersHelper
   end
 
   def num_denom_helper(other)
-    raise 'Incorrect number of arguments' if other.empty?
     if other.size == 1
       other = other[0].split('/')
     else
       _, temp = find_next_value other
-      raise 'Incorrect number of arguments' unless temp[0] == '/' || temp.empty?
+      raise arg_err_build 1, 0 unless temp[0] == '/' || temp.empty?
       i = find_idx_numerators other
       other.delete_at(i)
     end
@@ -28,12 +27,12 @@ module SchemeNumbersHelper
     raise 'Invalid data type' unless check_for_number num
     return [num, 1] if other.empty?
     denom, other = find_next_value other
-    raise 'Incorrect number of arguments' unless other.empty?
+    raise arg_err_build 1, other.size unless other.empty?
     [num, denom]
   end
 
   def compare_value_arithmetic(other, oper)
-    raise 'Incorrect number of arguments' if other.size < 2
+    raise arg_err_build 'at least 2', other.size if other.size < 2
     other = convert_to_num other
     result = other.each_cons(2).all? { |x, y| x.public_send oper, y }
     result ? '#t' : '#f'
@@ -96,32 +95,33 @@ module SchemeNumbers
   end
 
   def /(other)
-    raise 'Incorrect number of arguments' if other.empty?
+    raise arg_err_build 'at least 1', 0 if other.empty?
     other = divide_special_convert other
     return (divide_number 1, other[0].to_num) if other.size == 1
     other[1..-1].inject(other[0]) { |res, t| divide_number res, t }
   end
 
   def quotient(other)
-    raise 'Incorrect number of arguments' if other.size != 2
+    raise arg_err_build 2, other.size if other.size != 2
     x, y = convert_to_num other
     result = divide_number x, y
     result < 0 ? result.ceil : result.floor
   end
 
   def remainder(other)
-    raise 'Incorrect number of arguments' if other.size != 2
+    raise arg_err_build 2, other.size if other.size != 2
     x, y = convert_to_num other
     (x.abs % y.abs) * (x / x.abs)
   end
 
   def modulo(other)
-    raise 'Incorrect number of arguments' if other.size != 2
+    raise arg_err_build 2, other.size if other.size != 2
     x, y = convert_to_num other
     x.modulo y
   end
 
   def numerator(other)
+    raise arg_err_build 1, 0 if other.empty?
     other = num_denom_helper other
     result = (get_num_denom other)[0]
     raise 'Invalid data type' unless check_for_number result
@@ -129,6 +129,7 @@ module SchemeNumbers
   end
 
   def denominator(other)
+    raise arg_err_build 1, 0 if other.empty?
     other = num_denom_helper other
     result = (get_num_denom other)[1]
     raise 'Invalid data type' unless check_for_number result
@@ -148,13 +149,13 @@ module SchemeNumbers
   end
 
   def min(other)
-    raise 'Incorrect number of arguments' if other.empty?
+    raise arg_err_build 'at least 1', 0 if other.empty?
     other = convert_to_num other
     other.min
   end
 
   def max(other)
-    raise 'Incorrect number of arguments' if other.empty?
+    raise arg_err_build 'at least 1', 0 if other.empty?
     other = convert_to_num other
     other.max
   end

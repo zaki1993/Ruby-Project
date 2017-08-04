@@ -39,8 +39,7 @@ module TokenizerHelper
       'string-contains?' => 'strcontains', 'string-length'  => 'strlen',
       'string->list'     => 'strlist',     'string-split'   => 'strsplit',
       'string-sufix?'    => 'strsufix',    'string-prefix?' => 'strprefix',
-      'string-replace'   => 'strreplace',  'string-join'    => 'strjoin',
-      'list-ref'         => 'listref',     'list-tail'      => 'listtail'
+      'string-replace'   => 'strreplace',  'string-join'    => 'strjoin'
     }
   end
 
@@ -89,12 +88,13 @@ module TokenizerHelper
     val = (predefined_method_caller [var])
     return val unless val.nil?
     valid = valid_var var
-    valid ? var : (raise 'Invalid data type')
+    valid ? var : (raise 'Unbound symbol "' + var + '"')
   end
 end
 
 # Tokenizer class
 class Tokenizer
+  include ErrorMessages
   include TokenizerHelper
   include ValueFinder
   include SchemeChecker

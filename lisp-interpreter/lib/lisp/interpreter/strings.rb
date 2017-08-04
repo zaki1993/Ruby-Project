@@ -37,7 +37,7 @@ module SchemeStringsHelper
   end
 
   def arg_function_validator(other, vars = 1)
-    raise 'Incorrect number of arguments' if other.size != vars
+    raise arg_err_build other.size, vars if other.size != vars
     result = other[0..vars - 1].all? { |v| check_for_string v }
     raise 'Invalid data type' unless result
     result
@@ -48,13 +48,18 @@ module SchemeStringsHelper
     delim_result = find_delimeter dilimeter
     '"' + (values.join delim_result) + '"'
   end
+
+  def strjoin_validate(other)
+    raise arg_err_build '[1, 2]', other.size unless other.size.between? 1, 2
+    raise 'Invalid data type' unless other[0].to_s.list?
+  end
 end
 
 # Scheme numbers module
 module SchemeStrings
   include SchemeStringsHelper
   def substring(other)
-    raise 'Incorrect number of arguments' unless other.size.between? 2, 3
+    raise arg_err_build '[2, 3]', other.size unless other.size.between? 2, 3
     str, from, to = other
     arg_function_validator [str]
     valid = (check_for_number from) && (to.nil? || (check_for_number to))
@@ -63,7 +68,7 @@ module SchemeStrings
   end
 
   def string?(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     result = check_for_string other[0].to_s
     result ? '#t' : '#f'
   end
@@ -123,8 +128,7 @@ module SchemeStrings
   end
 
   def strjoin(other)
-    raise 'Incorrect number of arguments' unless other.size.between? 1, 2
-    raise 'Invalid data type' unless other[0].to_s.list?
+    strjoin_validate other
     arg_function_validator [other[1]] if other.size == 2
     string_join_helper other[0], other[1]
   end

@@ -64,7 +64,7 @@ module SchemeListsHelper
 
   def get_cons_values(tokens)
     result = get_k_arguments tokens, false, 2
-    raise 'Too little arguments' if result.size != 2
+    raise arg_err_build 2, result.size if result.size != 2
     result
   end
 
@@ -75,7 +75,7 @@ module SchemeListsHelper
   end
 
   def find_list_function_value(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     raise 'Invalid data type' unless other[0].list?
     split_list_as_string other[0].to_s
   end
@@ -86,7 +86,7 @@ module SchemeListsHelper
   end
 
   def car_cdr_values(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     return find_list_function_value other if other[0].list?
     (split_list_string other[0].to_s)[2..-2] if other[0].pair?
   end
@@ -95,13 +95,20 @@ module SchemeListsHelper
     return lst.map { |t| func.call(*t) } if func.is_a? Proc
     lst.map { |t| send func, t }
   end
+
+  def map_validate_helper(other)
+    raise arg_err_build 'at least 2', 0 if other.empty?
+    func, other = valid_function other
+    raise arg_err_build 'at least 2', 1 if other.empty?
+    [func, other]
+  end
 end
 
 # Scheme lists module
 module SchemeLists
   include SchemeListsHelper
   def cons(other)
-    raise 'Incorrect number of arguments' if other.size != 2
+    raise arg_err_build 2, other.size if other.size != 2
     cons_helper other
   end
 
@@ -123,17 +130,17 @@ module SchemeLists
   end
 
   def list?(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     other[0].to_s.list? ? '#t' : '#f'
   end
 
   def pair?(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     other[0].to_s.pair? ? '#t' : '#f'
   end
 
   def null?(other)
-    raise 'Incorrect number of arguments' if other.size != 1
+    raise arg_err_build 1, other.size if other.size != 1
     return '#f' unless other[0].to_s.list?
     other[0].to_s.size == 3 ? '#t' : '#f'
   end
@@ -148,9 +155,7 @@ module SchemeLists
   end
 
   def map(other)
-    raise 'Incorrect number of arguments' if other.empty?
-    func, other = valid_function other
-    raise 'Incorrect number of arguments' if other.empty?
+    func, other = map_validate_helper other
     lst = find_all_values other
     lst = lst.map { |t| find_list_function_value [t] }
     lst = (equalize_lists lst).transpose

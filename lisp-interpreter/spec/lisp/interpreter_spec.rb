@@ -7,7 +7,6 @@ RSpec.describe Lisp::Interpreter do
     @p.parse('(define y 0.999)')
     @msg =
       {
-        'inc_number' => 'Incorrect number of arguments',
         'zero_div' => 'divided by 0',
         'inv_type' => 'Invalid data type'
       }
@@ -20,6 +19,14 @@ RSpec.describe Lisp::Interpreter do
       '(' + arr.join(' ') + ')'
     end
 
+    def arg_err_build(e, g)
+      'Incorrect number of arguments, expected ' + e.to_s + ' got ' + g.to_s
+    end
+
+    def unbound_symbol(sym)
+      'Unbound symbol "' + sym.to_s + '"'
+    end
+
     @p.parse('(define xl (lambda (x) (* 2 x)))')
     @p.parse('(define yl (lambda () 5))')
     @p.parse('(define zl (lambda ()))')
@@ -28,15 +35,15 @@ RSpec.describe Lisp::Interpreter do
   describe 'exceptions' do
     context 'wrong number of arguments' do
       it 'throws error when less arguments are provided' do
-        expect(@p.parse('(cons 1)')).to eq @msg['inc_number']
+        expect(@p.parse('(cons 1)')).to eq arg_err_build 2, 1
       end
 
       it 'throws error when more arguments are provided' do
-        expect(@p.parse('(xl 6 6)')).to eq @msg['inc_number']
+        expect(@p.parse('(xl 6 6)')).to eq arg_err_build 1, 2
       end
 
       it 'throws error when no arguments are expected' do
-        expect(@p.parse('(yl 5)')).to eq @msg['inc_number']
+        expect(@p.parse('(yl 5)')).to eq arg_err_build 0, 1
       end
     end
 
@@ -61,7 +68,7 @@ RSpec.describe Lisp::Interpreter do
 
   describe 'literals' do
     it 'throws invalid variable error when the data is invalid' do
-      expect(@p.parse('#\invalid')).to eq @msg['inv_type']
+      expect(@p.parse('#\invalid')).to eq unbound_symbol '#\invalid'
     end
 
     it 'can parse integers' do
@@ -981,7 +988,7 @@ RSpec.describe Lisp::Interpreter do
       expr1 = '(define prodfive (lambda (x)(define yy 5)(* x yy)))'
       expect(@p.parse(expr1)).to be_instance_of(Proc)
       expect(@p.parse('(prodfive 6)')).to eq 30
-      expect(@p.parse('yy')).to eq @msg['inv_type']
+      expect(@p.parse('yy')).to eq unbound_symbol 'yy'
     end
   end
 
