@@ -984,4 +984,21 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('yy')).to eq @msg['inv_type']
     end
   end
+
+  describe 'file read' do
+    it 'reads from .ss file' do
+      expect(@p.parse('ghci D:/Github/Ruby-Project/lisp-interpreter/spec/lisp/test.ss')).to be_instance_of(Proc)
+    end
+
+    it 'reads from .scm file' do
+      expect(@p.parse('ghci test.scm')).to eq 3
+    end
+
+    it 'returns error if the file is missing or not valid scheme file' do
+      msg1 = 'File with name "test.ff" is not valid scheme file'
+      msg2 = 'File with name "test1.ss" does not exist!'
+      expect(@p.parse('ghci test.ff')).to eq msg1
+      expect(@p.parse('ghci test1.ss')).to eq msg2
+    end
+  end
 end

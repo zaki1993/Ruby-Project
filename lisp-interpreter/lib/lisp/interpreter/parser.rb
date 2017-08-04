@@ -44,7 +44,49 @@ class Parser
     result
   end
 
+  def read_file_helper(token)
+    pattern = /^ghci .*\.[.ss|.scm]+$/
+    result = (token =~ pattern)
+    if result.nil?
+      token = token[5..-1].nil? ? token[4..-1] : token[5..-1]
+      msg = 'File with name "' + token + '" is not valid scheme file'
+      return msg
+      return false
+    end
+    true
+  end
+
+  def read_file_reader(f, value, expr)
+    while (c = f.read(1))
+      expr << c
+      if (validate_token expr).nil? && expr != ''
+        last_value =parse expr
+        expr = ''
+      end
+    end
+    last_value
+  end
+
+  def read_file_executor(file)
+    f = File.open(file)
+    expr = ''
+    last_value = ''
+    read_file_reader f, last_value, expr
+  end
+
+  def read_file(token)
+    res = read_file_helper token
+    return res if res.is_a? String
+    filename = token[5..-1]
+    if !File.exist? filename
+      return 'File with name "' + filename + '" does not exist!'
+    else
+      read_file_executor filename
+    end
+  end
+
   def parse(token)
+    return read_file token if token.start_with? 'ghci'
     token_error = validate_token token
     result =
       if token_error.nil?

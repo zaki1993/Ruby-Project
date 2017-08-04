@@ -1,2 +1,2 @@
-require "../lib/lisp/interpreter/run"
+require_relative '../lib/lisp/interpreter/run'
 ruby run.rb

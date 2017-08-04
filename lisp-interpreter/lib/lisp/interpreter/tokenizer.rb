@@ -55,7 +55,8 @@ module TokenizerHelper
 
   def init_reserved_fn
     {
-      'null' => '\'()'
+      'null' => '\'()',
+      'ghci' => ''
     }
   end
 
