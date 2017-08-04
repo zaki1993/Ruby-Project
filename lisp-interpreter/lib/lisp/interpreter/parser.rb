@@ -51,12 +51,11 @@ class Parser
       token = token[5..-1].nil? ? token[4..-1] : token[5..-1]
       msg = 'File with name "' + token + '" is not valid scheme file'
       return msg
-      return false
     end
     true
   end
 
-  def read_file_reader(f, value, expr)
+  def read_file_reader(f, expr)
     while (c = f.read(1))
       expr << c
       if (validate_token expr).nil? && expr != ''
@@ -70,28 +69,19 @@ class Parser
   def read_file_executor(file)
     f = File.open(file)
     expr = ''
-    last_value = ''
-    read_file_reader f, last_value, expr
+    read_file_reader f, expr
   end
 
-  def read_file(token) 
+  def read_file(token)
     res = read_file_helper token
     return res if res.is_a? String
     filename = token[5..-1]
-    if !File.exist? filename
-      'File with name "' + filename + '" does not exist!'
-    else
-      read_file_executor filename
-    end
-  end
-
-  def fetch_file_read(token)
-    res = read_file token
-    print_result res unless res.to_s.empty?
+    return read_file_executor filename if File.exist? filename
+    'File with name "' + filename + '" does not exist!'
   end
 
   def parse(token)
-    return fetch_file_read token if token.start_with? 'ghci'
+    return read_file token if token.start_with? 'ghci'
     token_error = validate_token token
     result =
       if token_error.nil?

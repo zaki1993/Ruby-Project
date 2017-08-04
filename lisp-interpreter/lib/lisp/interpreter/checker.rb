@@ -24,7 +24,7 @@ module SchemeChecker
   def check_for_quote(token)
     return true if token[0].quote?
     is_instance_var = check_instance_var token
-    return true if is_instance_var && (check_for_quote get_var token)
+    return true if is_instance_var && (check_for_number get_var token)
     false
   end
 
@@ -39,7 +39,7 @@ module SchemeChecker
     return true if var == '#\space'
     return true if var.character?
     is_instance_var = check_instance_var var
-    return true if is_instance_var && (check_for_symbol get_var var)
+    return true if is_instance_var && (check_for_character get_var var)
     false
   end
 end
