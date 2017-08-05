@@ -122,7 +122,7 @@ module FunctionalSchemeHelper
   end
 
   def find_params_lambda(other)
-    raise 'Unbound symbol ' + other.to_s if other[0] != '('
+    raise 'Invalid syntax' if other[0] != '('
     idx = find_bracket_idx other, 0
     [other[1..idx - 1], other[idx + 1..-1]]
   end
@@ -130,7 +130,7 @@ module FunctionalSchemeHelper
   def eval_lambda(other)
     idx = find_bracket_idx other.unshift('('), 0
     to_eval = other[1..idx - 1]
-    (proc_lambda to_eval).call(*other[idx + 1..-1])
+    (proc_lambda to_eval, true).call(*other[idx + 1..-1])
   end
 
   def proc_lambda_helper(other, params, args)
@@ -139,9 +139,11 @@ module FunctionalSchemeHelper
     define_func_helper other.dup, params.dup, args
   end
 
-  def proc_lambda(other)
+  def proc_lambda(other, is_call = false)
     params, other = find_params_lambda other
     other = fetch_inner_scope other
+    valid = params.all? { |t| valid_var_name t } || is_call
+    raise 'Invalid syntax' unless valid
     to_return = other[0..1].join == '(compose' && params.empty?
     return calc_input_val other if to_return
     proc = proc do |*args|

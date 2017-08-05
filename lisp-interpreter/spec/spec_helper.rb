@@ -1,4 +1,3 @@
-require 'bundler/setup'
 require 'lisp/interpreter'
 
 RSpec.configure do |config|
