@@ -28,12 +28,6 @@ module SchemeChecker
     false
   end
 
-  def check_instance_var(var)
-    return false if var.is_a? Proc
-    return false unless valid_var_name var
-    instance_variable_defined?("@#{var}")
-  end
-
   def check_for_symbol(var)
     var = var.join('') if var.is_a? Array
     return true if var == '#\space'
@@ -41,5 +35,11 @@ module SchemeChecker
     is_instance_var = check_instance_var var
     return true if is_instance_var && (check_for_character get_var var)
     false
+  end
+
+  def check_instance_var(var)
+    return false if var.is_a? Proc
+    return false unless valid_var_name var
+    @procs.key? var.to_s
   end
 end

@@ -17,7 +17,8 @@ module Validator
   end
 
   def valid_var_name(var)
-    !var.match(/^[[:alpha:]]+$/).nil?
+    symbols = %r{[<|<=|=|>|>=|*|\/|+|-|&|^|#|@|]}
+    !var.match(/[[:alpha:]]/).nil? || !var.match(symbols).nil?
   end
 
   def valid_var(var)

@@ -61,30 +61,20 @@ module TokenizerHelper
 
   def set_reserved_keywords
     @reserved.each do |key, value|
-      instance_variable_set("@#{key}", value)
-    end
-  end
-
-  def set_var_helper(var, value)
-    valid = (valid_var value.to_s) || (value.is_a? Proc)
-    raise 'Invalid parameter' unless valid
-    if value.is_a? Proc
-      remove_instance_variable("@#{var}") if check_instance_var var
-      @procs[var] = value if value.is_a? Proc
-    else
-      @procs.delete var
-      set_var var, value
+      @procs[key.to_s] = value
     end
   end
 
   def set_var(var, value)
-    raise 'Cannot predefine reserved keyword' if @reserved.key? var
-    instance_variable_set("@#{var}", value)
+    raise 'Cannot predefine reserved keyword' if @reserved.key? var.to_s
+    valid = (valid_var value.to_s) || (value.is_a? Proc)
+    raise 'Invalid parameter' unless valid
+    @procs[var] = value
   end
 
   def get_var(var)
     check = check_instance_var var
-    return instance_variable_get("@#{var}") if check
+    return @procs[var.to_s] if check
     val = (predefined_method_caller [var])
     return val unless val.nil?
     valid = valid_var var

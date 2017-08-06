@@ -163,7 +163,7 @@ module FunctionalSchemeHelper
   def define_var(var, values)
     raise arg_err_build 1, values.size if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
-    set_var_helper var, values[0]
+    set_var var, values[0]
   end
 
   def set_values_define(other, params, args)
