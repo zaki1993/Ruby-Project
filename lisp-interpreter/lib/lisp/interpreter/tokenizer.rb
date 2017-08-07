@@ -80,6 +80,10 @@ module TokenizerHelper
     valid = valid_var var
     valid ? var : (raise 'Unbound symbol "' + var + '"')
   end
+
+  def syntax_methods
+    @functions
+  end
 end
 
 # Tokenizer class
@@ -108,7 +112,7 @@ class Tokenizer
 
   def check_car_cdr(arr)
     result = arr[1].match(/c[ad]{2,}r/)
-    raise 'No procedure found' if result.nil?
+    raise arr[1].to_s + ' is not a function' if result.nil?
     car_cdr_infinite arr
   end
 
@@ -131,6 +135,10 @@ class Tokenizer
     end
   end
 
+  def validate_call_method(m_name)
+    raise m_name.to_s + ' is not a function' if valid_var m_name.to_s
+  end
+
   def call_predefined_method(m_name, arr)
     return special_check_proc m_name, arr if m_name.is_a? Proc
     if @do_not_calculate.include? m_name
@@ -141,12 +149,16 @@ class Tokenizer
     end
   end
 
+  def call_function_infinite(m_name)
+    m_name if (@functions.value? m_name) || m_name.to_s.match(/c[ad]{2,}r/)
+  end
+
   def predefined_method_caller_helper(m_name, operations)
     return m_name if m_name.is_a? Proc
     return @procs[m_name] if @procs.key? m_name
     return m_name if operations.include? m_name
     return @functions[m_name] if @functions.key? m_name
-    m_name if @functions.value? m_name
+    call_function_infinite m_name
   end
 
   def method_caller_checker(token, operations)

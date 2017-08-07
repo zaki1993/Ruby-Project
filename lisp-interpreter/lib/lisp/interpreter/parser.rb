@@ -24,7 +24,7 @@ class Parser
       print 'zakichan> ' if @env_type == Environment::PROD
       token = ''
       until (validate_token token).nil? && token != ''
-        crr_input = STDIN.gets.chomp
+        crr_input = STDIN.gets.chomp + ' '
         token << crr_input
         break if crr_input == ''
       end
@@ -47,17 +47,16 @@ class Parser
   def read_file_helper(token)
     pattern = /^ghci .*\.[.ss|.scm]+$/
     result = (token =~ pattern)
-    if result.nil?
-      token = token[5..-1].nil? ? token[4..-1] : token[5..-1]
-      msg = 'File with name "' + token + '" is not valid scheme file'
-      return msg
-    end
-    true
+    return unless result.nil?
+    token = token[5..-1].nil? ? token[4..-1] : token[5..-1]
+    msg = 'File with name "' + token + '" is not valid scheme file'
+    msg
   end
 
   def read_file_reader(f, expr)
-    while (c = f.read(1))
-      expr << c
+    last_value = ''
+    f.each do |line|
+      expr << line
       if (validate_token expr).nil? && expr != ''
         last_value = parse expr
         expr = ''
@@ -74,10 +73,10 @@ class Parser
 
   def read_file(token)
     res = read_file_helper token
-    return res if res.is_a? String
+    return finalize_result res if res.is_a? String
     filename = token[5..-1]
     return read_file_executor filename if File.exist? filename
-    'File with name "' + filename + '" does not exist!'
+    finalize_result 'File with name "' + filename + '" does not exist!'
   end
 
   def parse(token)
@@ -89,7 +88,7 @@ class Parser
       else
         token_error
       end
-    print_result result unless result.to_s.empty?
+    finalize_result result unless result.to_s.empty?
   end
 
   def validate_token(token)
@@ -100,10 +99,27 @@ class Parser
     end
   end
 
-  def print_result(result)
+  def finalize_result(result)
+    result = format_result result
+    display_result result if @env_type == Environment::PROD
+    result
+  end
+
+  def format_result(result)
     to_remove = result.to_s.list? || result.to_s.pair? || result.to_s.quote?
     result = result.delete('\'') if to_remove
-    puts result if @env_type == Environment::PROD
     result
+  end
+
+  def find_result_type(res, methods)
+    return '#<Closure>' if res.is_a? Proc
+    is_func = (methods.key? res.to_s) || res.to_s.match(/c[ad]{2,}r/)
+    return '#<Function ' + res.to_s + '>' if is_func
+    res.to_s
+  end
+
+  def display_result(result)
+    to_print = find_result_type result, @tokenizer.syntax_methods
+    puts to_print
   end
 end

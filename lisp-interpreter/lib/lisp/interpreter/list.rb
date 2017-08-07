@@ -102,6 +102,13 @@ module SchemeListsHelper
     raise arg_err_build 'at least 2', 1 if other.empty?
     [func, other]
   end
+
+  def car_cdr_infinite_helper(value, fn)
+    fn.reverse[1..-2].each_char do |t|
+      value = t == 'a' ? (car [value]) : (cdr [value])
+    end
+    value
+  end
 end
 
 # Scheme lists module
@@ -165,5 +172,12 @@ module SchemeLists
   def shuffle(other)
     values = find_list_function_value other
     build_list values.shuffle
+  end
+
+  def car_cdr_infinite(other)
+    fn = other[1]
+    values = find_all_values other[2..-2]
+    raise 'Incorrect number of arguments' unless values.size == 1
+    car_cdr_infinite_helper values[0], fn
   end
 end

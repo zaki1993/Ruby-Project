@@ -994,12 +994,12 @@ RSpec.describe Lisp::Interpreter do
 
   describe 'file read' do
     it 'reads from .ss file' do
-      expr1 = 'ghci D:/Github/Ruby-Project/lisp-interpreter/spec/lisp/test.ss'
+      expr1 = 'ghci spec/lisp/test.ss'
       expect(@p.parse(expr1)).to be_instance_of(Proc)
     end
 
     it 'reads from .scm file' do
-      expr1 = 'ghci D:/Github/Ruby-Project/lisp-interpreter/spec/lisp/test.scm'
+      expr1 = 'ghci spec/lisp/test.scm'
       expect(@p.parse(expr1)).to eq 3
     end
 
