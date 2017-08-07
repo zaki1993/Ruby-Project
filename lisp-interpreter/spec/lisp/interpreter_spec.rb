@@ -720,6 +720,20 @@ RSpec.describe Lisp::Interpreter do
     end
   end
 
+  describe 'car_cdr_infinite' do
+    it 'throws error when <p> is the empty list' do
+      expect(@p.parse('(cadr null)')).to eq car_cdr_err '\'()', 'cdr'
+      expect(@p.parse('(cdar (list))')).to eq car_cdr_err '\'()', 'car'
+      expect(@p.parse('(caaadr \'())')).to eq car_cdr_err '\'()', 'cdr'
+    end
+
+    it 'returns the element of <p> depending of car and cdr' do
+      expect(@p.parse('(cadr (list 1 2 3))')).to eq '2'
+      expect(@p.parse('(caar (list (list 1 2) 2))')).to eq '1'
+      expect(@p.parse('(cdar (list (list 1 2) 4))')).to eq '(2)'
+    end
+  end
+
   describe '(list? v)' do
     it 'returns true if <v> is empty list' do
       expect(@p.parse('(list? null)')).to eq '#t'

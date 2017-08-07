@@ -145,12 +145,9 @@ class Tokenizer
       send m_name.to_s, arr[2..-2]
     elsif !m_name.nil?
       values = find_all_values arr[2..-2]
+      validate_call_method m_name
       send m_name.to_s, values
     end
-  end
-
-  def call_function_infinite(m_name)
-    m_name if (@functions.value? m_name) || m_name.to_s.match(/c[ad]{2,}r/)
   end
 
   def predefined_method_caller_helper(m_name, operations)
@@ -158,7 +155,7 @@ class Tokenizer
     return @procs[m_name] if @procs.key? m_name
     return m_name if operations.include? m_name
     return @functions[m_name] if @functions.key? m_name
-    call_function_infinite m_name
+    m_name if @functions.value? m_name
   end
 
   def method_caller_checker(token, operations)
@@ -182,6 +179,7 @@ class Tokenizer
     else
       return if token.empty?
       token = token.join('') if token.is_a? Array
+      return token if token =~ /c[ad]{2,}r/
       get_var token.to_s
     end
   end
