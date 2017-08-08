@@ -68,6 +68,7 @@ module TokenizerHelper
   def set_var(var, value)
     valid = (valid_var value.to_s) || (value.is_a? Proc)
     raise 'Invalid parameter' unless valid || (value.is_a? Symbol)
+    return if var == value.to_s
     @procs[var] = value
   end
 
