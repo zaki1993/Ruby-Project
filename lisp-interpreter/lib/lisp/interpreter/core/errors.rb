@@ -20,7 +20,7 @@ module ErrorMessages
     'Unbound symbol ' + symbol.to_s
   end
 
-  def data_type_err(exp, got)
+  def type_err(exp, got)
     'Invalid data type, expected ' + exp.to_s + ' got ' + got.to_s
   end
 end

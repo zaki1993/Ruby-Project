@@ -9,8 +9,7 @@ RSpec.describe Lisp::Interpreter do
     @p.parse('(define y 0.999)')
     @msg =
       {
-        'zero_div' => 'divided by 0',
-        'inv_type' => 'Invalid data type'
+        'zero_div' => 'divided by 0'
       }
 
     def car_cdr_err(got, fn)
@@ -43,19 +42,19 @@ RSpec.describe Lisp::Interpreter do
 
     context 'incorrect argument type' do
       it 'throws error when <number> is expected' do
-        expect(@p.parse('(+ #t)')).to eq @msg['inv_type']
+        expect(@p.parse('(+ #t)')).to eq type_err '<number>', '<boolean>'
       end
 
       it 'throws error when <string> is expected' do
-        expect(@p.parse('(string-length 1)')).to eq @msg['inv_type']
+        expect(@p.parse('(substring 1)')).to eq arg_err_build '[2, 3]', '1'
       end
 
       it 'throws error when <boolean> is expected' do
-        expect(@p.parse('(not \'apple)')).to eq @msg['inv_type']
+        expect(@p.parse('(not \'apple)')).to eq type_err '<boolean>', '<quote>'
       end
 
       it 'throws error when <list> is expected' do
-        expect(@p.parse('(length "not list")')).to eq @msg['inv_type']
+        expect(@p.parse('(length "str")')).to eq type_err '<list>', '<string>'
       end
     end
   end

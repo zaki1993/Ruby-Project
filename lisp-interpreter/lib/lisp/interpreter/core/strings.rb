@@ -39,7 +39,7 @@ module SchemeStringsHelper
   def arg_function_validator(other, vars = 1)
     raise arg_err_build other.size, vars if other.size != vars
     res = other[0..vars - 1].reject { |v| check_for_string v }
-    raise data_type_err '<string>', res[0].type unless res.empty?
+    raise type_err '<string>', res[0].type unless res.empty?
     res
   end
 
@@ -51,13 +51,13 @@ module SchemeStringsHelper
 
   def strjoin_validate(other)
     raise arg_err_build '[1, 2]', other.size unless other.size.between? 1, 2
-    raise data_type_err '<list>', other[0].type unless other[0].to_s.list?
+    raise type_err '<list>', other[0].type unless other[0].to_s.list?
   end
 
   def substring_validator(from, to)
     valid = (check_for_num from) && (to.nil? || (check_for_num to))
     type = [from, to].first { |t| t.type if t.type != 'number' }
-    raise data_type_err '<number>', type unless valid
+    raise type_err '<number>', type unless valid
   end
 end
 
