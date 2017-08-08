@@ -38,9 +38,9 @@ module SchemeStringsHelper
 
   def arg_function_validator(other, vars = 1)
     raise arg_err_build other.size, vars if other.size != vars
-    result = other[0..vars - 1].all? { |v| check_for_string v }
-    raise 'Invalid data type' unless result
-    result
+    res = other[0..vars - 1].reject { |v| check_for_string v }
+    raise data_type_err '<string>', res[0].type unless res.empty?
+    res
   end
 
   def string_join_helper(other, dilimeter)
@@ -51,7 +51,13 @@ module SchemeStringsHelper
 
   def strjoin_validate(other)
     raise arg_err_build '[1, 2]', other.size unless other.size.between? 1, 2
-    raise 'Invalid data type' unless other[0].to_s.list?
+    raise data_type_err '<list>', other[0].type unless other[0].to_s.list?
+  end
+
+  def substring_validator(from, to)
+    valid = (check_for_num from) && (to.nil? || (check_for_num to))
+    type = [from, to].first { |t| t.type if t.type != 'number' }
+    raise data_type_err '<number>', type unless valid
   end
 end
 
@@ -62,8 +68,7 @@ module SchemeStrings
     raise arg_err_build '[2, 3]', other.size unless other.size.between? 2, 3
     str, from, to = other
     arg_function_validator [str]
-    valid = (check_for_num from) && (to.nil? || (check_for_num to))
-    raise 'Incorrect parameter type' unless valid
+    substring_validator from, to
     substring_builder str, from.to_num, to.to_num
   end
 

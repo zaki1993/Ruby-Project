@@ -1,6 +1,8 @@
 require 'spec_helper'
+require_relative '../../lib/lisp/interpreter/core/errors'
 
 RSpec.describe Lisp::Interpreter do
+  include ErrorMessages
   before do
     @p = Parser.new
     @p.parse('(define x 5)')
@@ -17,14 +19,6 @@ RSpec.describe Lisp::Interpreter do
 
     def build_lst(arr)
       '(' + arr.join(' ') + ')'
-    end
-
-    def arg_err_build(e, g)
-      'Incorrect number of arguments, expected ' + e.to_s + ' got ' + g.to_s
-    end
-
-    def unbound_symbol(sym)
-      'Unbound symbol "' + sym.to_s + '"'
     end
 
     @p.parse('(define xl (lambda (x) (* 2 x)))')
@@ -68,7 +62,7 @@ RSpec.describe Lisp::Interpreter do
 
   describe 'literals' do
     it 'throws invalid variable error when the data is invalid' do
-      expect(@p.parse('#\invalid')).to eq unbound_symbol '#\invalid'
+      expect(@p.parse('#\invalid')).to eq unbound_symbol_err '#\invalid'
     end
 
     it 'can parse integers' do
@@ -1002,7 +996,7 @@ RSpec.describe Lisp::Interpreter do
       expr1 = '(define prodfive (lambda (x)(define yy 5)(* x yy)))'
       expect(@p.parse(expr1)).to be_instance_of(Proc)
       expect(@p.parse('(prodfive 6)')).to eq 30
-      expect(@p.parse('yy')).to eq unbound_symbol 'yy'
+      expect(@p.parse('yy')).to eq unbound_symbol_err 'yy'
     end
   end
 

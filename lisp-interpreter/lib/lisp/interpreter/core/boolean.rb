@@ -29,7 +29,8 @@ module SchemeBooleans
 
   def not(other)
     raise arg_err_build 1, other.size if other.size != 1
-    raise 'Invalid data type' unless check_for_bool other[0]
+    valid = check_for_bool other[0]
+    raise data_type_err '<boolean>', other[0].type unless valid
     other[0] == '#t' ? '#f' : '#t'
   end
 

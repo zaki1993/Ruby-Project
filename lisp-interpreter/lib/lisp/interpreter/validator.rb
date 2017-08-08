@@ -27,20 +27,20 @@ module Validator
 
   def valid_function(fn)
     idx = fn[0] == '(' ? (find_bracket_idx fn, 0) : 0
-    func =
+    f =
       if idx.zero?
         predefined_method_caller [fn[idx]]
       else
         calc_input_val fn[0..idx]
       end
-    raise 'No such procedure' if func.nil? && (!func.is_a? Proc)
-    [func, fn[idx + 1..-1]]
+    valid_function? f, fn, idx
+    [f, fn[idx + 1..-1]]
   end
 
   private
 
   def valid_literals(var)
-    number = check_for_number var
+    number = check_for_num var
     string = check_for_string var
     boolean = check_for_bool var
     symbol = check_for_symbol var
@@ -50,5 +50,10 @@ module Validator
 
   def valid_objects(var)
     var.list? || var.pair?
+  end
+
+  def valid_function?(f, fn, idx)
+    idx = find_bracket_idx fn, 1 if fn[idx] == '\''
+    raise no_procedure_build fn[0..idx].join if f.nil? && (!f.is_a? Proc)
   end
 end

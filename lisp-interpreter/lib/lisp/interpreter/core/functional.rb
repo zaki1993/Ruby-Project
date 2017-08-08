@@ -91,6 +91,12 @@ module Optimize
     expr = build_compose_expr funcs
     proc_lambda expr
   end
+
+  def define_var_stl(var, values)
+    valid_stl = methods.include? values.to_s[2..-3].to_sym
+    return set_var var, values.to_s[2..-3].to_sym if valid_stl
+    set_var var, values[0]
+  end
 end
 
 # FunctionalScheme helper
@@ -163,7 +169,7 @@ module FunctionalSchemeHelper
   def define_var(var, values)
     raise arg_err_build 1, values.size if values.size != 1
     raise 'Invalid variable name' unless valid_var_name var
-    set_var var, values[0]
+    define_var_stl var, values
   end
 
   def set_values_define(other, params, args)

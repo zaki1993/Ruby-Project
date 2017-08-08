@@ -2,7 +2,7 @@
 module SchemeNumbersHelper
   def get_one_arg_function(other)
     raise arg_err_build 1, other.size if other.size != 1
-    raise 'Invalid data type' unless check_for_number other[0]
+    raise data_type_err '<number>', other[0].type unless check_for_num other[0]
     other[0].to_num
   end
 
@@ -24,7 +24,7 @@ module SchemeNumbersHelper
 
   def get_num_denom(other)
     num, other = find_next_value other
-    raise 'Invalid data type' unless check_for_number num
+    raise data_type_err '<number>', num.type unless check_for_num num
     return [num, 1] if other.empty?
     denom, other = find_next_value other
     raise arg_err_build 1, other.size unless other.empty?
@@ -40,7 +40,7 @@ module SchemeNumbersHelper
 
   def convert_to_num(other)
     other.each do |t|
-      raise 'Invalid data type' unless check_for_number t
+      raise data_type_err '<number>', t.type unless check_for_num t
     end
     other.map(&:to_num)
   end
@@ -124,7 +124,7 @@ module SchemeNumbers
     raise arg_err_build 1, 0 if other.empty?
     other = num_denom_helper other
     result = (get_num_denom other)[0]
-    raise 'Invalid data type' unless check_for_number result
+    raise data_type_err '<number>', result.type unless check_for_num result
     result.to_num
   end
 
@@ -132,7 +132,7 @@ module SchemeNumbers
     raise arg_err_build 1, 0 if other.empty?
     other = num_denom_helper other
     result = (get_num_denom other)[1]
-    raise 'Invalid data type' unless check_for_number result
+    raise data_type_err '<number>', result.type unless check_for_num result
     result.to_num
   end
 

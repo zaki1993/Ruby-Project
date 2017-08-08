@@ -1,13 +1,13 @@
-require_relative 'object'
-require_relative 'errors'
+require_relative 'core/object'
+require_relative 'core/errors'
+require_relative 'core/numbers'
+require_relative 'core/strings'
+require_relative 'core/boolean'
+require_relative 'core/list'
+require_relative 'core/functional'
 require_relative 'value_finder'
 require_relative 'checker'
 require_relative 'validator'
-require_relative 'numbers'
-require_relative 'strings'
-require_relative 'boolean'
-require_relative 'list'
-require_relative 'functional'
 
 # Tokenizer helper
 module TokenizerHelper
@@ -66,9 +66,8 @@ module TokenizerHelper
   end
 
   def set_var(var, value)
-    raise 'Cannot predefine reserved keyword' if @reserved.key? var.to_s
     valid = (valid_var value.to_s) || (value.is_a? Proc)
-    raise 'Invalid parameter' unless valid
+    raise 'Invalid parameter' unless valid || (value.is_a? Symbol)
     @procs[var] = value
   end
 
@@ -78,7 +77,7 @@ module TokenizerHelper
     val = (predefined_method_caller [var])
     return val unless val.nil?
     valid = valid_var var
-    valid ? var : (raise 'Unbound symbol "' + var + '"')
+    valid ? var : (raise unbound_symbol_err var)
   end
 
   def syntax_methods
@@ -124,12 +123,17 @@ class Tokenizer
     call_predefined_method m_name, arr
   end
 
+  def check_for_stl_function(arr)
+    idx = find_bracket_idx arr, 1
+    func, = valid_function arr[1..idx]
+    values = find_all_values arr[idx + 1..-2]
+    return func.call(*values) if func.is_a? Proc
+    calc_input_val ['(', func, *values, ')']
+  end
+
   def special_check_proc(m_name, arr)
     if arr[0..1].join == '(('
-      idx = find_bracket_idx arr, 1
-      func, = valid_function arr[1..idx]
-      values = find_all_values arr[idx + 1..-2]
-      func.call(*values)
+      check_for_stl_function arr
     else
       m_name.call(*arr[2..-2])
     end

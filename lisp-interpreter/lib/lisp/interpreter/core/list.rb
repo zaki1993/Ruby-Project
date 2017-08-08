@@ -76,7 +76,7 @@ module SchemeListsHelper
 
   def find_list_function_value(other)
     raise arg_err_build 1, other.size if other.size != 1
-    raise 'Invalid data type' unless other[0].list?
+    raise data_type_err '<list>', other[0].type unless other[0].list?
     split_list_as_string other[0].to_s
   end
 
