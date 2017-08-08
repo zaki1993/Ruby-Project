@@ -1,95 +1,12 @@
-require_relative 'core/object'
-require_relative 'core/errors'
-require_relative 'core/numbers'
-require_relative 'core/strings'
-require_relative 'core/boolean'
-require_relative 'core/list'
-require_relative 'core/functional'
-require_relative 'value_finder'
-require_relative 'checker'
-require_relative 'validator'
-
-# Tokenizer helper
-module TokenizerHelper
-  def initialize
-    @other = []
-    @procs = {}
-    @do_not_calculate = init_do_not_calculate_fn
-    @reserved = init_reserved_fn
-    set_reserved_keywords
-    @functions = init_functions
-    init_predefined.each { |f| @functions[f] = f }
-  end
-
-  def reset
-    @other = []
-  end
-
-  def init_do_not_calculate_fn
-    %w[
-      foldl foldr map filter
-      if apply numerator denominator
-      lambda compose define
-    ]
-  end
-
-  def init_functions
-    {
-      'string-downcase'  => 'strdowncase', 'string-upcase'  => 'strupcase',
-      'string-contains?' => 'strcontains', 'string-length'  => 'strlen',
-      'string->list'     => 'strlist',     'string-split'   => 'strsplit',
-      'string-sufix?'    => 'strsufix',    'string-prefix?' => 'strprefix',
-      'string-replace'   => 'strreplace',  'string-join'    => 'strjoin'
-    }
-  end
-
-  def init_predefined
-    %w[
-      define not equal? if quotient remainder modulo numerator denominator
-      min max sub1 add1 abs string? substring null? cons null list car
-      cdr list? pair? length reverse remove shuffle map foldl foldr filter
-      member lambda apply compose
-    ]
-  end
-
-  def init_reserved_fn
-    {
-      'null' => '\'()',
-      'ghci' => ''
-    }
-  end
-
-  def set_reserved_keywords
-    @reserved.each do |key, value|
-      @procs[key.to_s] = value
-    end
-  end
-
-  def set_var(var, value)
-    valid = (valid_var value.to_s) || (value.is_a? Proc)
-    raise 'Invalid parameter' unless valid || (value.is_a? Symbol)
-    return if var == value.to_s
-    @procs[var] = value
-  end
-
-  def get_var(var)
-    check = check_instance_var var
-    return @procs[var.to_s] if check
-    val = (predefined_method_caller [var])
-    return val unless val.nil?
-    valid = valid_var var
-    valid ? var : (raise unbound_symbol_err var)
-  end
-
-  def syntax_methods
-    @functions
-  end
-end
+require_relative 'core/loader'
+require_relative 'helpers/value_finder'
+require_relative 'helpers/checker'
+require_relative 'helpers/validator'
 
 # Tokenizer class
 class Tokenizer
+  include StlLoader
   include ErrorMessages
-  include TokenizerHelper
   include ValueFinder
   include SchemeChecker
   include Validator
@@ -99,8 +16,11 @@ class Tokenizer
   include SchemeLists
   include FunctionalScheme
 
+  def syntax_methods
+    @functions
+  end
+
   def tokenize(token)
-    reset
     token.delete('')
     @other = token
     begin
@@ -176,16 +96,5 @@ class Tokenizer
         break t unless t.match(/[[:digit:]]/).nil?
       end
     predefined_method_caller_helper m_name, operations
-  end
-
-  def get_raw_value(token)
-    if token.pair? || token.list?
-      build_list no_eval_list token[2..-2]
-    else
-      return if token.empty?
-      token = token.join('') if token.is_a? Array
-      return token if token =~ /c[ad]{2,}r/
-      get_var token.to_s
-    end
   end
 end

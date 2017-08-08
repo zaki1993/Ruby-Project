@@ -169,7 +169,7 @@ module FunctionalSchemeHelper
 
   def define_var(var, values)
     raise arg_err_build 1, values.size if values.size != 1
-    raise 'Invalid variable name' unless valid_var_name var
+    raise var.to_s + ' is not valid variable name' unless valid_var_name var
     define_var_stl var, values
   end
 
@@ -186,7 +186,7 @@ module FunctionalSchemeHelper
 
   def define_func_helper(other, params, args)
     temp = set_values_define other, params, args
-    calc_input_val temp
+    (find_all_values temp)[-1]
   end
 
   def arg_finder_helper(name, args)

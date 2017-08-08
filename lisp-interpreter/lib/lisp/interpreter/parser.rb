@@ -1,5 +1,3 @@
-require_relative 'core/errors'
-require_relative 'validator'
 require_relative 'tokenizer'
 
 # Environment type
