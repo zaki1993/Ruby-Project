@@ -96,7 +96,7 @@ strings:
     
 list and pairs:
     
-    (null? \'()); #t
+    (null? '()); #t
     
     (cons 1 2); (1 . 2)
     
