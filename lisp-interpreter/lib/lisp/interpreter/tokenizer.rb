@@ -111,7 +111,7 @@ class Tokenizer
 
   def check_car_cdr(arr)
     result = arr[1].match(/c[ad]{2,}r/)
-    raise arr[1].to_s + ' is not a function' if result.nil?
+    raise no_procedure_build arr[1].to_s if result.nil?
     car_cdr_infinite arr
   end
 
@@ -140,7 +140,7 @@ class Tokenizer
   end
 
   def validate_call_method(m_name)
-    raise m_name.to_s + ' is not a function' if valid_var m_name.to_s
+    raise no_procedure_build m_name.to_s if valid_var m_name.to_s
   end
 
   def call_predefined_method(m_name, arr)

@@ -130,25 +130,45 @@ list and pairs:
     
     (foldr cons '() '(1 2 3 4 5)); (1 2 3 4 5)
     
-    (filter (<= 3) '(1 2 3 4 5)); (1 2 3)
+    (filter (lambda (x) (<= x 3)) '(1 2 3 4 5)); (1 2 3)
     
-    (member 2 (list 1 2 3 4)); (2 3 4
+    (member 2 (list 1 2 3 4)); (2 3 4)
     
 functions and procedures:
     
-    (lambda (x) (* 2 x)); <Proc>
+    (lambda (x) (* 2 x)); <#Closure>
     
     ((lambda (x) (* 2 x)) 5); 10
     
     (apply + '(1 2 3)); 6
     
     ((compose fn1 fn2) val); (fn1 (fn2 val))
+
+    (compose fn1 fn2); #<Closure>
+
+errors:
+
+    (+ 1 2 #t); "Invalid data type, expected <number> got <boolean>"
+
+    (string-length 123); "Invalid data type, expected <string> got <number>"
+
+    (string-join "SAMPLE"); "Invalid data type, expected <list> got <string>"
+
+    (substring "sample"); "Incorrect number of arguments, expected [2, 3] got 1"
+
+    (x); "x is not a function"
+
+    x; "Unbound symbol x"
     
 other:
     
-    (define x 5) ; 5
+    (define x 5); 5
+
+    (define x (lambda (x) (* 2 x))); <#Closure>
     
-    (define (even? x) (if (equal? (remainder x 2) 0) #t #f))
+    (define (even? x) (if (equal? (remainder x 2) 0) #t #f)); <#Closure>
+
+    (define map foldl); <Function foldl>
     
     (even? 4); #t
     

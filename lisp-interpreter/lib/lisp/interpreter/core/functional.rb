@@ -71,7 +71,8 @@ module Optimize
       value = value.to_s unless value.is_a? Array
       value = calc_input_val ['(', t, *value, ')']
     end
-    value
+    is_arr = value.is_a? Array
+    is_arr ? value[0] : value
   end
 
   def build_compose_expr(funcs)

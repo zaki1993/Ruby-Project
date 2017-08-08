@@ -13,7 +13,7 @@ module ErrorMessages
   end
 
   def no_procedure_build(name)
-    'No procedure found ' + name.to_s
+    name.to_s + ' is not function'
   end
 
   def unbound_symbol_err(symbol)
