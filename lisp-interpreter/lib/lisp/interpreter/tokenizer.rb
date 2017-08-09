@@ -66,7 +66,7 @@ class Tokenizer
 
   def call_predefined_method(m_name, arr)
     return special_check_proc m_name, arr if m_name.is_a? Proc
-    if @do_not_calculate.include? m_name
+    if DO_NOT_CALCULATE_FUNCTIONS.include? m_name
       send m_name.to_s, arr[2..-2]
     elsif !m_name.nil?
       values = find_all_values arr[2..-2]

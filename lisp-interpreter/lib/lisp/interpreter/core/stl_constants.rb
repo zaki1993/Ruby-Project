@@ -1,4 +1,4 @@
-# STL functions
+# STL constants
 module SchemeStl
   DO_NOT_CALCULATE_FUNCTIONS =
     %w[

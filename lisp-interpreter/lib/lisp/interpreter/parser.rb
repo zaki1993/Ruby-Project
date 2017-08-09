@@ -22,7 +22,7 @@ class Parser
       print 'zakichan> ' if @env_type == Environment::PROD
       token = ''
       until (validate_token token).nil? && token != ''
-        crr_input = STDIN.gets.chomp + ' '
+        crr_input = STDIN.gets.chomp
         token << crr_input
         break if crr_input == ''
       end
@@ -78,7 +78,7 @@ class Parser
   end
 
   def parse(token)
-    return read_file token if token.start_with? 'ghci'
+    return read_file token if (token.start_with? 'ghci ') && token.size > 4
     token_error = validate_token token
     result =
       if token_error.nil?

@@ -24,6 +24,3 @@ module ErrorMessages
     'Invalid data type, expected ' + exp.to_s + ' got ' + got.to_s
   end
 end
-
-class SchemeException < RuntimeError
-end
