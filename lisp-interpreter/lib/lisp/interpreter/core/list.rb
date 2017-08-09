@@ -149,8 +149,7 @@ module SchemeLists
 
   def null?(other)
     raise arg_err_build 1, other.size if other.size != 1
-    return '#f' unless other[0].to_s.list?
-    other[0].to_s.size == 3 ? '#t' : '#f'
+    other[0] == '\'()' ? '#t' : '#f'
   end
 
   def length(other)
