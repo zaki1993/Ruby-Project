@@ -14,17 +14,6 @@ module SchemeListsHelper
     result
   end
 
-  def find_to_evaluate_or_not(tokens, no_quotes = false)
-    if tokens[0..1].join == '(list'
-      evaluate_list tokens[2..-2], no_quotes
-    elsif tokens[0..1].join == '(cons'
-      result = cons tokens[2..-2]
-      result[2..-2].split(' ')
-    else
-      no_eval_list tokens[2..-2], no_quotes
-    end
-  end
-
   def find_idx_for_list(tokens)
     if tokens[0] == '('
       find_bracket_idx tokens, 0
@@ -103,11 +92,23 @@ module SchemeListsHelper
     [func, other]
   end
 
-  def car_cdr_infinite_helper(value, fn)
-    fn.reverse[1..-2].each_char do |t|
-      value = t == 'a' ? (car [value]) : (cdr [value])
+  def build_function_car_cdr(fn)
+    prepare_call = ['(', fn, 'x', ')']
+    fn[1..-2].each_char do |t|
+      prepare_call += (t == 'a' ? ['(', 'car'] : ['(', 'cdr'])
     end
-    value
+    prepare_call << 'x'
+    (fn.size - 2).times { prepare_call << ')' }
+    prepare_call
+  end
+
+  def generate_infinite_car_cdr(fn)
+    prepare_call = build_function_car_cdr fn
+    define_function prepare_call
+  end
+
+  def call_car_cdr_infinite(fn, values)
+    @procs[fn.to_s].call values
   end
 end
 
@@ -177,7 +178,8 @@ module SchemeLists
   def car_cdr_infinite(other)
     fn = other[1]
     values = find_all_values other[2..-2]
-    raise 'Incorrect number of arguments' unless values.size == 1
-    car_cdr_infinite_helper values[0], fn
+    return call_car_cdr_infinite fn, values if @procs.key? fn.to_s
+    raise arg_err_build 1, values.size unless values.size == 1
+    (generate_infinite_car_cdr fn).call values[0]
   end
 end

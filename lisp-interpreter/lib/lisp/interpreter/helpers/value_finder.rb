@@ -55,6 +55,8 @@ module ValueFinder
 
   def find_next_value(other)
     return [other[0], other[1..-1]] if other[0].is_a? Proc
+    match_inf = other[0].to_s.match(/c[ad]{2,}r/)
+    return [(generate_infinite_car_cdr other[0]), other[1..-1]] if match_inf
     find_value_helper other
   end
 
@@ -80,7 +82,7 @@ module ValueFinder
     else
       return if token.empty?
       token = token.join('') if token.is_a? Array
-      return token if token =~ /c[ad]{2,}r/
+      return (generate_infinite_car_cdr token) if token =~ /c[ad]{2,}r/
       get_var token.to_s
     end
   end

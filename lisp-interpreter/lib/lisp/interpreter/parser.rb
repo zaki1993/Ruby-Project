@@ -111,7 +111,7 @@ class Parser
 
   def find_result_type(res, methods)
     return '#<Closure>' if res.is_a? Proc
-    is_func = (methods.key? res.to_s) || res.to_s.match(/c[ad]{2,}r/)
+    is_func = (methods.key? res.to_s)
     return '#<Function ' + res.to_s + '>' if is_func
     res.to_s
   end

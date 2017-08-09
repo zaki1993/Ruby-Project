@@ -41,13 +41,9 @@ class Object
   end
 
   def type
-    return '<list>' if list?
-    return '<pair>' if pair?
-    return '<string>' if string?
-    return '<number>' if number?
-    return '<character>' if character?
-    return '<boolean>' if boolean?
-    '<quote>'
+    fns = %w[list pair string number character boolean quote]
+    res = fns.reject { |t| fns.index(t) unless send t + '?' }
+    '<' + res[0] + '>'
   end
 
   private
