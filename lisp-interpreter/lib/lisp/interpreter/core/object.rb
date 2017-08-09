@@ -42,8 +42,7 @@ class Object
 
   def type
     fns = %w[list pair string number character boolean quote]
-    res = fns.reject { |t| fns.index(t) unless send t + '?' }
-    '<' + res[0] + '>'
+    fns.each { |t| return '<' + t + '>' if send t + '?' }
   end
 
   private
