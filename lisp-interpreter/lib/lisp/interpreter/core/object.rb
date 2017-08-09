@@ -6,7 +6,7 @@ class Object
 
   def to_num
     return to_f if to_f.to_s == to_s
-    return to_i if to_i.to_s == to_s
+    to_i if to_i.to_s == to_s
   end
 
   def character?
@@ -32,8 +32,7 @@ class Object
   end
 
   def quote?
-    return true if start_with? '\''
-    false
+    start_with? '\''
   end
 
   def boolean?
