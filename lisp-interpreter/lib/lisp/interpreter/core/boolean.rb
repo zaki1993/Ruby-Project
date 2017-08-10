@@ -37,7 +37,7 @@ module SchemeBooleans
   def if(other)
     raise arg_err_build 3, 0 if other.empty?
     expr, other = find_next_value other
-    raise arg_err_build 3, other.size + 1 if other.size != 2
+    raise arg_err_build 3, other.size + 1 if other.size < 2
     if_helper expr, other
   end
 end

@@ -269,9 +269,9 @@ RSpec.describe Lisp::Interpreter do
     end
 
     it 'returns the numerator of <q> when <q> is float' do
-      expect(@p.parse('(numerator 5.3)')).to eq 5.3
-      expect(@p.parse('(numerator 1.5)')).to eq 1.5
-      expect(@p.parse('(numerator 0.7)')).to eq 0.7
+      expect(@p.parse('(numerator 5.3)')).to eq 5_967_269_506_265_907
+      expect(@p.parse('(numerator 1.5)')).to eq 3
+      expect(@p.parse('(numerator 0.7)')).to eq 3_152_519_739_159_347
     end
 
     it 'returns the numerator of <q> when <q> is rational' do
@@ -289,9 +289,9 @@ RSpec.describe Lisp::Interpreter do
     end
 
     it 'returns the denominator of <q> when <q> is float' do
-      expect(@p.parse('(denominator 5.3)')).to eq 1
-      expect(@p.parse('(denominator 1.5)')).to eq 1
-      expect(@p.parse('(denominator 0.7)')).to eq 1
+      expect(@p.parse('(denominator 5.3)')).to eq 1_125_899_906_842_624
+      expect(@p.parse('(denominator 1.5)')).to eq 2
+      expect(@p.parse('(denominator 0.7)')).to eq 4_503_599_627_370_496
     end
 
     it 'returns the denominator of <q> when <q> is rational' do

@@ -1,12 +1,15 @@
 # redefine method in Object class
+require 'bigdecimal'
+
+# Object class
 class Object
   def number?
-    to_f.to_s == to_s || to_i.to_s == to_s
+    match(/\A[-+]?[0-9]*\.?[0-9]+\Z/)
   end
 
   def to_num
-    return to_f if to_f.to_s == to_s
-    to_i if to_i.to_s == to_s
+    num = BigDecimal.new(to_s)
+    num.frac.zero? ? num.to_i : num.to_f
   end
 
   def character?

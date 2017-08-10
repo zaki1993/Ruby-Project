@@ -10,25 +10,32 @@ module SchemeNumbersHelper
     other[0] == '(' ? (find_bracket_idx other, 0) + 1 : 1
   end
 
+  def rationalize_num(num)
+    [num.to_num.to_r.to_s]
+  end
+
   def num_denom_helper(other)
     if other.size == 1
-      other = other[0].split('/')
+      other = rationalize_num other[0] if check_for_num other[0]
+      other[0].split('/')
     else
-      _, temp = find_next_value other
-      raise arg_err_build 1, 0 unless temp[0] == '/' || temp.empty?
-      i = find_idx_numerators other
-      other.delete_at(i)
+      other = other.map { |t| t.to_s.split(%r{(\/)}) }.flatten
+      other.delete('')
+      get_num_denom other
     end
-    other
+  end
+
+  def num_denom_validator(temp)
+    raise arg_err_build 1, temp.size + 1 if (temp[0] != '/') && !temp.empty?
   end
 
   def get_num_denom(other)
-    num, other = find_next_value other
-    raise type_err '<number>', num.type unless check_for_num num
-    return [num, 1] if other.empty?
-    denom, other = find_next_value other
-    raise arg_err_build 1, other.size unless other.empty?
-    [num, denom]
+    x, temp = find_next_value other
+    num_denom_validator temp
+    return [x, 1] if temp.empty?
+    y, temp = find_next_value temp[1..-1]
+    num_denom_validator temp
+    [x, y]
   end
 
   def compare_value_arithmetic(other, oper)
@@ -122,18 +129,14 @@ module SchemeNumbers
 
   def numerator(other)
     raise arg_err_build 1, 0 if other.empty?
-    other = num_denom_helper other
-    result = (get_num_denom other)[0]
-    raise type_err '<number>', result.type unless check_for_num result
-    result.to_num
+    nums = num_denom_helper other
+    nums[0].to_num
   end
 
   def denominator(other)
     raise arg_err_build 1, 0 if other.empty?
-    other = num_denom_helper other
-    result = (get_num_denom other)[1]
-    raise type_err '<number>', result.type unless check_for_num result
-    result.to_num
+    nums = num_denom_helper other
+    nums[1].to_num
   end
 
   def abs(other)
