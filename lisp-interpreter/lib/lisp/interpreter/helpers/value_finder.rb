@@ -73,6 +73,7 @@ module ValueFinder
     val = (predefined_method_caller [var])
     return val unless val.nil?
     valid = valid_var var
+    var = var.to_num.to_s if check_for_num var
     valid ? var : (raise unbound_symbol_err var)
   end
 

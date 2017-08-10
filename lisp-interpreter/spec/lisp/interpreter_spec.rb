@@ -64,12 +64,11 @@ RSpec.describe Lisp::Interpreter do
       expect(@p.parse('#\invalid')).to eq unbound_symbol_err '#\invalid'
     end
 
-    it 'can parse integers' do
+    it 'can parse numbers' do
       expect(@p.parse('1')).to eq '1'
-    end
-
-    it 'can parse floats' do
+      expect(@p.parse('0123')).to eq '123'
       expect(@p.parse('1.5')).to eq '1.5'
+      expect(@p.parse('0.500')).to eq '0.5'
     end
 
     it 'can parse strings' do

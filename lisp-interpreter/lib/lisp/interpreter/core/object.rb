@@ -8,8 +8,8 @@ class Object
   end
 
   def to_num
-    num = BigDecimal.new(to_s)
-    num.frac.zero? ? num.to_i : num.to_f
+    return to_f if to_s.include? '.'
+    to_i
   end
 
   def character?
