@@ -60,10 +60,6 @@ class Tokenizer
     end
   end
 
-  def validate_call_method(m_name)
-    raise no_procedure_build m_name.to_s if valid_var m_name.to_s
-  end
-
   def call_predefined_method(m_name, arr)
     return special_check_proc m_name, arr if m_name.is_a? Proc
     if DO_NOT_CALCULATE_FUNCTIONS.include? m_name

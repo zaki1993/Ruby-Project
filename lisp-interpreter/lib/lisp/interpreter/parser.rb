@@ -51,7 +51,7 @@ class Parser
     msg
   end
 
-  def read_file_reader(f, expr)
+  def read_file_execute_lines(f, expr)
     last_value = ''
     f.each do |line|
       expr << line
@@ -66,7 +66,7 @@ class Parser
   def read_file_executor(file)
     f = File.open(file)
     expr = ''
-    read_file_reader f, expr
+    read_file_execute_lines f, expr
   end
 
   def read_file(token)

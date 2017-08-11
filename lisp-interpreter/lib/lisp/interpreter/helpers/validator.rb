@@ -56,4 +56,8 @@ module Validator
     idx = find_bracket_idx fn, 1 if fn[idx] == '\''
     raise no_procedure_build fn[0..idx].join if f.nil? && (!f.is_a? Proc)
   end
+
+  def validate_call_method(m_name)
+    raise no_procedure_build m_name.to_s if valid_var m_name.to_s
+  end
 end
