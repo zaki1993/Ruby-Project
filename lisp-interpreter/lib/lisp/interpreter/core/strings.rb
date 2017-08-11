@@ -27,10 +27,6 @@ module SchemeStringsHelper
     end
   end
 
-  def build_character(char)
-    '#\\' + (char == ' ' ? 'space' : char)
-  end
-
   def remove_carriage(str)
     str = str[1..-2]
     str.gsub('\n', '').gsub('\r', '').gsub('\t', '').strip.squeeze(' ')
@@ -38,7 +34,7 @@ module SchemeStringsHelper
 
   def arg_function_validator(other, vars = 1)
     raise arg_err_build other.size, vars if other.size != vars
-    res = other[0..vars - 1].reject { |v| check_for_string v }
+    res = other[0..vars - 1].reject(&:string?)
     raise type_err '<string>', res[0].type unless res.empty?
     res
   end
@@ -55,7 +51,7 @@ module SchemeStringsHelper
   end
 
   def substring_validator(from, to)
-    valid = (check_for_num from) && (to.nil? || (check_for_num to))
+    valid = from.number? && (to.nil? || to.number?)
     type = [from, to].first { |t| t.type if t.type != 'number' }
     raise type_err '<number>', type unless valid
   end
@@ -74,8 +70,7 @@ module SchemeStrings
 
   def string?(other)
     raise arg_err_build 1, other.size if other.size != 1
-    result = check_for_string other[0].to_s
-    result ? '#t' : '#f'
+    other[0].string? ? '#t' : '#f'
   end
 
   def strlen(other)
@@ -108,7 +103,7 @@ module SchemeStrings
 
   def strlist(other)
     arg_function_validator other
-    result = other[0][1..-2].chars.map { |c| build_character c }
+    result = other[0][1..-2].chars.map(&:to_char)
     build_list result
   end
 

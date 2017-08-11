@@ -47,6 +47,10 @@ class Object
     fns.each { |t| return '<' + t + '>' if send t + '?' }
   end
 
+  def to_char
+    '#\\' + (self == ' ' ? 'space' : self)
+  end
+
   private
 
   def object_split

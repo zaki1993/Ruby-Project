@@ -1,9 +1,5 @@
 # Helper functions for SchemeLists
 module SchemeListsHelper
-  def evaluate_list(tokens, no_quotes)
-    find_all_values_list_evaluate tokens, no_quotes
-  end
-
   def no_eval_list(tokens, no_quotes = false)
     result = []
     until tokens.empty?
@@ -20,16 +16,6 @@ module SchemeListsHelper
     elsif tokens[1] == '('
       find_bracket_idx tokens, 1
     end
-  end
-
-  def find_all_values_list_evaluate(tokens, no_quotes = false)
-    result = []
-    until tokens.empty?
-      x, tokens = find_next_value tokens
-      x = x[1..-2] if no_quotes && (check_for_string x.to_s)
-      result << x
-    end
-    result
   end
 
   def build_list(values)
