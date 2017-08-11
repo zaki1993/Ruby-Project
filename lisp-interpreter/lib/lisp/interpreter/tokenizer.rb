@@ -25,7 +25,7 @@ class Tokenizer
     @other = token
     begin
       calc_input_val @other
-    rescue ZeroDivisionError, RuntimeError => e
+    rescue SystemStackError, ZeroDivisionError, RuntimeError => e
       e.message
     end
   end
