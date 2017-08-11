@@ -3,10 +3,10 @@ module SchemeBooleansHelper
   def if_idx_helper(other)
     if other[0] == '('
       idx = find_bracket_idx other, 0
-      (find_next_value other[idx + 1..-1])[0]
+      other[idx + 1..-1]
     else
       _, other = find_next_value other
-      (find_next_value other)[0]
+      other
     end
   end
 
@@ -14,7 +14,7 @@ module SchemeBooleansHelper
     if expr == '#f'
       if_idx_helper other
     else
-      (find_next_value other)[0]
+      other
     end
   end
 end
@@ -38,6 +38,7 @@ module SchemeBooleans
     raise arg_err_build 3, 0 if other.empty?
     expr, other = find_next_value other
     raise arg_err_build 3, other.size + 1 if other.size < 2
-    if_helper expr, other
+    res = if_helper expr, other
+    (find_next_value res)[0]
   end
 end
