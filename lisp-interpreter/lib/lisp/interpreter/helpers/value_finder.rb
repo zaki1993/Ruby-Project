@@ -18,13 +18,6 @@ module ValueFinder
     end
   end
 
-  def find_next_function_value(other)
-    idx = (find_bracket_idx other, 0)
-    value = calc_input_val other[0..idx]
-    other = other[idx + 1..other.size]
-    [value, other]
-  end
-
   def size_for_list_elem(values)
     result = []
     values.each do |v|
@@ -37,19 +30,23 @@ module ValueFinder
     result.size
   end
 
-  def find_next_value_helper(other)
+  def find_list_value(other)
     value = no_eval_list other[2..(find_bracket_idx other, 1) - 1]
     [(build_list value), other[3 + (size_for_list_elem value)..-1]]
   end
 
+  def find_next_raw_value(other)
+    [(get_var other[0].to_s), other[1..-1]]
+  end
+
   def find_value_helper(other)
     if other[0] == '('
-      find_next_function_value other
+      idx = find_idx_for_list other
+      [(calc_input_val other[0..idx]), other[idx + 1..-1]]
     elsif other[0..1].join == '\'('
-      find_next_value_helper other
+      find_list_value other
     else
-      value = get_var other[0].to_s
-      [value, other[1..-1]]
+      find_next_raw_value other
     end
   end
 
