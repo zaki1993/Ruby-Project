@@ -4,7 +4,7 @@ require 'bigdecimal'
 # Object class
 class Object
   def number?
-    match(/\A[-+]?[0-9]*\.?[0-9]+\Z/)
+    match(/^[\+\-]?\d*\.?\d+(?:[Ee][\+\-]?\d+)?$/)
   end
 
   def to_num
