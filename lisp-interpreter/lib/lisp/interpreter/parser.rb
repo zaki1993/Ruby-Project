@@ -20,14 +20,36 @@ class Parser
   def run
     loop do
       print 'zakichan> ' if @env_type == Environment::PROD
-      token = ''
-      until (validate_token token).nil? && token != ''
-        crr_input = STDIN.gets.chomp
-        token << crr_input
-        break if crr_input == ''
+      begin
+        token = read_input('')
+      rescue Interrupt => e
+        puts 'Exiting..!'
+        Thread.sleep(2)
+        return
       end
       parse token
     end
+  end
+
+  def read_input(token)
+    until (validate_token token).nil? && token != ''
+      crr_input = STDIN.gets.chomp
+      token << crr_input
+      break if crr_input == ''
+    end
+    token
+  end
+
+  def parse(token)
+    return read_file token if (token.start_with? 'ghci') && token.size > 4
+    token_error = validate_token token
+    result =
+      if token_error.nil?
+        @tokenizer.tokenize split_token token
+      else
+        token_error
+      end
+    finalize_result result unless result.to_s.empty?
   end
 
   def split_token(token)
@@ -47,8 +69,7 @@ class Parser
     result = (token =~ pattern)
     return unless result.nil?
     token = token[5..-1].nil? ? token[4..-1] : token[5..-1]
-    msg = 'File with name "' + token + '" is not valid scheme file'
-    msg
+    'File with name "' + token.to_s + '" is not valid scheme file'
   end
 
   def read_file_execute_lines(f, expr)
@@ -75,18 +96,6 @@ class Parser
     filename = token[5..-1]
     return read_file_executor filename if File.exist? filename
     finalize_result 'File with name "' + filename + '" does not exist!'
-  end
-
-  def parse(token)
-    return read_file token if (token.start_with? 'ghci ') && token.size > 4
-    token_error = validate_token token
-    result =
-      if token_error.nil?
-        @tokenizer.tokenize split_token token
-      else
-        token_error
-      end
-    finalize_result result unless result.to_s.empty?
   end
 
   def validate_token(token)
