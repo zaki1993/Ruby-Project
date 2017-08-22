@@ -1,3 +1,5 @@
+require_relative 'stl_constants'
+
 # Scheme booleans helper
 module SchemeBooleansHelper
   def if_idx_helper(other)
@@ -11,7 +13,7 @@ module SchemeBooleansHelper
   end
 
   def if_helper(expr, other)
-    if expr == '#f'
+    if expr == FALSE
       if_idx_helper other
     else
       other
@@ -24,14 +26,14 @@ module SchemeBooleans
   include SchemeBooleansHelper
   def equal?(other)
     raise arg_err_build 2, other.size if other.size != 2
-    other[0].to_s == other[1].to_s ? '#t' : '#f'
+    other[0].to_s == other[1].to_s ? TRUE : FALSE
   end
 
   def not(other)
     raise arg_err_build 1, other.size if other.size != 1
     valid = check_for_bool other[0]
     raise type_err '<boolean>', other[0].type unless valid
-    other[0] == '#t' ? '#f' : '#t'
+    other[0] == TRUE ? FALSE : TRUE
   end
 
   def if(other)

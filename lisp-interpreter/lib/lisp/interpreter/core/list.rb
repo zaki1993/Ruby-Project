@@ -125,17 +125,17 @@ module SchemeLists
 
   def list?(other)
     raise arg_err_build 1, other.size if other.size != 1
-    other[0].to_s.list? ? '#t' : '#f'
+    other[0].to_s.list? ? TRUE : FALSE
   end
 
   def pair?(other)
     raise arg_err_build 1, other.size if other.size != 1
-    other[0].to_s.pair? ? '#t' : '#f'
+    other[0].to_s.pair? ? TRUE : FALSE
   end
 
   def null?(other)
     raise arg_err_build 1, other.size if other.size != 1
-    other[0] == '\'()' ? '#t' : '#f'
+    other[0] == '\'()' ? TRUE : FALSE
   end
 
   def length(other)

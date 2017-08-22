@@ -39,7 +39,7 @@ class Object
   end
 
   def boolean?
-    ['#t', '#f'].include? self
+    self == TRUE || self == FALSE
   end
 
   def type

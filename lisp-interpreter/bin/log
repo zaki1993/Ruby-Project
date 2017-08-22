@@ -1,5 +1,8 @@
-D:/Github/d/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:27:in `rescue in block in run': private method `sleep' called for Thread:Class (NoMethodError)
-	from D:/Github/d/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:23:in `block in run'
-	from D:/Github/d/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:21:in `loop'
-	from D:/Github/d/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:21:in `run'
+D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/core/stl_constants.rb:34: warning: already initialized constant TRUE
+D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/core/stl_constants.rb:35: warning: already initialized constant FALSE
+D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:29:in `sleep': Interrupt
+	from D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:29:in `rescue in block in run'
+	from D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:25:in `block in run'
+	from D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:23:in `loop'
+	from D:/Github/last/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:23:in `run'
 	from ../lib/lisp/interpreter/run.rb  :4:in `<main>'

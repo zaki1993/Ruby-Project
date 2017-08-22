@@ -42,7 +42,7 @@ module SchemeNumbersHelper
     raise arg_err_build 'at least 2', other.size if other.size < 2
     other = convert_to_num other
     result = other.each_cons(2).all? { |x, y| x.public_send oper, y }
-    result ? '#t' : '#f'
+    result ? TRUE : FALSE
   end
 
   def convert_to_num(other)
