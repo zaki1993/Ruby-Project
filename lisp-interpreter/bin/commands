@@ -1,0 +1,108 @@
+Predefined functions:
+(+ z ...)                       ## (+ 1 2) -> 3
+
+(- z w ...+)                    ## (- 1 2) -> -1
+
+(* z ...)                       ## (* 2 3) -> 6
+
+(/ z w ...+)                    ## (/ 9 3) -> 3
+
+(not v)                         ## (not #t) -> #f
+
+(equal? v1 v2)                  ## (equal? #t #f) -> #f
+
+(quotient n m)                  ## (quotient 10 3) -> 3
+
+(remainder n m)                 ## (remainder 10 3) -> 1
+
+(modulo n m)                    ## (modulo 10 3) -> 1
+
+(numerator q)                   ## (numerator 1.5) -> 3
+
+(denominator q)                 ## (denominator 1.5) -> 2
+
+(abs z)                         ## (abs -5) -> 5
+
+(add1 z)                        ## (add1 5) -> 6
+
+(sub1 z)                        ## (sub1 5) -> 4
+
+(min x ...+)                    ## (min 1 2 3) -> 1
+
+(max x ...+)                    ## (max 1 2 3) -> 3
+
+(< x y ...+)                    ## (< 2 3 4) -> #t
+
+(> x y ...+)                    ## (> 2 3 3) -> #f
+
+(<= x y ...+)                   ## (<= 2 2 3) -> #t
+
+(>= x y ...+)                   ## (>= 2 2 3) -> #t
+
+(string-length str)             ## (string-length "sample") -> 6
+
+(substring str from [to])       ## (substring "Hello world" 4) -> "o world"
+
+(string-upcase str)             ## (string-upcase "sample") -> "SAMPLE"
+
+(string-downcase str)           ## (string-downcase "SAMPLE") -> "sample"
+
+(string-contains? s contained)  ## (string-contains? "racket" "acke") -> #t
+
+(string->list str)              ## (string->list "Sample") -> (#\S #\a #\m #\p #\l #\e)
+
+(string-split str [sep])        ## (string-split "  foo bar  baz \r\n\t") -> ("foo" "bar" "baz")
+
+(string? v)                     ## (string? "sample") -> #t
+
+(string-replace str from to)    ## (string-replace "foo bar baz" "bar" "blah") -> "foo blah baz"
+
+(string-prefix? s prefix)       ## (string-prefix? "Racket" "Rac") -> #t
+
+(string-sufix? s suffix)        ## (string-sufix? "Racket" "cket") -> #t
+
+(string-join strs [sep])        ## (string-join (list 1 2)) -> "1 2"
+
+(null? v)                       ## (null? null) -> #t
+
+(cons a d)                      ## (cons 1 2) -> (1 . 2)
+
+(list v ...)                    ## (list 1 "s") -> (1 "s")
+
+(car p)                         ## (car (list 1 2 3 4)) -> 1
+
+(cdr p)                         ## (cdr '(1 2 3 4)) -> (2 3 4)
+
+(list? v)                       ## (list? null) -> #t
+
+(pair? v)                       ## (pair? (list 1 2)) -> #t
+
+(length lst)                    ## (length (list 1 2 3)) -> 3
+
+(reverse lst)                   ## (reverse (list 1 2 3)) -> (3 2 1)
+
+(remove v lst)                  ## (remove 1 (list 1 2 1 3)) -> (2 1 3)
+
+(shuffle lst)                   ## (shuffle (list)) -> ()
+
+(map proc lst ...+)             ## (map cons '(1 2) '(1 10)) -> ((1 . 1) (2 . 10))
+
+(foldl proc init lst ...+)      ## (foldl cons '() '(1 2 3 4)) -> (4 3 2 1)
+
+(foldr proc init lst ...+)      ## (foldr cons '() '(1 2 3 4)) -> (1 2 3 4)
+
+(filter pred lst)               ## (filter (lambda (x) (< x 3)) '(1 3 -4 0 5)) -> (1 -4 0)
+
+(member v lst)                  ## (member 2 (list 1 2 3 4)) -> (2 3 4)
+
+(lambda params body ...+)       ## ((lambda () 5)) -> 5
+
+(apply proc v ... lst)          ## (apply + '(1 2 3)) -> 6
+
+(compose proc ...)              ## (compose f1 f2 x) -> (f1 (f2 x))
+
+(define var value)              ## (define x 5) -> 5
+
+(define (fn args))              ## (define (*2 x) (* 2 x)) -> #<Closure>
+
+ghci filename                   ## ghci file.scm -> Executes file.scm content

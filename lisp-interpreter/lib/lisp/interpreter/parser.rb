@@ -1,5 +1,6 @@
 require_relative 'tokenizer'
 require_relative 'helpers/printer'
+require_relative 'helpers/validator'
 
 # Environment type
 module Environment
@@ -43,6 +44,7 @@ class Parser
 
   def parse(token)
     return read_file token if (token.start_with? 'ghci') && token.size > 4
+    return help if token == '--help'
     token_error = validate_token token
     result =
       if token_error.nil?
@@ -99,11 +101,8 @@ class Parser
     finalize_result 'File with name "' + filename + '" does not exist!'
   end
 
-  def validate_token(token)
-    if !balanced_brackets? token
-      unbalanced_brackets_error
-    elsif !balanced_quotes? token
-      unbalanced_quotes_error
-    end
+  def help
+    msg = 'Could not find any help file'
+    puts msg unless system('help.bat')
   end
 end

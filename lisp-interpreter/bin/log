@@ -1,0 +1,9 @@
+D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/core/stl_constants.rb:34: warning: already initialized constant TRUE
+D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/core/stl_constants.rb:35: warning: already initialized constant FALSE
+command_list=" was unexpected at this time.
+D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:30:in `sleep': Interrupt
+	from D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:30:in `rescue in block in run'
+	from D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:26:in `block in run'
+	from D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:24:in `loop'
+	from D:/Github/Ruby-Project/lisp-interpreter/lib/lisp/interpreter/parser.rb:24:in `run'
+	from ../lib/lisp/interpreter/run.rb  :4:in `<main>'

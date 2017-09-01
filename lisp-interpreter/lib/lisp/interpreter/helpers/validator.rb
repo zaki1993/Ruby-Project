@@ -37,6 +37,14 @@ module Validator
     [f, fn[idx + 1..-1]]
   end
 
+  def validate_token(token)
+    if !balanced_brackets? token
+      unbalanced_brackets_error
+    elsif !balanced_quotes? token
+      unbalanced_quotes_error
+    end
+  end
+
   private
 
   def valid_literals(var)

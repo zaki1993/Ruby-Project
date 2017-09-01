@@ -1,4 +1,5 @@
 @echo off
+
 call rake spec > log 2> NUL
 if %ERRORLEVEL% == 0 goto :run
 echo Could not start the application.
