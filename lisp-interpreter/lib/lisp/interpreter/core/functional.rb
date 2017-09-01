@@ -1,5 +1,8 @@
+require_relative 'stl_constants'
+
 # Optimization module
 module Optimize
+  include SchemeStl
   def fold_values_helper(other)
     other = other.map { |t| find_list_function_value [t] }
     (equalize_lists other).transpose
@@ -41,9 +44,9 @@ module Optimize
   def filter_helper(func, values)
     result =
       if func.is_a? Proc
-        values.select { |t| func.call(*t) == '#t' }
+        values.select { |t| func.call(*t) == TRUE }
       else
-        values.select { |t| (send func, [t]) == '#t' }
+        values.select { |t| (send func, [t]) == FALSE }
       end
     build_list result
   end
@@ -123,7 +126,7 @@ module FunctionalSchemeHelper
   end
 
   def member_helper(to_check, values)
-    return '#f' unless values.include? to_check
+    return FALSE unless values.include? to_check
     idx = values.index(to_check)
     build_list values[idx..-1]
   end

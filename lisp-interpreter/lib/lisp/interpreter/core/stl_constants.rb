@@ -29,3 +29,8 @@ module SchemeStl
       'null' => '\'()'
     }.freeze
 end
+
+class Object
+  TRUE = '#t'.freeze
+  FALSE = '#f'.freeze
+end

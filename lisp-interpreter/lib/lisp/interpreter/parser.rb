@@ -1,4 +1,5 @@
 require_relative 'tokenizer'
+require_relative 'helpers/printer'
 
 # Environment type
 module Environment
@@ -11,6 +12,7 @@ class Parser
   include ErrorMessages
   include Validator
   include Environment
+  include Printer
 
   def initialize(env_type = Environment::TEST)
     @env_type = env_type
@@ -20,14 +22,35 @@ class Parser
   def run
     loop do
       print 'zakichan> ' if @env_type == Environment::PROD
-      token = ''
-      until (validate_token token).nil? && token != ''
-        crr_input = STDIN.gets.chomp
-        token << crr_input
-        break if crr_input == ''
+      begin
+        token = read_input('')
+      rescue Interrupt
+        puts 'Exiting..!'
+        sleep(1)
       end
       parse token
     end
+  end
+
+  def read_input(token)
+    until (validate_token token).nil? && token != ''
+      crr_input = STDIN.gets.chomp
+      token << crr_input
+      break if crr_input == ''
+    end
+    token
+  end
+
+  def parse(token)
+    return read_file token if (token.start_with? 'ghci') && token.size > 4
+    token_error = validate_token token
+    result =
+      if token_error.nil?
+        @tokenizer.tokenize split_token token
+      else
+        token_error
+      end
+    finalize_result result unless result.to_s.empty?
   end
 
   def split_token(token)
@@ -47,8 +70,7 @@ class Parser
     result = (token =~ pattern)
     return unless result.nil?
     token = token[5..-1].nil? ? token[4..-1] : token[5..-1]
-    msg = 'File with name "' + token + '" is not valid scheme file'
-    msg
+    'File with name "' + token.to_s + '" is not valid scheme file'
   end
 
   def read_file_execute_lines(f, expr)
@@ -77,47 +99,11 @@ class Parser
     finalize_result 'File with name "' + filename + '" does not exist!'
   end
 
-  def parse(token)
-    return read_file token if (token.start_with? 'ghci ') && token.size > 4
-    token_error = validate_token token
-    result =
-      if token_error.nil?
-        @tokenizer.tokenize split_token token
-      else
-        token_error
-      end
-    finalize_result result unless result.to_s.empty?
-  end
-
   def validate_token(token)
     if !balanced_brackets? token
       unbalanced_brackets_error
     elsif !balanced_quotes? token
       unbalanced_quotes_error
     end
-  end
-
-  def finalize_result(result)
-    result = format_result result
-    display_result result if @env_type == Environment::PROD
-    result
-  end
-
-  def format_result(result)
-    to_remove = result.to_s.list? || result.to_s.pair? || result.to_s.quote?
-    result = result.delete('\'') if to_remove
-    result
-  end
-
-  def find_result_type(res, methods)
-    return '#<Closure>' if res.is_a? Proc
-    is_func = (methods.key? res.to_s)
-    return '#<Function ' + res.to_s + '>' if is_func
-    res.to_s
-  end
-
-  def display_result(result)
-    to_print = find_result_type result, @tokenizer.syntax_methods
-    puts to_print
   end
 end

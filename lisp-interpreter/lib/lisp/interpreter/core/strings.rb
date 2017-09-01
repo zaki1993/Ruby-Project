@@ -70,7 +70,7 @@ module SchemeStrings
 
   def string?(other)
     raise arg_err_build 1, other.size if other.size != 1
-    other[0].string? ? '#t' : '#f'
+    other[0].string? ? TRUE : FALSE
   end
 
   def strlen(other)
@@ -91,7 +91,7 @@ module SchemeStrings
   def strcontains(other)
     arg_function_validator other, 2
     result = other[0][1..-2].include? other[1][1..-2]
-    result ? '#t' : '#f'
+    result ? TRUE : FALSE
   end
 
   def strsplit(other)
@@ -117,14 +117,14 @@ module SchemeStrings
     arg_function_validator other, 2
     str, to_check = other.map { |t| t[1..-2] }
     result = str.start_with? to_check
-    result ? '#t' : '#f'
+    result ? TRUE : FALSE
   end
 
   def strsufix(other)
     arg_function_validator other, 2
     str, to_check = other.map { |t| t[1..-2] }
     result = str.end_with? to_check
-    result ? '#t' : '#f'
+    result ? TRUE : FALSE
   end
 
   def strjoin(other)
